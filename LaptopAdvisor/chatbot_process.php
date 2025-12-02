@@ -175,8 +175,13 @@ function generate_bot_response($input) {
     
     $intentData = json_decode($analysis['message'] ?? '{}', true);
     
+    // Extract Sentiment and Update Conversation
+    $sentiment = $intentData['sentiment'] ?? 'neutral';
+    $outcome = 'in_progress';
+    
     // --- Step 3: Handle Product Search ---
     if (isset($intentData['type']) && $intentData['type'] === 'product_search') {
+        $outcome = 'product_recommendation';
         $criteria = $intentData['search_criteria'] ?? [];
         
         // Build dynamic SQL query
@@ -243,6 +248,8 @@ function generate_bot_response($input) {
                 ['role' => 'user', 'content' => $finalPrompt]
             ]);
             
+            update_conversation_analysis($sentiment, $outcome);
+            
             return $response['message'] ?? "I found some great options for you! Check out the " . $foundProducts[0]['product_name'] . ".";
         } else {
             // No exact matches, ask Ollama to handle gracefully
@@ -255,6 +262,8 @@ function generate_bot_response($input) {
                 ['role' => 'user', 'content' => $finalPrompt]
             ]);
             
+            update_conversation_analysis($sentiment, 'no_results');
+            
             return $response['message'];
         }
     }
@@ -265,6 +274,20 @@ function generate_bot_response($input) {
         ['role' => 'user', 'content' => $input]
     ]);
     
+    update_conversation_analysis($sentiment, 'general_chat');
+    
     return $response['message'] ?? "I'm having trouble connecting to my brain right now. Please try again later.";
+}
+
+function update_conversation_analysis($sentiment, $outcome) {
+    global $conn;
+    $input = json_decode(file_get_contents('php://input'), true);
+    $session_id = $input['session_id'] ?? null;
+    
+    if ($session_id) {
+        $stmt = $conn->prepare("UPDATE conversations SET sentiment = ?, outcome = ? WHERE session_id = ?");
+        $stmt->bind_param("sss", $sentiment, $outcome, $session_id);
+        $stmt->execute();
+    }
 }
 ?>
