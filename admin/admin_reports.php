@@ -92,13 +92,13 @@ $page_title = "Advanced Reports";
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="dateFrom">From Date</label>
-                                            <input type="date" class="form-control" id="dateFrom" value="2024-01-01">
+                                            <input type="date" class="form-control" id="dateFrom" value="<?= date('Y-01-01') ?>">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-group">
                                             <label for="dateTo">To Date</label>
-                                            <input type="date" class="form-control" id="dateTo" value="2024-12-31">
+                                            <input type="date" class="form-control" id="dateTo" value="<?= date('Y-12-31') ?>">
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -132,8 +132,8 @@ $page_title = "Advanced Reports";
                                         </div>
                                     </div>
                                     <div class="col-md-8">
-                                        <h6 class="text-muted font-semibold">Total Reports Generated</h6>
-                                        <h6 class="font-extrabold mb-0">1,247</h6>
+                                        <h6 class="text-muted font-semibold">Total Orders</h6>
+                                        <h6 class="font-extrabold mb-0" id="summary-orders">-</h6>
                                     </div>
                                 </div>
                             </div>
@@ -149,8 +149,8 @@ $page_title = "Advanced Reports";
                                         </div>
                                     </div>
                                     <div class="col-md-8">
-                                        <h6 class="text-muted font-semibold">Data Points Analyzed</h6>
-                                        <h6 class="font-extrabold mb-0">89,432</h6>
+                                        <h6 class="text-muted font-semibold">Total Revenue</h6>
+                                        <h6 class="font-extrabold mb-0" id="summary-revenue">-</h6>
                                     </div>
                                 </div>
                             </div>
@@ -166,8 +166,8 @@ $page_title = "Advanced Reports";
                                         </div>
                                     </div>
                                     <div class="col-md-8">
-                                        <h6 class="text-muted font-semibold">Active Users</h6>
-                                        <h6 class="font-extrabold mb-0">2,847</h6>
+                                        <h6 class="text-muted font-semibold">New Users</h6>
+                                        <h6 class="font-extrabold mb-0" id="summary-users">-</h6>
                                     </div>
                                 </div>
                             </div>
@@ -197,7 +197,7 @@ $page_title = "Advanced Reports";
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4>Sales & Revenue Analytics</h4>
+                                <h4 id="chart-title">Sales & Revenue Analytics</h4>
                             </div>
                             <div class="card-body">
                                 <div id="chart-sales-revenue"></div>
@@ -217,40 +217,121 @@ $page_title = "Advanced Reports";
     <script src="source/assets/vendors/apexcharts/apexcharts.js"></script>
 
     <script>
-        function generateReport() {
-            const reportType = document.getElementById('reportType').value;
-            const dateFrom = document.getElementById('dateFrom').value;
-            const dateTo = document.getElementById('dateTo').value;
-            alert(`Generating ${reportType} report from ${dateFrom} to ${dateTo}`);
-        }
-
-        function exportReport() {
-            const csvContent = "data:text/csv;charset=utf-8,Report Name,Value,Date\nTotal Revenue,847392,2024-12-15";
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "comprehensive_report.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // Sales Revenue Chart
+        // Initialize Charts
         var salesRevenueOptions = {
-            series: [{
-                name: 'Revenue',
-                data: [44000, 55000, 57000, 56000, 61000, 58000, 63000, 60000, 66000, 69000, 72000, 84000]
-            }],
+            series: [],
             chart: {
                 type: 'line',
-                height: 350
+                height: 350,
+                zoom: { enabled: false }
             },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth' },
             xaxis: {
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                categories: [],
+                type: 'datetime'
+            },
+            tooltip: {
+                x: { format: 'dd MMM yyyy' }
+            },
+            noData: {
+                text: 'Loading...'
             }
         };
         var salesRevenueChart = new ApexCharts(document.querySelector("#chart-sales-revenue"), salesRevenueOptions);
         salesRevenueChart.render();
+
+        function generateReport() {
+            const reportType = document.getElementById('reportType').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            
+            // Show loading state
+            const btn = document.querySelector('button[onclick="generateReport()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+            btn.disabled = true;
+
+            // Update Chart Title
+            const reportTypeText = document.getElementById('reportType').options[document.getElementById('reportType').selectedIndex].text;
+            document.getElementById('chart-title').textContent = reportTypeText + ' Analytics';
+
+            fetch(`ajax/report_handler.php?action=generate&reportType=${reportType}&dateFrom=${dateFrom}&dateTo=${dateTo}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateDashboard(data);
+                    } else {
+                        alert('Error generating report: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while generating the report.');
+                })
+                .finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+        }
+
+        function updateDashboard(data) {
+            // Update Summary Cards
+            const cards = document.querySelectorAll('.card-body .row .col-md-8');
+            if (cards.length >= 3) {
+                // Card 1
+                cards[0].querySelector('h6.text-muted').textContent = data.summary.card1.title;
+                cards[0].querySelector('h6.font-extrabold').textContent = data.summary.card1.value;
+                
+                // Card 2
+                cards[1].querySelector('h6.text-muted').textContent = data.summary.card2.title;
+                cards[1].querySelector('h6.font-extrabold').textContent = data.summary.card2.value;
+                
+                // Card 3
+                cards[2].querySelector('h6.text-muted').textContent = data.summary.card3.title;
+                cards[2].querySelector('h6.font-extrabold').textContent = data.summary.card3.value;
+            }
+
+            // Determine chart type and axis type
+            let xaxisType = 'category';
+            if (data.chart.type === 'line' || data.chart.type === 'area') {
+                xaxisType = 'datetime';
+            }
+
+            // Update Chart
+            salesRevenueOptions = {
+                series: data.chart.series,
+                chart: {
+                    type: data.chart.type,
+                    height: 350
+                },
+                xaxis: {
+                    categories: data.chart.categories,
+                    type: xaxisType
+                },
+                labels: data.chart.type === 'donut' ? data.chart.categories : undefined
+            };
+            
+            // Destroy and re-create to ensure clean state switching between types
+            if (salesRevenueChart) {
+                salesRevenueChart.destroy();
+            }
+            salesRevenueChart = new ApexCharts(document.querySelector("#chart-sales-revenue"), salesRevenueOptions);
+            salesRevenueChart.render();
+        }
+
+        function exportReport() {
+            const reportType = document.getElementById('reportType').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            
+            window.location.href = `ajax/report_handler.php?action=export&reportType=${reportType}&dateFrom=${dateFrom}&dateTo=${dateTo}`;
+        }
+
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', function() {
+            generateReport();
+        });
     </script>
 </body>
 </html>
