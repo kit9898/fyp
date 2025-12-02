@@ -108,8 +108,8 @@ $page_title = "Advanced Reports";
                                                 <button type="button" class="btn btn-primary" id="generateBtn">
                                                     <i class="bi bi-search"></i> Generate
                                                 </button>
-                                                <button type="button" class="btn btn-success" id="exportBtn">
-                                                    <i class="bi bi-download"></i> Export CSV
+                                                <button type="button" class="btn btn-danger" id="exportBtn">
+                                                    <i class="bi bi-file-pdf"></i> Export PDF
                                                 </button>
                                             </div>
                                         </div>
@@ -122,7 +122,7 @@ $page_title = "Advanced Reports";
 
                 <!-- Summary Cards -->
                 <div class="row">
-                    <div class="col-6 col-lg-3 col-md-6">
+                    <div class="col-12 col-lg-4 col-md-4">
                         <div class="card">
                             <div class="card-body px-3 py-4-5">
                                 <div class="row">
@@ -139,7 +139,7 @@ $page_title = "Advanced Reports";
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-lg-3 col-md-6">
+                    <div class="col-12 col-lg-4 col-md-4">
                         <div class="card">
                             <div class="card-body px-3 py-4-5">
                                 <div class="row">
@@ -156,7 +156,7 @@ $page_title = "Advanced Reports";
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-lg-3 col-md-6">
+                    <div class="col-12 col-lg-4 col-md-4">
                         <div class="card">
                             <div class="card-body px-3 py-4-5">
                                 <div class="row">
@@ -168,23 +168,6 @@ $page_title = "Advanced Reports";
                                     <div class="col-md-8">
                                         <h6 class="text-muted font-semibold" id="card3-title">New Users</h6>
                                         <h6 class="font-extrabold mb-0" id="card3-value">-</h6>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-lg-3 col-md-6">
-                        <div class="card">
-                            <div class="card-body px-3 py-4-5">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="stats-icon red">
-                                            <i class="iconly-boldBookmark"></i>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <h6 class="text-muted font-semibold">Report Exports</h6>
-                                        <h6 class="font-extrabold mb-0">567</h6>
                                     </div>
                                 </div>
                             </div>
@@ -215,6 +198,8 @@ $page_title = "Advanced Reports";
     <script src="source/assets/js/bootstrap.js"></script>
     <script src="source/assets/js/app.js"></script>
     <script src="source/assets/vendors/apexcharts/apexcharts.js"></script>
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
         // Global chart variable
@@ -517,14 +502,134 @@ $page_title = "Advanced Reports";
             btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exporting...';
             btn.disabled = true;
             
-            // Redirect to export handler
-            window.location.href = `ajax/report_handler.php?action=export&reportType=${reportType}&dateFrom=${dateFrom}&dateTo=${dateTo}`;
-            
-            // Reset button after a delay (since page might not actually redirect if there's an error)
-            setTimeout(() => {
+            // Check if jsPDF is loaded
+            if (typeof window.jspdf === 'undefined') {
+                alert('PDF library is still loading. Please try again in a moment.');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-            }, 2000);
+                return;
+            }
+            
+            // Get report type text
+            const reportTypeText = document.getElementById('reportType').options[document.getElementById('reportType').selectedIndex].text;
+            
+            // Use jsPDF
+            const { jsPDF } = window.jspdf;
+            
+            // Get chart as base64 image
+            if (salesRevenueChart) {
+                salesRevenueChart.dataURI().then(({ imgURI }) => {
+                    generatePDF(imgURI, reportTypeText, dateFrom, dateTo, btn, originalText);
+                }).catch(error => {
+                    console.error('Error getting chart image:', error);
+                    alert('Error exporting chart. Please try again.');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            } else {
+                alert('No chart available to export. Please generate a report first.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function generatePDF(chartImage, reportType, dateFrom, dateTo, btn, originalText) {
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                
+                // Add header
+                pdf.setFillColor(41, 98, 255);
+                pdf.rect(0, 0, pageWidth, 40, 'F');
+                
+                // Title
+                pdf.setTextColor(255, 255, 255);
+                pdf.setFontSize(20);
+                pdf.setFont(undefined, 'bold');
+                pdf.text('Smart Laptop Advisor', 15, 20);
+                
+                pdf.setFontSize(14);
+                pdf.setFont(undefined, 'normal');
+                pdf.text('Analytics Report', 15, 30);
+                
+                // Report details
+                pdf.setTextColor(0, 0, 0);
+                pdf.setFontSize(12);
+                pdf.setFont(undefined, 'bold');
+                pdf.text('Report Type:', 15, 55);
+                pdf.setFont(undefined, 'normal');
+                pdf.text(reportType, 50, 55);
+                
+                pdf.setFont(undefined, 'bold');
+                pdf.text('Date Range:', 15, 65);
+                pdf.setFont(undefined, 'normal');
+                pdf.text(`${dateFrom} to ${dateTo}`, 50, 65);
+                
+                pdf.setFont(undefined, 'bold');
+                pdf.text('Generated:', 15, 75);
+                pdf.setFont(undefined, 'normal');
+                pdf.text(new Date().toLocaleString(), 50, 75);
+                
+                // Add summary cards data
+                const card1Title = document.getElementById('card1-title').textContent;
+                const card1Value = document.getElementById('card1-value').textContent;
+                const card2Title = document.getElementById('card2-title').textContent;
+                const card2Value = document.getElementById('card2-value').textContent;
+                const card3Title = document.getElementById('card3-title').textContent;
+                const card3Value = document.getElementById('card3-value').textContent;
+                
+                // Summary section
+                pdf.setFontSize(14);
+                pdf.setFont(undefined, 'bold');
+                pdf.text('Summary', 15, 90);
+                
+                pdf.setFontSize(11);
+                pdf.setFont(undefined, 'bold');
+                pdf.text(card1Title + ':', 15, 100);
+                pdf.setFont(undefined, 'normal');
+                pdf.text(card1Value, 70, 100);
+                
+                pdf.setFont(undefined, 'bold');
+                pdf.text(card2Title + ':', 15, 110);
+                pdf.setFont(undefined, 'normal');
+                pdf.text(card2Value, 70, 110);
+                
+                pdf.setFont(undefined, 'bold');
+                pdf.text(card3Title + ':', 15, 120);
+                pdf.setFont(undefined, 'normal');
+                pdf.text(card3Value, 70, 120);
+                
+                // Add chart section
+                pdf.setFontSize(14);
+                pdf.setFont(undefined, 'bold');
+                pdf.text('Analytics Chart', 15, 135);
+                
+                // Add chart image
+                const chartWidth = pageWidth - 30;
+                const chartHeight = 120;
+                pdf.addImage(chartImage, 'PNG', 15, 145, chartWidth, chartHeight);
+                
+                // Add footer
+                pdf.setFontSize(8);
+                pdf.setTextColor(128, 128, 128);
+                pdf.text('© Smart Laptop Advisor - Generated by Admin Panel', pageWidth / 2, pageHeight - 10, { align: 'center' });
+                
+                // Save PDF
+                const fileName = `${reportType.replace(/\s+/g, '_')}_Report_${dateFrom}_to_${dateTo}.pdf`;
+                pdf.save(fileName);
+                
+                // Reset button
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF: ' + error.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
