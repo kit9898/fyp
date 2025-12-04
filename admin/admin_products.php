@@ -410,39 +410,67 @@ if (isset($_POST['edit_product'])) {
 if (isset($_POST['bulk_delete'])) {
     $product_ids = $_POST['product_ids'] ?? [];
     if (!empty($product_ids)) {
-        // Phase 2: Get image URLs for deletion
+        // Check for products in orders
         $placeholders = str_repeat('?,', count($product_ids) - 1) . '?';
-        $stmt = $conn->prepare("SELECT image_url FROM products WHERE product_id IN ($placeholders)");
         $types = str_repeat('i', count($product_ids));
-        $stmt->bind_param($types, ...$product_ids);
-        $stmt->execute();
-        $result = $stmt->get_result();
         
-        $image_paths = [];
-        while ($row = $result->fetch_assoc()) {
-            if (!empty($row['image_url'])) {
-                $image_paths[] = '../' . $row['image_url'];
-            }
+        $check_stmt = $conn->prepare("SELECT DISTINCT product_id FROM order_items WHERE product_id IN ($placeholders)");
+        $check_stmt->bind_param($types, ...$product_ids);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+        
+        $ordered_ids = [];
+        while ($row = $check_result->fetch_assoc()) {
+            $ordered_ids[] = $row['product_id'];
         }
-        $stmt->close();
+        $check_stmt->close();
         
-        // Delete products from database
-        $stmt = $conn->prepare("DELETE FROM products WHERE product_id IN ($placeholders)");
-        $stmt->bind_param($types, ...$product_ids);
+        // Filter out products that are in orders
+        $ids_to_delete = array_values(array_diff($product_ids, $ordered_ids));
         
-        if ($stmt->execute()) {
-            // Delete associated image files
-            foreach ($image_paths as $image_path) {
-                if (file_exists($image_path)) {
-                    unlink($image_path);
+        if (empty($ids_to_delete)) {
+            $error_message = "Cannot delete selected products. All selected products are part of existing orders.";
+        } else {
+            // Phase 2: Get image URLs for deletion
+            $placeholders_del = str_repeat('?,', count($ids_to_delete) - 1) . '?';
+            $types_del = str_repeat('i', count($ids_to_delete));
+            
+            $stmt = $conn->prepare("SELECT image_url FROM products WHERE product_id IN ($placeholders_del)");
+            $stmt->bind_param($types_del, ...$ids_to_delete);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $image_paths = [];
+            while ($row = $result->fetch_assoc()) {
+                if (!empty($row['image_url'])) {
+                    $image_paths[] = '../' . $row['image_url'];
                 }
             }
-            $success_message = count($product_ids) . " product(s) deleted successfully.";
-            logActivity($conn, $_SESSION['admin_id'], 'delete', 'products', "Bulk deleted " . count($product_ids) . " products");
-        } else {
-            $error_message = "Error deleting products.";
+            $stmt->close();
+            
+            // Delete products from database
+            $stmt = $conn->prepare("DELETE FROM products WHERE product_id IN ($placeholders_del)");
+            $stmt->bind_param($types_del, ...$ids_to_delete);
+            
+            if ($stmt->execute()) {
+                // Delete associated image files
+                foreach ($image_paths as $image_path) {
+                    if (file_exists($image_path)) {
+                        unlink($image_path);
+                    }
+                }
+                
+                $success_message = count($ids_to_delete) . " product(s) deleted successfully.";
+                if (count($ordered_ids) > 0) {
+                    $success_message .= " " . count($ordered_ids) . " product(s) were skipped because they are in orders.";
+                }
+                
+                logActivity($conn, $_SESSION['admin_id'], 'delete', 'products', "Bulk deleted " . count($ids_to_delete) . " products");
+            } else {
+                $error_message = "Error deleting products.";
+            }
+            $stmt->close();
         }
-        $stmt->close();
     }
 }
 
@@ -450,32 +478,44 @@ if (isset($_POST['bulk_delete'])) {
 if (isset($_POST['delete_product'])) {
     $product_id = $_POST['product_id'];
     
-    // Get the image path before deleting the product
-    $stmt = $conn->prepare("SELECT image_url FROM products WHERE product_id = ?");
-    $stmt->bind_param("i", $product_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $product = $result->fetch_assoc();
-    $stmt->close();
-    
-    // Delete the product from database
-    $stmt = $conn->prepare("DELETE FROM products WHERE product_id = ?");
-    $stmt->bind_param("i", $product_id);
-    
-    if ($stmt->execute()) {
-        // Delete the image file if it exists
-        if (!empty($product['image_url'])) {
-            $image_path = '../' . $product['image_url'];
-            if (file_exists($image_path)) {
-                unlink($image_path);
-            }
-        }
-        $success_message = "Product deleted successfully.";
-        logActivity($conn, $_SESSION['admin_id'], 'delete', 'products', "Deleted product ID: $product_id", 'product', $product_id);
+    // Check if product is in any orders
+    $check_stmt = $conn->prepare("SELECT product_id FROM order_items WHERE product_id = ? LIMIT 1");
+    $check_stmt->bind_param("i", $product_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+    $is_ordered = $check_result->num_rows > 0;
+    $check_stmt->close();
+
+    if ($is_ordered) {
+        $error_message = "Cannot delete product. It is part of existing orders and cannot be removed.";
     } else {
-        $error_message = "Error deleting product.";
+        // Get the image path before deleting the product
+        $stmt = $conn->prepare("SELECT image_url FROM products WHERE product_id = ?");
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $product = $result->fetch_assoc();
+        $stmt->close();
+        
+        // Delete the product from database
+        $stmt = $conn->prepare("DELETE FROM products WHERE product_id = ?");
+        $stmt->bind_param("i", $product_id);
+        
+        if ($stmt->execute()) {
+            // Delete the image file if it exists
+            if (!empty($product['image_url'])) {
+                $image_path = '../' . $product['image_url'];
+                if (file_exists($image_path)) {
+                    unlink($image_path);
+                }
+            }
+            $success_message = "Product deleted successfully.";
+            logActivity($conn, $_SESSION['admin_id'], 'delete', 'products', "Deleted product ID: $product_id", 'product', $product_id);
+        } else {
+            $error_message = "Error deleting product.";
+        }
+        $stmt->close();
     }
-    $stmt->close();
 }
 
 // Handle Brand & Category Filtering
@@ -1068,13 +1108,24 @@ $page_title = "Product Management";
                         if (data.media && data.media.length > 0) {
                             const images = data.media.filter(m => m.media_type === 'image');
                             if (images.length > 0) {
-                                existingImagesContainer.innerHTML = '<label class="mt-2">Existing Additional Images:</label><div class="d-flex flex-wrap gap-2 mb-3">';
+                                let imagesHtml = '<label class="form-label d-block mt-2">Existing Additional Images:</label><div class="d-flex flex-wrap gap-3 mb-3">';
                                 images.forEach(img => {
                                     let url = img.media_url;
                                     if (!url.startsWith('http') && !url.startsWith('../')) url = '../' + url;
-                                    existingImagesContainer.innerHTML += `<img src="${url}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">`;
+                                    
+                                    imagesHtml += `
+                                        <div class="position-relative" id="media-${img.media_id}" style="width: 100px; height: 100px;">
+                                            <img src="${url}" class="img-thumbnail w-100 h-100" style="object-fit: cover;">
+                                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 p-0 d-flex justify-content-center align-items-center shadow-sm" 
+                                                    style="width: 22px; height: 22px; border-radius: 50%; transform: translate(30%, -30%); border: 2px solid white;"
+                                                    onclick="deleteProductMedia(${img.media_id})" title="Delete Image">
+                                                <i class="bi bi-x" style="font-size: 16px; line-height: 1;"></i>
+                                            </button>
+                                        </div>
+                                    `;
                                 });
-                                existingImagesContainer.innerHTML += '</div>';
+                                imagesHtml += '</div>';
+                                existingImagesContainer.innerHTML = imagesHtml;
                             }
                         }
                     }
@@ -1160,6 +1211,7 @@ $page_title = "Product Management";
             }
             
             // Show loading state
+            // Show loading state
             const submitBtn = document.querySelector('button[form="addProductForm"]');
             if (submitBtn) {
                 submitBtn.disabled = true;
@@ -1179,6 +1231,31 @@ $page_title = "Product Management";
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="bi bi-save me-2"></i>Save Product';
                 }
+            });
+        }
+    }
+
+    function deleteProductMedia(mediaId) {
+        if (confirm('Are you sure you want to delete this image?')) {
+            fetch('ajax/delete_product_media.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ media_id: mediaId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const element = document.getElementById(`media-${mediaId}`);
+                    if (element) element.remove();
+                } else {
+                    alert('Failed to delete image: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the image.');
             });
         }
     }
@@ -1485,12 +1562,7 @@ $page_title = "Product Management";
                                 <small class="text-muted">YouTube, Vimeo, or direct video URL</small>
                             </div>
 
-                            <!-- Video URL Section -->
-                            <div class="form-group mb-3">
-                                <label for="editProductVideoUrl">Product Video URL (Optional)</label>
-                                <input type="url" class="form-control" id="editProductVideoUrl" name="video_url" placeholder="https://youtube.com/watch?v=... or direct video link">
-                                <small class="text-muted">YouTube, Vimeo, or direct video URL</small>
-                            </div>
+
                         </div>
                     </div>
                 </form>
