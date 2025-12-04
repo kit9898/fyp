@@ -107,7 +107,7 @@ if ($flagged_filter == '1') {
     $where_clauses[] = "o.is_flagged = 1";
 }
 
-$query = "SELECT o.*, u.full_name, u.email FROM orders o LEFT JOIN users u ON o.user_id = u.user_id";
+$query = "SELECT o.*, u.full_name, u.email, u.profile_image_url FROM orders o LEFT JOIN users u ON o.user_id = u.user_id";
 if (!empty($where_clauses)) {
     $query .= " WHERE " . implode(" AND ", $where_clauses);
 }
@@ -384,9 +384,30 @@ while ($row = $result->fetch_assoc()) {
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <div>
-                                            <strong><?php echo htmlspecialchars($txn['full_name'] ?? 'Guest'); ?></strong><br>
-                                            <small class="text-muted"><?php echo htmlspecialchars($txn['email'] ?? 'No Email'); ?></small>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar avatar-md me-3">
+                                                <?php 
+                                                $avatar_src = "source/assets/images/faces/" . rand(1, 8) . ".jpg";
+                                                // Check if user has a custom avatar
+                                                if (!empty($txn['profile_image_url'])) {
+                                                    $avatar_path = '../LaptopAdvisor/uploads/' . $txn['profile_image_url'];
+                                                    if (file_exists($avatar_path)) {
+                                                        $avatar_src = $avatar_path;
+                                                    } else {
+                                                        // Try without uploads prefix if path already contains it or is just filename
+                                                        $avatar_path = '../LaptopAdvisor/' . $txn['profile_image_url'];
+                                                        if (file_exists($avatar_path)) {
+                                                            $avatar_src = $avatar_path;
+                                                        }
+                                                    }
+                                                }
+                                                ?>
+                                                <img src="<?php echo htmlspecialchars($avatar_src); ?>" alt="Face" style="object-fit: cover;">
+                                            </div>
+                                            <div>
+                                                <strong><?php echo htmlspecialchars($txn['full_name'] ?? 'Guest'); ?></strong><br>
+                                                <small class="text-muted"><?php echo htmlspecialchars($txn['email'] ?? 'No Email'); ?></small>
+                                            </div>
                                         </div>
                                     </td>
                                     <td>
