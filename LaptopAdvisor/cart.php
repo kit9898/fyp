@@ -90,25 +90,29 @@ if (isset($_POST['apply_coupon']) && isset($_POST['coupon_code'])) {
     $coupon_code = trim($_POST['coupon_code']);
     
     if (!empty($coupon_code)) {
-        $stmt = $conn->prepare("SELECT * FROM coupons WHERE coupon_code = ? AND is_active = 1");
+        // Updated to use 'code' and 'expiry_date' per database schema
+        $stmt = $conn->prepare("SELECT * FROM coupons WHERE code = ? AND is_active = 1");
         $stmt->bind_param("s", $coupon_code);
         $stmt->execute();
         $result = $stmt->get_result();
         
         if ($coupon = $result->fetch_assoc()) {
             $now = date('Y-m-d H:i:s');
-            if ($now >= $coupon['valid_from'] && $now <= $coupon['valid_to']) {
+            $expiry = $coupon['expiry_date'];
+            
+            // Check if expired (if expiry date is set)
+            if ($expiry === NULL || $now <= $expiry) {
                 $_SESSION['coupon'] = [
-                    'code' => $coupon['coupon_code'],
+                    'code' => $coupon['code'], // Mapped from DB 'code'
                     'discount_type' => $coupon['discount_type'],
                     'discount_value' => $coupon['discount_value']
                 ];
                 $coupon_success = "Coupon applied successfully!";
             } else {
-                $coupon_error = "This coupon has expired.";
+                $coupon_error = "This coupon has expired (Expiry: $expiry).";
             }
         } else {
-            $coupon_error = "Invalid coupon code.";
+            $coupon_error = "Invalid or inactive coupon code.";
         }
         $stmt->close();
     }

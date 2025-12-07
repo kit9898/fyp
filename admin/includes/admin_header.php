@@ -9,7 +9,7 @@ function isModulePage($pages) {
 }
 
 // Define module pages
-$ecommerce_pages = ['admin_products.php', 'admin_orders.php', 'admin_inventory.php', 'admin_transactions.php'];
+$ecommerce_pages = ['admin_products.php', 'admin_orders.php', 'admin_inventory.php', 'admin_transactions.php', 'admin_coupons.php'];
 $ai_pages = ['admin_personas.php', 'admin_recommendation_logs.php', 'admin_ai_performance.php'];
 $chatbot_pages = ['admin_conversation_logs.php', 'admin_intent_management.php', 'admin_chatbot_training.php', 'admin_chatbot_analytics.php'];
 $admin_pages = ['admin_customers.php', 'admin_admins.php', 'admin_roles.php'];
@@ -69,6 +69,9 @@ $theme = isset($_COOKIE['admin_theme']) ? $_COOKIE['admin_theme'] : 'light';
                                 </li>
                                 <li class="submenu-item <?php echo ($current_page == 'admin_transactions.php') ? 'active' : ''; ?>">
                                     <a href="admin_transactions.php">Transactions</a>
+                                </li>
+                                <li class="submenu-item <?php echo ($current_page == 'admin_coupons.php') ? 'active' : ''; ?>">
+                                    <a href="admin_coupons.php">Coupon Management</a>
                                 </li>
                             </ul>
                         </li>
