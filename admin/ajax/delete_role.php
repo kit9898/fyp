@@ -79,7 +79,7 @@ if (mysqli_stmt_execute($stmt)) {
             $log_desc = "Deleted role ID: $role_id";
             $ip_address = $_SERVER['REMOTE_ADDR'];
             
-            mysqli_stmt_bind_param($log_stmt, "issis", $current_admin_id, $log_desc, $role_id, $ip_address);
+            mysqli_stmt_bind_param($log_stmt, "isis", $current_admin_id, $log_desc, $role_id, $ip_address);
             @mysqli_stmt_execute($log_stmt);
             @mysqli_stmt_close($log_stmt);
         }

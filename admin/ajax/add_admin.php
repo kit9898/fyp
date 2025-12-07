@@ -90,7 +90,7 @@ if (mysqli_stmt_execute($stmt)) {
             $description = "Created new admin: $first_name $last_name ($email)";
             $ip_address = $_SERVER['REMOTE_ADDR'];
             
-            mysqli_stmt_bind_param($log_stmt, "issis", $current_admin_id, $description, $admin_id, $ip_address);
+            mysqli_stmt_bind_param($log_stmt, "isis", $current_admin_id, $description, $admin_id, $ip_address);
             @mysqli_stmt_execute($log_stmt);
             @mysqli_stmt_close($log_stmt);
         }
