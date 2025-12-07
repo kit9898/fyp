@@ -12,7 +12,7 @@ define('DB_NAME', 'laptop_advisor_db');
 
 // Ollama Configuration
 define('OLLAMA_API_URL', 'http://127.0.0.1:11434');
-define('OLLAMA_MODEL', 'gpt-oss:120b-cloud');
+define('OLLAMA_MODEL', 'gpt-oss:20b-cloud');
 define('OLLAMA_TIMEOUT', 90); // Increased timeout for larger model
 
 // Chatbot Configuration
