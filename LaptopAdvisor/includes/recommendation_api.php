@@ -167,6 +167,72 @@ class RecommendationAPI {
         
         return null;
     }
+
+    /**
+     * Get AI-powered accessory recommendations
+     * 
+     * @param int $user_id User ID
+     * @param int $laptop_id Laptop ID to base recommendations on
+     * @param string $use_case Optional use case
+     * @param int $limit Number of recommendations
+     * @return array|null Array of recommendations
+     */
+    public function getAccessoryRecommendations($user_id, $laptop_id, $use_case = null, $limit = 6) {
+        // Check cache
+        if ($this->cache_enabled) {
+            $cache_key = "ml_acc_{$user_id}_{$laptop_id}_{$use_case}_{$limit}";
+            $cached = $this->getFromCache($cache_key);
+            if ($cached !== null) {
+                return $cached;
+            }
+        }
+
+        $data = [
+            'user_id' => (int)$user_id,
+            'laptop_id' => (int)$laptop_id,
+            'limit' => (int)$limit
+        ];
+
+        if ($use_case !== null) {
+            $data['use_case'] = $use_case;
+        }
+
+        $response = $this->makeRequest('/accessory-recommendations', $data);
+
+        if ($response && isset($response['success']) && $response['success']) {
+            $recommendations = $response['recommendations'];
+            
+            if ($this->cache_enabled) {
+                $this->saveToCache($cache_key, $recommendations);
+            }
+            
+            return $recommendations;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get popular accessories by use case
+     * 
+     * @param string $use_case Use case
+     * @param int $limit Number of accessories
+     * @return array|null Array of accessories
+     */
+    public function getPopularAccessories($use_case, $limit = 6) {
+        $data = [
+            'use_case' => $use_case,
+            'limit' => (int)$limit
+        ];
+
+        $response = $this->makeRequest('/popular-accessories', $data);
+
+        if ($response && isset($response['success']) && $response['success']) {
+            return $response['accessories'];
+        }
+
+        return null;
+    }
     
     /**
      * Trigger model retraining

@@ -1,7 +1,8 @@
-flask==2.3.3
-pandas==1.5.3
-numpy==1.23.5
-scikit-learn==1.2.2
-mysql-connector-python==8.0.33
-python-dotenv==1.0.0
-scipy==1.10.1
+flask
+pandas
+numpy
+scikit-learn
+mysql-connector-python
+python-dotenv
+scipy
+SQLAlchemy

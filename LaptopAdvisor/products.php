@@ -153,6 +153,7 @@ $categories_query = $conn->query("SELECT DISTINCT product_category FROM products
 ?>
 
 <link rel="stylesheet" href="css/products.css"> 
+<link rel="stylesheet" href="css/ml-enhancements.css"> 
 <style>
 /* CSS Styles */
 .page-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; margin-bottom: 30px; border-radius: 12px; }
@@ -464,18 +465,9 @@ $categories_query = $conn->query("SELECT DISTINCT product_category FROM products
         <button class="btn btn-primary" onclick="goToCompare()" id="compareNowBtn">
             Compare Now
         </button>
-        <button class="btn" style="background-color:#6c757d; color: white;" onclick="clearCompare()">
-            Clear
-        </button>
     </div>
-    
-<?php elseif ($view == 'recommendations'): ?>
-    <!-- Recommendation View (Unchanged logic, just keeping structure) -->
+<?php else: ?>
     <?php if ($total_results > 0): ?>
-        <div class="results-info" style="margin-bottom: 25px; text-align: center;">
-            We found <strong><?php echo $total_results; ?></strong> personalized recommendations for you
-        </div>
-        
         <div class="product-grid">
             <?php while ($row = $result->fetch_assoc()): ?>
                 <div class="product-card recommendation-card">

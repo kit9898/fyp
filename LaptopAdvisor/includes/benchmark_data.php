@@ -11,6 +11,13 @@ function getCPUBenchmarkScore($cpu_name) {
     
     // PassMark CPU Benchmark Scores (approximate)
     $cpu_benchmarks = [
+        // Intel Core Ultra (Series 1 & 2)
+        'ultra 9 185h' => 48000,
+        'ultra 7 165h' => 36000,
+        'ultra 7 155h' => 32000,
+        'ultra 5 135h' => 24000,
+        'ultra 5 125h' => 22000,
+
         // Intel Core i9 (13th/14th Gen)
         'i9-14900k' => 56000,
         'i9-14900hx' => 48000,
@@ -40,6 +47,7 @@ function getCPUBenchmarkScore($cpu_name) {
         'i5-1240p' => 20000,
         
         // AMD Ryzen 9
+        'ryzen 9 8945hs' => 40000,
         'ryzen 9 7950x' => 60000,
         'ryzen 9 7945hx' => 52000,
         'ryzen 9 7940hs' => 38000,
@@ -48,6 +56,7 @@ function getCPUBenchmarkScore($cpu_name) {
         'ryzen 9 5900x' => 39000,
         
         // AMD Ryzen 7
+        'ryzen 7 8845hs' => 34000,
         'ryzen 7 7800x3d' => 42000,
         'ryzen 7 7840hs' => 32000,
         'ryzen 7 7735hs' => 30000,
@@ -107,8 +116,11 @@ function getGPUBenchmarkScore($gpu_name) {
     $gpu_benchmarks = [
         // NVIDIA RTX 40-series
         'rtx 4090' => 35000,
+        'rtx 4080 super' => 30000,
         'rtx 4080' => 28000,
+        'rtx 4070 ti super' => 24000,
         'rtx 4070 ti' => 22000,
+        'rtx 4070 super' => 20000,
         'rtx 4070' => 18000,
         'rtx 4060 ti' => 14000,
         'rtx 4060' => 11000,
@@ -182,6 +194,10 @@ function getGPUBenchmarkScore($gpu_name) {
  * @return int Estimated score
  */
 function estimateCPUScore($cpu) {
+    if (strpos($cpu, 'ultra 9') !== false) return 45000;
+    if (strpos($cpu, 'ultra 7') !== false) return 32000;
+    if (strpos($cpu, 'ultra 5') !== false) return 22000;
+    
     if (strpos($cpu, 'i9') !== false || strpos($cpu, 'ryzen 9') !== false) {
         if (strpos($cpu, '14') !== false || strpos($cpu, '13') !== false) return 45000;
         return 40000;

@@ -8,6 +8,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import StandardScaler
 import mysql.connector
+from sqlalchemy import create_engine
 from config import Config
 import pickle
 import os
@@ -29,12 +30,9 @@ class AccessoryRecommender:
     def connect_db(self):
         """Establish database connection"""
         try:
-            self.conn = mysql.connector.connect(
-                host=self.config.DB_HOST,
-                user=self.config.DB_USER,
-                password=self.config.DB_PASSWORD,
-                database=self.config.DB_NAME
-            )
+            # Create SQLAlchemy engine
+            connection_string = f"mysql+mysqlconnector://{self.config.DB_USER}:{self.config.DB_PASSWORD}@{self.config.DB_HOST}/{self.config.DB_NAME}"
+            self.conn = create_engine(connection_string)
             return True
         except Exception as e:
             print(f"Database connection error: {e}")
@@ -42,8 +40,8 @@ class AccessoryRecommender:
     
     def close_db(self):
         """Close database connection"""
-        if self.conn and self.conn.is_connected():
-            self.conn.close()
+        if self.conn:
+            self.conn.dispose()
     
     def load_data(self):
         """Load product and order data from database"""

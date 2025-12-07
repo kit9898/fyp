@@ -205,101 +205,17 @@ function getPerformanceRating($ram, $gpu) {
 
 function getUseCaseBadge($use_case) {
     $badges = [
-        'Gaming' => ['icon' => 'ðŸŽ®', 'color' => '#e74c3c'],
-        'Creative' => ['icon' => 'ðŸŽ¨', 'color' => '#9b59b6'],
-        'Business' => ['icon' => 'ðŸ’¼', 'color' => '#3498db'],
-        'Student' => ['icon' => 'ðŸ“š', 'color' => '#2ecc71'],
-        'General Use' => ['icon' => 'ðŸŒ', 'color' => '#95a5a6']
+        'Gaming' => ['icon' => '🎮', 'color' => '#e74c3c'],
+        'Creative' => ['icon' => '🎨', 'color' => '#9b59b6'],
+        'Business' => ['icon' => '💼', 'color' => '#3498db'],
+        'Student' => ['icon' => '📚', 'color' => '#2ecc71'],
+        'General Use' => ['icon' => '🌐', 'color' => '#95a5a6']
     ];
-    return $badges[$use_case] ?? ['icon' => 'ðŸ’»', 'color' => '#34495e'];
+    return $badges[$use_case] ?? ['icon' => '💻', 'color' => '#34495e'];
 }
 ?>
 
-<style>
-/* --- AMAZON STYLE GALLERY CSS --- */
-.amazon-gallery-container { display: flex; gap: 15px; height: fit-content; position: sticky; top: 20px; }
-.thumbnails-column { display: flex; flex-direction: column; gap: 10px; width: 60px; }
-.thumb-item { width: 50px; height: 50px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; cursor: pointer; opacity: 0.7; transition: all 0.2s; background: white; position: relative; display: flex; justify-content: center; align-items: center; }
-.thumb-item img, .thumb-item video { width: 100%; height: 100%; object-fit: contain; }
-.thumb-item.active, .thumb-item:hover { border-color: #e77600; box-shadow: 0 0 3px 1px #e77600; opacity: 1; }
-.play-icon-overlay { position: absolute; font-size: 20px; color: white; background: rgba(0,0,0,0.5); border-radius: 50%; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-.main-image-area { flex: 1; position: relative; border-radius: 8px; overflow: hidden; cursor: zoom-in; display: flex; justify-content: center; align-items: center; background: white; min-height: 400px; border: 1px solid #f0f0f0; }
-.main-media-element { max-width: 100%; max-height: 500px; object-fit: contain; width: 100%; height: 100%; }
-.zoom-hint { position: absolute; top: 10px; right: 10px; color: #666; background: rgba(255,255,255,0.8); padding: 5px; border-radius: 50%; font-size: 1.2rem; pointer-events: none; z-index: 10; }
-
-/* --- LIGHTBOX OVERLAY CSS --- */
-.lightbox-overlay { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); animation: fadeIn 0.3s; }
-.lightbox-content { margin: auto; display: block; max-width: 90%; max-height: 90vh; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 30px rgba(0,0,0,0.5); background: transparent; }
-.lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; font-weight: bold; cursor: pointer; transition: 0.3s; z-index: 10001; }
-.lightbox-close:hover { color: #f1f1f1; }
-@keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
-
-/* General Styles */
-.breadcrumb { padding: 15px 0; font-size: 0.9rem; color: #666; }
-.breadcrumb a { color: #3b82f6; text-decoration: none; }
-.product-detail-wrapper { max-width: 1200px; margin: 0 auto; }
-.product-detail-container { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; margin-bottom: 50px; }
-.use-case-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: white; margin-bottom: 10px; }
-.product-title { font-size: 2rem; font-weight: 700; margin: 10px 0 5px 0; color: #1a1a1a; }
-.brand-tag-large { font-size: 1.1rem; color: #666; font-weight: 500; }
-.price-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 20px 0; }
-.price-label { font-size: 0.9rem; opacity: 0.9; }
-.product-price-display { font-size: 2.5rem; font-weight: 700; margin: 5px 0; }
-.key-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 25px 0; }
-.feature-box { background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid #3b82f6; }
-.feature-box strong { display: block; font-size: 0.85rem; color: #666; margin-bottom: 5px; }
-.feature-box span { font-size: 1.1rem; font-weight: 600; color: #1a1a1a; }
-.performance-meter { margin: 25px 0; padding: 20px; background: #f8f9fa; border-radius: 10px; }
-.meter-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; }
-.meter-bar { height: 12px; background: #e9ecef; border-radius: 10px; overflow: hidden; }
-.meter-fill { height: 100%; background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%); border-radius: 10px; transition: width 1s ease; }
-.cart-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-top: 20px; }
-.quantity-selector { display: flex; align-items: center; gap: 15px; margin: 20px 0; }
-.quantity-btn { width: 40px; height: 40px; border: 2px solid #e9ecef; background: white; border-radius: 8px; font-size: 1.2rem; cursor: pointer; transition: all 0.3s; }
-.quantity-display { font-size: 1.3rem; font-weight: 600; min-width: 40px; text-align: center; }
-.add-to-cart-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-.quick-actions { display: flex; gap: 10px; margin-top: 15px; }
-.quick-action-btn { flex: 1; padding: 10px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.3s; text-align: center; text-decoration: none; color: #495057; font-weight: 500; }
-.spec-tabs { display: flex; gap: 10px; border-bottom: 2px solid #e9ecef; margin: 30px 0 20px 0; }
-.spec-tab { padding: 12px 20px; background: none; border: none; cursor: pointer; font-weight: 600; color: #666; border-bottom: 3px solid transparent; transition: all 0.3s; }
-.spec-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
-.tab-content { display: none; padding: 20px 0; }
-.tab-content.active { display: block; }
-.spec-table { width: 100%; border-collapse: collapse; }
-.spec-table tr { border-bottom: 1px solid #e9ecef; }
-.spec-table td { padding: 15px 10px; }
-.trust-badges { display: flex; gap: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px; margin: 20px 0; }
-.trust-badge { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #666; }
-.review-summary { background: #f8f9fa; padding: 20px; border-radius: 10px; display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
-.big-rating { font-size: 3rem; font-weight: 700; color: #1a1a1a; }
-.review-card { border-bottom: 1px solid #e9ecef; padding: 20px 0; }
-.review-card:last-child { border-bottom: none; }
-.star-rating-input { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 5px; margin: 10px 0 20px 0; }
-.star-rating-input input { display: none; }
-.star-rating-input label { cursor: pointer; font-size: 1.5rem; color: #e9ecef; transition: color 0.2s; }
-.star-rating-input input:checked ~ label, .star-rating-input label:hover, .star-rating-input label:hover ~ label { color: #f59e0b; }
-
-/* Similar Products & Accessories Common Styles */
-.similar-products-section { margin-top: 60px; padding-top: 40px; border-top: 2px solid #e9ecef; }
-.similar-products-section h3 { font-size: 1.8rem; margin-bottom: 25px; color: #1a1a1a; }
-.similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-
-/* Product Card for Similar Items */
-.product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); transition: all 0.3s; height: 100%; }
-.product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
-.product-card a { text-decoration: none; color: inherit; display: block; height: 100%; }
-.product-card img { width: 100%; height: 180px; object-fit: contain; background: #f8f9fa; padding: 20px; }
-.product-card-info { padding: 20px; }
-.product-card-info .brand { color: #666; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 5px; }
-.product-card-info h3 { font-size: 1.1rem; margin: 8px 0; color: #1a1a1a; line-height: 1.4; font-weight: 700; }
-.product-card-info .product-price { font-size: 1.2rem; font-weight: 700; color: #007bff; margin-top: 10px; }
-
-@media (max-width: 768px) {
-    .product-detail-container { grid-template-columns: 1fr; gap: 20px; }
-    .amazon-gallery-container { flex-direction: column-reverse; }
-    .thumbnails-column { flex-direction: row; width: 100%; overflow-x: auto; justify-content: center; }
-}
-</style>
+<link rel="stylesheet" href="css/product-details.css">
 
 <div class="product-detail-wrapper">
     <?php if ($product): ?>
@@ -344,10 +260,10 @@ function getUseCaseBadge($use_case) {
                                 <video src="<?php echo htmlspecialchars($thumb_url); ?>" muted></video>
                                 <div class="play-icon-overlay">▶</div>
                             <?php elseif ($media_type == 'youtube'): ?>
-                                <img src="<?php echo htmlspecialchars($thumb_url); ?>" alt="Thumbnail">
+                                <img src="<?php echo htmlspecialchars($thumb_url); ?>" alt="Thumbnail" loading="lazy">
                                 <div class="play-icon-overlay">▶</div>
                             <?php else: ?>
-                                <img src="<?php echo htmlspecialchars($thumb_url); ?>" alt="Thumbnail" onerror="this.src='https://via.placeholder.com/50x50?text=?'">
+                                <img src="<?php echo htmlspecialchars($thumb_url); ?>" alt="Thumbnail" onerror="this.src='https://via.placeholder.com/50x50?text=?'" loading="lazy">
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
@@ -397,7 +313,7 @@ function getUseCaseBadge($use_case) {
                         <img id="mainProductMedia" class="main-media-element" 
                              src="<?php echo htmlspecialchars($first_url); ?>" 
                              alt="<?php echo htmlspecialchars($product['product_name']); ?>"
-                             onerror="this.src='https://via.placeholder.com/600x400?text=Image+Not+Found'">
+                             onerror="this.src='https://via.placeholder.com/600x400?text=Image+Not+Found'" loading="lazy">
                         <div class="zoom-hint"></div>
                     <?php endif; ?>
                 </div>
@@ -446,7 +362,7 @@ function getUseCaseBadge($use_case) {
                     <div class="meter-label"><span>Performance Rating</span><span><?php echo $performance_score; ?>/100</span></div>
                     <div class="meter-bar"><div class="meter-fill" style="width: <?php echo $performance_score; ?>%"></div></div>
                     <p style="margin-top: 8px; font-size: 0.85rem; color: #666;">
-                        <?php if ($performance_score >= 80) echo "âš¡ Exceptional performance"; elseif ($performance_score >= 60) echo "âœ“ Great performance"; else echo "â†’ Good for everyday computing"; ?>
+                        <?php if ($performance_score >= 80) echo "⚡ Exceptional performance"; elseif ($performance_score >= 60) echo "✓ Great performance"; else echo "→ Good for everyday computing"; ?>
                     </p>
                 </div>
                 <?php endif; ?>
@@ -460,7 +376,7 @@ function getUseCaseBadge($use_case) {
                     
                     if ($stock_qty > 0): 
                         $stock_status_class = $stock_qty > $low_stock_threshold ? 'text-success' : 'text-warning';
-                        $stock_icon = $stock_qty > $low_stock_threshold ? 'âœ“' : 'âš ï¸';
+                        $stock_icon = $stock_qty > $low_stock_threshold ? '✓' : '⚠️';
                     ?>
                         <div style="font-weight: 600; margin-bottom: 15px;" class="<?php echo $stock_status_class; ?>">
                             <?php echo $stock_icon; ?> 
@@ -476,28 +392,28 @@ function getUseCaseBadge($use_case) {
                             <input type="hidden" name="quantity" id="quantityInput" value="1">
                             <label style="font-weight: 600; display: block; margin-bottom: 10px;">Quantity</label>
                             <div class="quantity-selector">
-                                <button type="button" class="quantity-btn" onclick="changeQuantity(-1)">âˆ’</button>
+                                <button type="button" class="quantity-btn" onclick="changeQuantity(-1)">−</button>
                                 <span class="quantity-display" id="quantityDisplay">1</span>
                                 <button type="button" class="quantity-btn" onclick="changeQuantity(1)">+</button>
                             </div>
-                            <button type="submit" class="add-to-cart-btn">ðŸ›’ Add to Cart</button>
+                            <button type="submit" class="add-to-cart-btn">🛒 Add to Cart</button>
                         </form>
                     <?php else: ?>
-                        <div class="alert alert-danger" style="text-align: center;"><strong>ðŸš« Out of Stock</strong></div>
+                        <div class="alert alert-danger" style="text-align: center;"><strong>🚫 Out of Stock</strong></div>
                         <div class="quick-actions" style="margin-top: 15px;">
                             <button class="add-to-cart-btn" style="background: #ccc; cursor: not-allowed;" disabled>Out of Stock</button>
                         </div>
                     <?php endif; ?>
                     <div class="quick-actions">
-                        <a href="compare.php?ids=<?php echo $product['product_id']; ?>" class="quick-action-btn">âš–ï¸ Compare</a>
-                        <a href="products.php?view=browse&use_case=<?php echo urlencode($product['primary_use_case']); ?>" class="quick-action-btn">ðŸ” Similar Items</a>
+                        <button onclick="addToCompare(<?php echo $product['product_id']; ?>, '<?php echo $product['product_category'] ?? 'laptop'; ?>')" class="quick-action-btn" style="border:1px solid #e9ecef; width:100%; font-size:1rem; font-family:inherit;">⚖️ Compare</button>
+                        <a href="products.php?view=browse&use_case=<?php echo urlencode($product['primary_use_case']); ?>" class="quick-action-btn">🔍 Similar Items</a>
                     </div>
                 </div>
                 
                 <div class="trust-badges">
-                    <div class="trust-badge"><span>âœ“</span> Free Shipping</div>
-                    <div class="trust-badge"><span>â†º</span> 30-Day Returns</div>
-                    <div class="trust-badge"><span>â˜…</span> Warranty Included</div>
+                    <div class="trust-badge"><span>✓</span> Free Shipping</div>
+                    <div class="trust-badge"><span>↩️</span> 30-Day Returns</div>
+                    <div class="trust-badge"><span>★</span> Warranty Included</div>
                 </div>
             </div>
         </div>
@@ -573,7 +489,7 @@ function getUseCaseBadge($use_case) {
                     <h3 style="margin-bottom: 15px;">Performance Analysis</h3>
                     <div style="display: grid; gap: 20px;">
                         <div style="padding: 20px; background: #f8f9fa; border-radius: 10px;">
-                            <h4 style="margin-bottom: 10px; color: #3b82f6;">ðŸ’» Processing Power</h4>
+                            <h4 style="margin-bottom: 10px; color: #3b82f6;">💻 Processing Power</h4>
                             <p style="color: #495057; line-height: 1.6;">
                                 Equipped with <strong><?php echo htmlspecialchars($product['cpu']); ?></strong>, 
                                 this laptop provides 
@@ -592,7 +508,7 @@ function getUseCaseBadge($use_case) {
                         </div>
                         
                         <div style="padding: 20px; background: #f8f9fa; border-radius: 10px;">
-                            <h4 style="margin-bottom: 10px; color: #10b981;">ðŸŽ® Graphics Performance</h4>
+                            <h4 style="margin-bottom: 10px; color: #10b981;">🎮 Graphics Performance</h4>
                             <p style="color: #495057; line-height: 1.6;">
                                 The <strong><?php echo htmlspecialchars($product['gpu']); ?></strong> 
                                 <?php 
@@ -610,7 +526,7 @@ function getUseCaseBadge($use_case) {
                         </div>
                         
                         <div style="padding: 20px; background: #f8f9fa; border-radius: 10px;">
-                            <h4 style="margin-bottom: 10px; color: #f59e0b;">âš¡ Memory & Storage</h4>
+                            <h4 style="margin-bottom: 10px; color: #f59e0b;">⚡ Memory & Storage</h4>
                             <p style="color: #495057; line-height: 1.6;">
                                 With <strong><?php echo htmlspecialchars($product['ram_gb']); ?>GB RAM</strong>, 
                                 you can run 
@@ -630,7 +546,7 @@ function getUseCaseBadge($use_case) {
                     <h3 style="margin-bottom: 15px;">Usage & Compatibility</h3>
                     <div style="display: grid; gap: 20px;">
                         <div style="padding: 20px; background: #f8f9fa; border-radius: 10px;">
-                            <h4 style="margin-bottom: 10px; color: #3b82f6;">ðŸ”Œ Compatibility</h4>
+                            <h4 style="margin-bottom: 10px; color: #3b82f6;">🔌 Compatibility</h4>
                             <p style="color: #495057; line-height: 1.6;">
                                 This <strong><?php echo ucwords(str_replace('_', ' ', $product['product_category'] ?? 'accessory')); ?></strong> is designed to work seamlessly with modern laptops and desktop computers. 
                                 <?php if (!empty($product['related_to_category'])): ?>
@@ -642,7 +558,7 @@ function getUseCaseBadge($use_case) {
                         </div>
                         
                         <div style="padding: 20px; background: #f8f9fa; border-radius: 10px;">
-                            <h4 style="margin-bottom: 10px; color: #10b981;">ðŸŽ¯ Recommended Usage</h4>
+                            <h4 style="margin-bottom: 10px; color: #10b981;">🎯 Recommended Usage</h4>
                             <p style="color: #495057; line-height: 1.6;">
                                 Best suited for <strong><?php echo htmlspecialchars($product['primary_use_case']); ?></strong> environments. 
                                 <?php 
@@ -668,19 +584,19 @@ function getUseCaseBadge($use_case) {
                 <h3 style="margin-bottom: 15px;">Customer Reviews</h3>
                 <div class="review-summary">
                     <div style="text-align: center;"><div class="big-rating"><?php echo $average_rating; ?></div><div style="font-size: 0.9rem; color: #666;">out of 5</div></div>
-                    <div><div style="font-size: 1.2rem; color: #f59e0b;"><?php for ($i = 1; $i <= 5; $i++) echo ($i <= round($average_rating)) ? 'â˜…' : '<span style="color: #e9ecef">â˜…</span>'; ?></div><p style="margin: 0; color: #666;"><?php echo $total_reviews; ?> verified ratings</p></div>
+                    <div><div style="font-size: 1.2rem; color: #f59e0b;"><?php for ($i = 1; $i <= 5; $i++) echo ($i <= round($average_rating)) ? '★' : '<span style="color: #e9ecef">★</span>'; ?></div><p style="margin: 0; color: #666;"><?php echo $total_reviews; ?> verified ratings</p></div>
                 </div>
                 <div class="reviews-list">
                     <?php if ($total_reviews > 0): foreach ($reviews as $rev): ?>
                         <div class="review-card">
-                            <div class="review-header"><strong><?php echo htmlspecialchars($rev['full_name'] ?? 'User'); ?></strong><span style="color: #f59e0b;"><?php echo str_repeat('â˜…', $rev['rating']); ?></span></div>
+                            <div class="review-header"><strong><?php echo htmlspecialchars($rev['full_name'] ?? 'User'); ?></strong><span style="color: #f59e0b;"><?php echo str_repeat('★', $rev['rating']); ?></span></div>
                             <p><?php echo nl2br(htmlspecialchars($rev['review_text'])); ?></p>
                         </div>
                     <?php endforeach; else: ?><p style="text-align: center; color: #666; padding: 20px;">No reviews yet.</p><?php endif; ?>
                 </div>
                 <div class="content-box" style="margin-top: 30px; border: 1px solid #e9ecef; padding: 25px; border-radius: 10px;">
                     <h4 style="margin-bottom: 15px;">Write a Review</h4>
-                    <form method="POST" action=""><label style="font-weight: 600; display: block;">Your Rating</label><div class="star-rating-input"><input type="radio" id="star5" name="rating" value="5" required /><label for="star5">â˜…</label><input type="radio" id="star4" name="rating" value="4" /><label for="star4">â˜…</label><input type="radio" id="star3" name="rating" value="3" /><label for="star3">â˜…</label><input type="radio" id="star2" name="rating" value="2" /><label for="star2">â˜…</label><input type="radio" id="star1" name="rating" value="1" /><label for="star1">â˜…</label></div><label style="font-weight: 600; display: block; margin-bottom: 8px;">Your Review</label><textarea name="review_text" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;" rows="4" required></textarea><button type="submit" name="submit_review" class="add-to-cart-btn" style="width: auto; padding: 10px 30px; font-size: 1rem;">Submit Review</button></form>
+                    <form method="POST" action=""><label style="font-weight: 600; display: block;">Your Rating</label><div class="star-rating-input"><input type="radio" id="star5" name="rating" value="5" required /><label for="star5">★</label><input type="radio" id="star4" name="rating" value="4" /><label for="star4">★</label><input type="radio" id="star3" name="rating" value="3" /><label for="star3">★</label><input type="radio" id="star2" name="rating" value="2" /><label for="star2">★</label><input type="radio" id="star1" name="rating" value="1" /><label for="star1">★</label></div><label style="font-weight: 600; display: block; margin-bottom: 8px;">Your Review</label><textarea name="review_text" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;" rows="4" required></textarea><button type="submit" name="submit_review" class="add-to-cart-btn" style="width: auto; padding: 10px 30px; font-size: 1rem;">Submit Review</button></form>
                 </div>
             </div>
         </div>
@@ -694,7 +610,7 @@ function getUseCaseBadge($use_case) {
                         <div class="product-card">
                             <a href="product_details.php?product_id=<?php echo $similar['product_id']; ?>">
                                 <img src="<?php echo !empty($similar['image_url']) ? htmlspecialchars($similar['image_url']) : 'https://via.placeholder.com/280'; ?>" 
-                                     alt="<?php echo htmlspecialchars($similar['product_name']); ?>">
+                                     alt="<?php echo htmlspecialchars($similar['product_name']); ?>" loading="lazy">
                                 <div class="product-card-info">
                                     <p class="brand"><?php echo htmlspecialchars($similar['brand']); ?></p>
                                     <h3><?php echo htmlspecialchars($similar['product_name']); ?></h3>
@@ -711,7 +627,7 @@ function getUseCaseBadge($use_case) {
         <?php if (!empty($accessory_recommendations)): ?>
         <div class="accessories-recommendation-section" style="margin-top: 50px; padding-top: 40px; border-top: 2px solid #e9ecef;">
             <div style="margin-bottom: 25px;">
-                <h3 style="font-size: 1.8rem; margin-bottom: 10px; color: #1a1a1a;">âœ¨ Recommended Accessories</h3>
+                <h3 style="font-size: 1.8rem; margin-bottom: 10px; color: #1a1a1a;">✨ Recommended Accessories</h3>
                 <p style="color: #666; font-size: 1rem;">AI-powered recommendations for your <?php echo htmlspecialchars($product['primary_use_case']); ?> laptop</p>
             </div>
             <div class="accessory-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
@@ -721,23 +637,38 @@ function getUseCaseBadge($use_case) {
                     <div style="display: inline-block; padding: 4px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; font-size: 0.7rem; font-weight: 600; margin-bottom: 12px;">
                         <?php 
                         $category_icons = [
-                            'mouse' => 'ðŸ–±ï¸', 'keyboard' => 'âŒ¨ï¸', 'headset' => 'ðŸŽ§',
-                            'monitor' => 'ðŸ–¥ï¸', 'bag' => 'ðŸŽ’', 'webcam' => 'ðŸ“·',
-                            'mousepad' => 'â¬›', 'docking_station' => 'ðŸ”Œ', 'external_drive' => 'ðŸ’¾'
+                            'mouse' => '🖱️', 'keyboard' => '⌨️', 'headset' => '🎧',
+                            'monitor' => '🖥️', 'bag' => '🎒', 'webcam' => '📷',
+                            'mousepad' => '⬛', 'docking_station' => '🔌', 'external_drive' => '💾'
                         ];
-                        echo ($category_icons[$accessory['product_category']] ?? 'ðŸ›ï¸') . ' ';
+                        echo ($category_icons[$accessory['product_category']] ?? '🛠️') . ' ';
                         echo str_replace('_', ' ', ucwords($accessory['product_category'], '_'));
                         ?>
                     </div>
 
-                    <img src="<?php echo htmlspecialchars($accessory['image_url']); ?>" style="width: 100%; height: 150px; object-fit: contain; margin-bottom: 12px;">
+
+
+                    <?php 
+                    $img_url = $accessory['image_url'];
+                    // Fix path if it contains the project folder name incorrectly
+                    $img_url = str_replace('LaptopAdvisor/', '', $img_url);
+                    
+                    // Fallback if empty
+                    if (empty($img_url)) {
+                        $img_url = 'https://via.placeholder.com/220?text=No+Image';
+                    }
+                    ?>
+                    <img src="<?php echo htmlspecialchars($img_url); ?>" 
+                         style="width: 100%; height: 150px; object-fit: contain; margin-bottom: 12px;" 
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/220?text=Image+Not+Found';">
                     <h4 style="font-size: 0.95rem; margin: 10px 0 8px 0; min-height: 40px;"><?php echo htmlspecialchars($accessory['product_name']); ?></h4>
                     <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;"><?php echo htmlspecialchars($accessory['brand']); ?></p>
                     
                     <?php if ($accessory['stock_quantity'] > 0): ?>
-                        <p style="font-size: 0.75rem; color: #10b981; margin-bottom: 10px;">âœ“ In Stock (<?php echo $accessory['stock_quantity']; ?> available)</p>
+                        <p style="font-size: 0.75rem; color: #10b981; margin-bottom: 10px;">✓ In Stock (<?php echo $accessory['stock_quantity']; ?> available)</p>
                     <?php else: ?>
-                        <p style="font-size: 0.75rem; color: #ef4444; margin-bottom: 10px;">âš ï¸ Out of Stock</p>
+                        <p style="font-size: 0.75rem; color: #ef4444; margin-bottom: 10px;">⚠️ Out of Stock</p>
                     <?php endif; ?>
 
                     <p style="font-size: 1.3rem; font-weight: 700; color: #667eea; margin: 12px 0;">$<?php echo number_format($accessory['price'], 2); ?></p>
@@ -748,7 +679,7 @@ function getUseCaseBadge($use_case) {
                             <input type="hidden" name="action" value="add">
                             <input type="hidden" name="product_id" value="<?php echo $accessory['product_id']; ?>">
                             <input type="hidden" name="quantity" value="1">
-                            <button type="submit" style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">ðŸ›’ Add to Cart</button>
+                            <button type="submit" style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">🛒 Add to Cart</button>
                         </form>
                         <?php else: ?>
                         <button disabled style="flex: 1; padding: 10px; background: #ccc; color: #666; border: none; border-radius: 8px; font-weight: 600; cursor: not-allowed;">Out of Stock</button>
@@ -759,7 +690,7 @@ function getUseCaseBadge($use_case) {
                 <?php endforeach; ?>
             </div>
             <div style="text-align: center; margin-top: 30px; padding: 15px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border-radius: 10px;">
-                <p style="margin: 0; color: #667eea; font-size: 0.85rem; font-weight: 600;">ðŸ¤– Powered by AI Machine Learning â€¢ Personalized just for you</p>
+                <p style="margin: 0; color: #667eea; font-size: 0.85rem; font-weight: 600;">🤖 Powered by AI Machine Learning • Personalized just for you</p>
             </div>
         </div>
         <?php endif; ?>
@@ -878,6 +809,101 @@ function switchTab(tabName) {
     document.getElementById(tabName).classList.add('active');
     event.target.classList.add('active');
 }
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.innerHTML = `
+        <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(toast);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function updateCompareBar() {
+    const selected = JSON.parse(localStorage.getItem('compare_ids')) || [];
+    const bar = document.getElementById('compareBar');
+    const countSpan = document.getElementById('compareCount');
+    
+    if (selected.length > 0) {
+        bar.classList.add('show');
+        countSpan.textContent = `${selected.length} Selected`;
+    } else {
+        bar.classList.remove('show');
+    }
+}
+
+function goToCompare() {
+    const selected = JSON.parse(localStorage.getItem('compare_ids')) || [];
+    if (selected.length > 0) {
+        window.location.href = 'compare.php?ids=' + selected.join(',');
+    } else {
+        showToast('No items selected to compare', 'error');
+    }
+}
+
+function clearCompare() {
+    localStorage.removeItem('compare_ids');
+    localStorage.removeItem('compare_category');
+    updateCompareBar();
+    showToast('Comparison list cleared', 'info');
+}
+
+function addToCompare(productId, category) {
+    let selected = new Set(JSON.parse(localStorage.getItem('compare_ids')) || []);
+    let currentCategory = localStorage.getItem('compare_category');
+
+    if (selected.has(String(productId))) {
+        showToast('This product is already in your comparison list.', 'info');
+        return;
+    }
+
+    if (selected.size >= 4) {
+        showToast('You can compare up to 4 products.', 'error');
+        // Optional: Offer to go to compare page
+        return;
+    }
+
+    // Check category mismatch
+    if (selected.size > 0 && currentCategory && currentCategory !== category) {
+        if (confirm(`You are trying to compare a ${category} with a ${currentCategory}. Start a new comparison?`)) {
+            selected.clear();
+            currentCategory = category;
+        } else {
+            return; // User cancelled
+        }
+    } else if (selected.size === 0) {
+        currentCategory = category;
+    }
+
+    selected.add(String(productId));
+    localStorage.setItem('compare_ids', JSON.stringify(Array.from(selected)));
+    localStorage.setItem('compare_category', currentCategory);
+
+    showToast('Product added to comparison!', 'success');
+    updateCompareBar();
+}
+
+// Initialize bar on load
+document.addEventListener('DOMContentLoaded', updateCompareBar);
+
 </script>
+
+<!-- Sticky Compare Bar -->
+<div class="sticky-compare-bar" id="compareBar">
+    <span class="compare-count" id="compareCount">0 Selected</span>
+    <button class="btn btn-secondary" onclick="clearCompare()" style="margin-top: 0; padding: 8px 20px; background: #6c757d; color: white; border: none;">
+        Clear
+    </button>
+    <button class="btn btn-primary" onclick="goToCompare()" id="compareNowBtn" style="margin-top: 0; padding: 8px 20px;">
+        Compare Now
+    </button>
+</div>
 
 <?php include 'includes/footer.php'; ?>

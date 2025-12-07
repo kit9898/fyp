@@ -137,11 +137,12 @@ if (empty($default_address['shipping_name'])) {
 
     <!-- Shipping & Payment Form -->
     <div class="payment-details-box content-box">
-        <form action="cart_process.php" method="post">
+        <form action="cart_process.php" method="post" id="checkoutForm">
             <input type="hidden" name="action" value="checkout">
+            <input type="hidden" name="payment_method" value="credit_card">
             
             <!-- Shipping Address Section -->
-            <h3>Shipping Address</h3>
+            <h3>📦 Shipping Address</h3>
             <div class="form-group">
                 <label for="shipping_name">Full Name *</label>
                 <input type="text" id="shipping_name" name="shipping_name" placeholder="John Doe" 
@@ -189,39 +190,110 @@ if (empty($default_address['shipping_name'])) {
             <hr style="margin: 2rem 0;">
             
             <!-- Payment Details Section -->
-            <h3>Payment Details</h3>
-            <p style="font-size: 0.9em; color: #6c757d; margin-bottom: 1.5rem;">This is a simulated payment form. Please do not enter real credit card details.</p>
+            <h3>💳 Payment Details</h3>
+            <p style="font-size: 0.9em; color: #6c757d; margin-bottom: 1.5rem;">
+                <strong>Note:</strong> This is a simulated payment form. Please do not enter real credit card details.
+            </p>
             
             <div class="form-group">
                 <label>Payment Method</label>
                 <div class="payment-method-selector">
-                    <label><input type="radio" name="payment_method" value="credit_card" checked> Credit Card</label>
-                    <label><input type="radio" name="payment_method" value="paypal"> PayPal</label>
+                    <label class="payment-option selected">
+                        <input type="radio" name="payment_method_display" value="credit_card" checked disabled>
+                        <span class="payment-icon">💳</span>
+                        <span>Credit Card</span>
+                    </label>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="cardholder_name">Cardholder Name</label>
-                <input type="text" id="cardholder_name" name="cardholder_name" value="Test User" required>
+                <label for="cardholder_name">Cardholder Name *</label>
+                <input type="text" id="cardholder_name" name="cardholder_name" 
+                       placeholder="John Doe" value="Test User" required>
             </div>
+            
             <div class="form-group">
-                <label for="card_number">Card Number</label>
-                <input type="text" id="card_number" name="card_number" placeholder="XXXX XXXX XXXX XXXX" value="4242424242424242" required>
+                <label for="card_number">Card Number *</label>
+                <input type="text" id="card_number" name="card_number" 
+                       placeholder="1234 5678 9012 3456" 
+                       value="4242424242424242" 
+                       maxlength="19" 
+                       required>
+                <small style="color: #6c757d;">Test card: 4242 4242 4242 4242</small>
             </div>
+            
             <div class="form-row">
                 <div class="form-group">
-                    <label for="expiry_date">Expiry Date</label>
-                    <input type="text" id="expiry_date" name="expiry_date" placeholder="MM/YY" value="12/26" required>
+                    <label for="expiry_date">Expiry Date *</label>
+                    <input type="text" id="expiry_date" name="expiry_date" 
+                           placeholder="MM/YY" 
+                           value="12/26" 
+                           maxlength="5" 
+                           required>
                 </div>
                 <div class="form-group">
-                    <label for="cvc">CVC</label>
-                    <input type="text" id="cvc" name="cvc" placeholder="123" value="123" required>
+                    <label for="cvc">CVC *</label>
+                    <input type="text" id="cvc" name="cvc" 
+                           placeholder="123" 
+                           value="123" 
+                           maxlength="4" 
+                           required>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">Pay $<?php echo number_format($grand_total, 2); ?></button>
+            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1.5rem;">
+                🔒 Pay $<?php echo number_format($grand_total, 2); ?>
+            </button>
         </form>
     </div>
 </div>
+
+<script>
+// Card number formatting
+document.getElementById('card_number').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '');
+    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+    e.target.value = formattedValue;
+});
+
+// Expiry date formatting
+document.getElementById('expiry_date').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    }
+    e.target.value = value;
+});
+
+// Form validation
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    const cardNumber = document.getElementById('card_number').value.replace(/\s/g, '');
+    const expiryDate = document.getElementById('expiry_date').value;
+    const cvc = document.getElementById('cvc').value;
+    
+    // Validate card number (basic check)
+    if (cardNumber.length < 13 || cardNumber.length > 19) {
+        e.preventDefault();
+        alert('Please enter a valid card number');
+        return false;
+    }
+    
+    // Validate expiry date
+    if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+        e.preventDefault();
+        alert('Please enter expiry date in MM/YY format');
+        return false;
+    }
+    
+    // Validate CVC
+    if (cvc.length < 3 || cvc.length > 4) {
+        e.preventDefault();
+        alert('Please enter a valid CVC (3-4 digits)');
+        return false;
+    }
+    
+    return true;
+});
+</script>
 
 <?php include 'includes/footer.php'; ?>

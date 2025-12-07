@@ -5,11 +5,15 @@ Machine Learning-based product recommendations using collaborative and content-b
 
 import pandas as pd
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import StandardScaler
+from sklearn.metrics.pairwise import cosine_similarity, linear_kernel
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from scipy.sparse import csr_matrix
 from sklearn.neighbors import NearestNeighbors
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import TruncatedSVD
+from sklearn.decomposition import TruncatedSVD
 import mysql.connector
+from sqlalchemy import create_engine
 from config import Config
 import pickle
 import os
@@ -24,18 +28,18 @@ class RecommendationEngine:
         self.conn = None
         self.products_df = None
         self.ratings_df = None
+        self.orders_df = None
         self.product_features = None
         self.similarity_matrix = None
+        self.svd_model = None
+        self.user_features = None
         
     def connect_db(self):
         """Establish database connection"""
         try:
-            self.conn = mysql.connector.connect(
-                host=self.config.DB_HOST,
-                user=self.config.DB_USER,
-                password=self.config.DB_PASSWORD,
-                database=self.config.DB_NAME
-            )
+            # Create SQLAlchemy engine
+            connection_string = f"mysql+mysqlconnector://{self.config.DB_USER}:{self.config.DB_PASSWORD}@{self.config.DB_HOST}/{self.config.DB_NAME}"
+            self.conn = create_engine(connection_string)
             return True
         except Exception as e:
             print(f"Database connection error: {e}")
@@ -43,8 +47,8 @@ class RecommendationEngine:
     
     def close_db(self):
         """Close database connection"""
-        if self.conn and self.conn.is_connected():
-            self.conn.close()
+        if self.conn:
+            self.conn.dispose()
     
     def load_data(self):
         """Load product and rating data from database"""
@@ -68,6 +72,14 @@ class RecommendationEngine:
             """
             self.ratings_df = pd.read_sql(ratings_query, self.conn)
             
+            # Load orders for weighted interactions
+            orders_query = """
+                SELECT o.user_id, oi.product_id
+                FROM order_items oi
+                JOIN orders o ON oi.order_id = o.order_id
+            """
+            self.orders_df = pd.read_sql(orders_query, self.conn)
+            
             self.close_db()
             return True
         except Exception as e:
@@ -76,41 +88,41 @@ class RecommendationEngine:
             return False
     
     def prepare_content_features(self):
-        """Prepare product features for content-based filtering"""
+        """Prepare product features using TF-IDF and metadata"""
         if self.products_df is None:
             return False
         
-        # Create feature matrix
-        features = pd.DataFrame()
-        
-        # Numerical features (normalized)
-        scaler = StandardScaler()
-        numerical_cols = ['price', 'ram_gb', 'storage_gb', 'display_size']
-        features[numerical_cols] = scaler.fit_transform(
-            self.products_df[numerical_cols].fillna(0)
+        # 1. Create Metadata Soup (Text representation)
+        # Combine important text fields
+        self.products_df['soup'] = (
+            self.products_df['primary_use_case'] + " " + 
+            self.products_df['brand'] + " " + 
+            self.products_df['cpu'] + " " + 
+            self.products_df['gpu'] + " " +
+            self.products_df['product_name']
         )
         
-        # Categorical features (one-hot encoding)
-        features = pd.concat([
-            features,
-            pd.get_dummies(self.products_df['brand'], prefix='brand'),
-            pd.get_dummies(self.products_df['primary_use_case'], prefix='use_case')
-        ], axis=1)
+        # 2. TF-IDF Vectorization
+        tfidf = TfidfVectorizer(stop_words='english')
+        tfidf_matrix = tfidf.fit_transform(self.products_df['soup'].fillna(''))
         
-        # Text features (simple encoding for CPU/GPU)
-        # Check for high-end components
-        features['has_high_end_cpu'] = self.products_df['cpu'].str.contains(
-            'i7|i9|Ryzen 7|Ryzen 9', case=False, na=False
-        ).astype(int)
+        # 3. Numerical Features (Price, RAM, Storage)
+        scaler = MinMaxScaler()
+        numerical_features = scaler.fit_transform(
+            self.products_df[['price', 'ram_gb', 'storage_gb', 'display_size']].fillna(0)
+        )
         
-        features['has_dedicated_gpu'] = self.products_df['gpu'].str.contains(
-            'RTX|GTX|RX|Radeon', case=False, na=False
-        ).astype(int)
+        # 4. Combine Features? 
+        # Actually, for content similarity, TF-IDF on rich text is often better than mixing scales.
+        # But let's compute similarity on TF-IDF primarily, and boost with numerical closeness?
+        # For simplicity and robustness, let's stick to a pure content similarity based on the "soup" 
+        # which now includes specs as text. This captures "Gaming" + "RTX 4060" well.
         
-        self.product_features = features
+        # Calculate Cosine Similarity Matrix
+        self.similarity_matrix = linear_kernel(tfidf_matrix, tfidf_matrix)
         
-        # Calculate similarity matrix
-        self.similarity_matrix = cosine_similarity(features)
+        # Store features for potential other uses
+        self.product_features = tfidf_matrix
         
         return True
     
@@ -148,84 +160,96 @@ class RecommendationEngine:
             return []
     
     def get_collaborative_recommendations(self, user_id, n=10):
-        """Get recommendations using collaborative filtering"""
-        if self.ratings_df is None or len(self.ratings_df) < self.config.MIN_RATINGS_FOR_COLLABORATIVE:
+        """Get recommendations using SVD (Matrix Factorization)"""
+        if self.ratings_df is None:
             return []
-        
-        try:
-            # Create user-item matrix
-            user_item_matrix = self.ratings_df.pivot_table(
-                index='user_id',
-                columns='product_id',
-                values='rating',
-                fill_value=0
-            )
             
-            # Check if user exists
+        try:
+            # 1. Prepare Interaction Matrix
+            # Combine ratings and orders
+            interactions = self.ratings_df.copy()
+            interactions['weight'] = 1.0 # Base weight for ratings
+            
+            if self.orders_df is not None and not self.orders_df.empty:
+                orders = self.orders_df.copy()
+                orders['weight'] = 2.0 # Higher weight for purchases
+                orders['rating'] = 1 # Implicit positive rating
+                
+                # Combine
+                interactions = pd.concat([
+                    interactions[['user_id', 'product_id', 'weight']], 
+                    orders[['user_id', 'product_id', 'weight']]
+                ])
+            
+            # Aggregate weights (if user rated AND bought)
+            interactions = interactions.groupby(['user_id', 'product_id'])['weight'].sum().reset_index()
+            
+            # Create Pivot Table
+            user_item_matrix = interactions.pivot(
+                index='user_id', 
+                columns='product_id', 
+                values='weight'
+            ).fillna(0)
+            
             if user_id not in user_item_matrix.index:
                 return []
-            
-            # Convert to sparse matrix for efficiency
-            sparse_matrix = csr_matrix(user_item_matrix.values)
-            
-            # Use KNN for finding similar users
-            model_knn = NearestNeighbors(metric='cosine', algorithm='brute', n_neighbors=min(10, len(user_item_matrix)))
-            model_knn.fit(sparse_matrix)
-            
-            # Get user index
-            user_idx = user_item_matrix.index.get_loc(user_id)
-            
-            # Find similar users
-            distances, indices = model_knn.kneighbors(
-                user_item_matrix.iloc[user_idx, :].values.reshape(1, -1),
-                n_neighbors=min(6, len(user_item_matrix))
-            )
-            
-            # Get products liked by similar users
-            similar_users = indices.flatten()[1:]  # Exclude the user itself
-            
-            # Aggregate ratings from similar users
-            recommendations = {}
-            for similar_user_idx in similar_users:
-                similar_user_id = user_item_matrix.index[similar_user_idx]
-                similar_user_ratings = self.ratings_df[
-                    (self.ratings_df['user_id'] == similar_user_id) & 
-                    (self.ratings_df['rating'] == 1)
-                ]
                 
-                for _, row in similar_user_ratings.iterrows():
-                    product_id = row['product_id']
-                    # Don't recommend products the user has already rated
-                    user_rated = self.ratings_df[
-                        (self.ratings_df['user_id'] == user_id) & 
-                        (self.ratings_df['product_id'] == product_id)
-                    ]
-                    
-                    if len(user_rated) == 0:
-                        if product_id not in recommendations:
-                            recommendations[product_id] = 0
-                        recommendations[product_id] += 1
+            # 2. Apply SVD (Matrix Factorization)
+            # Only if we have enough data
+            if len(user_item_matrix) < 5:
+                # Fallback to simple popularity if not enough users
+                return []
+                
+            X = csr_matrix(user_item_matrix.values)
             
-            # Sort by frequency
-            sorted_recommendations = sorted(
-                recommendations.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )[:n]
+            # Number of latent factors
+            n_components = min(20, len(user_item_matrix) - 1)
+            svd = TruncatedSVD(n_components=n_components, random_state=42)
+            user_factors = svd.fit_transform(X)
+            item_factors = svd.components_
             
-            # Normalize scores
-            max_score = max([score for _, score in sorted_recommendations]) if sorted_recommendations else 1
+            # 3. Predict Scores
+            # Reconstruct matrix: U * Sigma * Vt
+            predicted_ratings = np.dot(user_factors, item_factors)
             
-            return [
-                {
-                    'product_id': int(pid),
-                    'score': float(score / max_score),
-                    'method': 'collaborative'
-                }
-                for pid, score in sorted_recommendations
-            ]
+            # Get user's row index
+            user_idx = user_item_matrix.index.get_loc(user_id)
+            user_predictions = predicted_ratings[user_idx]
+            
+            # 4. Filter and Sort
+            # Get products user hasn't interacted with? 
+            # Actually, for "For You", we might want to recommend things they viewed but didn't buy too.
+            # But let's exclude things they already have a high weight for (bought).
+            
+            user_actual = user_item_matrix.iloc[user_idx]
+            
+            recommendations = []
+            for product_idx, score in enumerate(user_predictions):
+                product_id = user_item_matrix.columns[product_idx]
+                actual_weight = user_actual.iloc[product_idx]
+                
+                # If they haven't bought it (weight < 2), recommend it
+                if actual_weight < 2.0:
+                    recommendations.append({
+                        'product_id': int(product_id),
+                        'score': float(score),
+                        'method': 'collaborative_svd'
+                    })
+            
+            # Sort by score
+            recommendations.sort(key=lambda x: x['score'], reverse=True)
+            
+            # Normalize scores to 0-1 range for hybrid mixing
+            if recommendations:
+                max_score = recommendations[0]['score']
+                if max_score > 0:
+                    for rec in recommendations:
+                        rec['score'] /= max_score
+            
+            return recommendations[:n]
+
         except Exception as e:
-            print(f"Collaborative filtering error: {e}")
+            print(f"SVD Collaborative filtering error: {e}")
             return []
     
     def get_hybrid_recommendations(self, user_id, use_case=None, n=10):

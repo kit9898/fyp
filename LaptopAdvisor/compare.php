@@ -24,18 +24,45 @@ if (isset($_GET['ids'])) {
     }
 }
 
+// --- Category Detection Logic ---
+$is_accessory_mode = false;
+$mixed_categories = false;
+$current_category = null;
+
+if (!empty($products)) {
+    foreach ($products as $product) {
+        // Default to 'laptop' if category is null or empty
+        $cat = !empty($product['product_category']) ? $product['product_category'] : 'laptop';
+        
+        if ($current_category === null) {
+            $current_category = $cat;
+        } elseif ($current_category !== $cat) {
+            $mixed_categories = true;
+            break;
+        }
+    }
+    
+    if (!$mixed_categories && $current_category !== 'laptop') {
+        $is_accessory_mode = true;
+    }
+}
+
 // --- Enhanced logic to find the best specs for highlighting ---
 $best_specs = [];
 $worst_specs = [];
+$best_specs = [];
+$worst_specs = [];
 $performance_scores = [];
+$score_breakdowns = []; // Store detailed breakdown
 
-if (count($products) > 1) {
+if (count($products) > 1 && !$mixed_categories) {
     // Price (lower is better)
     $prices = array_column($products, 'price');
     $best_specs['price'] = min($prices);
     $worst_specs['price'] = max($prices);
     
-    // RAM (higher is better)
+    if (!$is_accessory_mode) {
+        // RAM (higher is better)
     $best_specs['ram_gb'] = max(array_column($products, 'ram_gb'));
     $worst_specs['ram_gb'] = min(array_column($products, 'ram_gb'));
     
@@ -92,10 +119,21 @@ if (count($products) > 1) {
         else $score += 3;
         
         $performance_scores[$index] = round($score);
+        
+        // Store breakdown
+        $score_breakdowns[$index] = [
+            'cpu' => min(35, $cpu_normalized),
+            'gpu' => min(40, $gpu_normalized),
+            'ram' => ($ram >= 32 ? 15 : ($ram >= 16 ? 12 : ($ram >= 8 ? 8 : 3))),
+            'storage' => ($storage >= 2000 ? 10 : ($storage >= 1000 ? 8 : ($storage >= 512 ? 6 : 3))),
+            'cpu_raw' => $cpu_benchmark,
+            'gpu_raw' => $gpu_benchmark
+        ];
     }
     
     $best_specs['performance'] = max($performance_scores);
     $worst_specs['performance'] = min($performance_scores);
+    }
 }
 
 // Helper function to get use case icon
@@ -181,13 +219,17 @@ function getGPULabel($score) {
 }
 
 .view-btn {
-    padding: 8px 16px;
-    background: #f8f9fa;
-    border: 2px solid #e9ecef;
+    padding: 10px 20px;
+    background: white;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s;
-    font-weight: 500;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .view-btn:hover,
@@ -217,12 +259,18 @@ function getGPULabel($score) {
 
 .compare-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate; /* Changed for better border control */
+    border-spacing: 0;
     font-size: 0.95rem;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .compare-table thead {
     background: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 20; /* Higher than first column */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .compare-table th {
@@ -238,12 +286,20 @@ function getGPULabel($score) {
     width: 180px;
     position: sticky;
     left: 0;
-    background: #f8f9fa;
+    background: rgba(248, 249, 250, 0.95);
+    backdrop-filter: blur(8px);
     z-index: 10;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
 }
 
 .product-header-cell {
     min-width: 200px;
+    position: relative; /* Fix for absolute positioning of winner badge */
+    transition: all 0.3s ease;
+}
+
+.product-header-cell:hover {
+    background: #f1f5f9;
 }
 
 .product-header-img {
@@ -257,10 +313,11 @@ function getGPULabel($score) {
 }
 
 .product-header-cell h3 {
-    font-size: 1rem;
-    margin: 8px 0 5px 0;
-    color: #1a1a1a;
-    line-height: 1.3;
+    font-size: 1.1rem;
+    margin: 12px 0 5px 0;
+    color: #111827;
+    line-height: 1.4;
+    font-weight: 700;
 }
 
 .product-header-cell .brand {
@@ -422,16 +479,19 @@ function getGPULabel($score) {
 
 .winner-badge {
     position: absolute;
-    top: 15px;
-    right: 15px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 25px;
-    font-weight: 700;
-    font-size: 0.85rem;
+    top: -10px;
+    right: 10px;
+    background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
+    color: #8a6d3b;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 800;
+    font-size: 0.75rem;
     z-index: 10;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 4px 15px rgba(253, 185, 49, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 2px solid white;
 }
 
 .compare-card img {
@@ -655,6 +715,46 @@ function getGPULabel($score) {
     z-index: 100;
     margin-bottom: 5px;
 }
+
+/* Visual Bars */
+.spec-bar-container {
+    width: 100%;
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.spec-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+.remove-product-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    z-index: 15; /* Above winner badge if needed, but winner badge is top -10 */
+}
+
+.remove-product-btn:hover {
+    background: #ef4444;
+    color: white;
+}
 </style>
 
 <div class="comparison-header">
@@ -662,7 +762,15 @@ function getGPULabel($score) {
     <p>Compare specifications side-by-side to make an informed decision</p>
 </div>
 
-<?php if (count($products) >= 2): ?>
+<?php if ($mixed_categories): ?>
+    <div class="empty-comparison" style="padding: 40px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 12px; color: #856404;">
+        <div class="empty-comparison-icon" style="font-size: 3rem; margin-bottom: 10px;">⚠️</div>
+        <h2 style="color: #856404;">Mixed Categories Selected</h2>
+        <p style="color: #856404;">You are trying to compare different types of products (e.g., a Laptop and a Mouse).<br>Please select products from the same category for a meaningful comparison.</p>
+        <a href="products.php" class="btn btn-primary" style="margin-top: 15px;">Return to Products</a>
+    </div>
+<?php elseif (count($products) >= 2): ?>
+    <!-- Quick Statistics -->
     <!-- Quick Statistics -->
     <div class="quick-stats">
         <div class="stat-card">
@@ -672,6 +780,7 @@ function getGPULabel($score) {
                 $<?php echo number_format(min($prices), 0); ?> - $<?php echo number_format(max($prices), 0); ?>
             </div>
         </div>
+        <?php if (!$is_accessory_mode): ?>
         <div class="stat-card">
             <div class="stat-card-icon">💾</div>
             <div class="stat-card-label">RAM Range</div>
@@ -693,9 +802,11 @@ function getGPULabel($score) {
                 <?php echo $worst_specs['display_size']; ?>" - <?php echo $best_specs['display_size']; ?>"
             </div>
         </div>
+        <?php endif; ?>
     </div>
 
     <!-- Winner Summary -->
+    <?php if (!$is_accessory_mode): ?>
     <?php 
     $winner_index = array_search($best_specs['performance'], $performance_scores);
     $winner = $products[$winner_index];
@@ -707,18 +818,23 @@ function getGPULabel($score) {
         </p>
         <p>Performance Score: <?php echo $performance_scores[$winner_index]; ?>/100</p>
     </div>
+    <?php endif; ?>
 
     <!-- Comparison Controls -->
     <div class="comparison-controls">
         <div class="view-toggle">
-            <button class="view-btn active" onclick="switchView('table')" id="tableViewBtn">
-                📊 Table View
+            <button class="view-btn active" onclick="switchView('table')" id="btn-table">
+                <i class="fas fa-table"></i> Table View
             </button>
-            <button class="view-btn" onclick="switchView('cards')" id="cardsViewBtn">
-                🎴 Card View
-        </button>
+            <button class="view-btn" onclick="switchView('card')" id="btn-card">
+                <i class="fas fa-th-large"></i> Card View
+            </button>
         </div>
+        
         <div class="comparison-actions">
+            <button class="view-btn" onclick="toggleDifferences()" id="btn-diff">
+                <i class="fas fa-adjust"></i> Highlight Differences
+            </button>
             <button class="btn" onclick="window.print()">
                 🖨️ Print
             </button>
@@ -743,9 +859,12 @@ function getGPULabel($score) {
                         <th>Specification</th>
                         <?php foreach ($products as $index => $product): ?>
                             <th class="product-header-cell">
-                                <?php if ($index === $winner_index): ?>
+                                <?php if (!$is_accessory_mode && $index === $winner_index): ?>
                                     <span class="winner-badge">🏆 Winner</span>
                                 <?php endif; ?>
+                                <button class="remove-product-btn" onclick="removeProduct(<?php echo $product['product_id']; ?>)" title="Remove from comparison">
+                                    <i class="fas fa-times"></i>
+                                </button>
                                 <img class="product-header-img" 
                                      src="<?php echo !empty($product['image_url']) ? htmlspecialchars($product['image_url']) : 'https://via.placeholder.com/180'; ?>" 
                                      alt="<?php echo htmlspecialchars($product['product_name']); ?>">
@@ -757,6 +876,7 @@ function getGPULabel($score) {
                 </thead>
                 <tbody>
                     <!-- Performance Score -->
+                    <?php if (!$is_accessory_mode): ?>
                     <tr>
                         <td>
                             <span class="tooltip-trigger" data-tooltip="Overall performance based on RAM, GPU, and storage">
@@ -776,9 +896,13 @@ function getGPULabel($score) {
                                 <div class="performance-badge <?php echo $badge_class; ?>">
                                     <?php echo $badge_text; ?>
                                 </div>
+                                <button class="btn-link" onclick="showScoreBreakdown(<?php echo $index; ?>)" style="display: block; margin: 5px auto 0; font-size: 0.75rem; color: #666; text-decoration: underline; background: none; border: none; cursor: pointer;">
+                                    View Breakdown
+                                </button>
                             </td>
                         <?php endforeach; ?>
                     </tr>
+                    <?php endif; ?>
 
                     <!-- Price -->
                     <tr>
@@ -792,6 +916,7 @@ function getGPULabel($score) {
                     </tr>
 
                     <!-- Value Rating -->
+                    <?php if (!$is_accessory_mode): ?>
                     <tr>
                         <td>💎 Value Rating</td>
                         <?php foreach ($products as $index => $product): ?>
@@ -810,14 +935,19 @@ function getGPULabel($score) {
                             </td>
                         <?php endforeach; ?>
                     </tr>
+                    <?php endif; ?>
 
                     <!-- RAM -->
+                    <?php if (!$is_accessory_mode): ?>
                     <tr>
                         <td>💾 RAM</td>
                         <?php foreach ($products as $product): ?>
                             <td class="<?php if ($product['ram_gb'] == $best_specs['ram_gb']) echo 'highlight-best'; 
                                              elseif ($product['ram_gb'] == $worst_specs['ram_gb']) echo 'highlight-worst'; ?>">
                                 <strong><?php echo htmlspecialchars($product['ram_gb']); ?> GB</strong>
+                                <div class="spec-bar-container">
+                                    <div class="spec-bar-fill" style="width: <?php echo min(100, ($product['ram_gb'] / 64) * 100); ?>%; background: #059669;"></div>
+                                </div>
                             </td>
                         <?php endforeach; ?>
                     </tr>
@@ -832,6 +962,9 @@ function getGPULabel($score) {
                                 <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">
                                     <?php echo htmlspecialchars($product['storage_type']); ?>
                                 </div>
+                                <div class="spec-bar-container">
+                                    <div class="spec-bar-fill" style="width: <?php echo min(100, ($product['storage_gb'] / 4096) * 100); ?>%; background: #d97706;"></div>
+                                </div>
                             </td>
                         <?php endforeach; ?>
                     </tr>
@@ -843,6 +976,9 @@ function getGPULabel($score) {
                             <td class="<?php if ($product['display_size'] == $best_specs['display_size']) echo 'highlight-best'; 
                                              elseif ($product['display_size'] == $worst_specs['display_size']) echo 'highlight-worst'; ?>">
                                 <strong><?php echo htmlspecialchars($product['display_size']); ?>"</strong>
+                                <div class="spec-bar-container">
+                                    <div class="spec-bar-fill" style="width: <?php echo min(100, ($product['display_size'] / 18) * 100); ?>%; background: #3b82f6;"></div>
+                                </div>
                             </td>
                         <?php endforeach; ?>
                     </tr>
@@ -888,6 +1024,7 @@ function getGPULabel($score) {
                             </td>
                         <?php endforeach; ?>
                     </tr>
+                    <?php endif; ?>
 
                     <!-- Use Case -->
                     <tr>
@@ -909,6 +1046,20 @@ function getGPULabel($score) {
                             <td><?php echo htmlspecialchars($product['brand']); ?></td>
                         <?php endforeach; ?>
                     </tr>
+
+                    <!-- Description (For Accessories) -->
+                    <?php if ($is_accessory_mode): ?>
+                    <tr>
+                        <td>📝 Description</td>
+                        <?php foreach ($products as $product): ?>
+                            <td>
+                                <div style="font-size: 0.9rem; color: #555; line-height: 1.5;">
+                                    <?php echo htmlspecialchars($product['description']); ?>
+                                </div>
+                            </td>
+                        <?php endforeach; ?>
+                    </tr>
+                    <?php endif; ?>
 
                     <!-- Actions -->
                     <tr>
@@ -940,8 +1091,8 @@ function getGPULabel($score) {
     <!-- Card View -->
     <div class="compare-cards" id="cardsView">
         <?php foreach ($products as $index => $product): ?>
-            <div class="compare-card <?php if ($index === $winner_index) echo 'winner'; ?>">
-                <?php if ($index === $winner_index): ?>
+            <div class="compare-card <?php if (!$is_accessory_mode && $index === $winner_index) echo 'winner'; ?>">
+                <?php if (!$is_accessory_mode && $index === $winner_index): ?>
                     <div class="winner-badge">🏆 Best Overall</div>
                 <?php endif; ?>
                 
@@ -959,18 +1110,21 @@ function getGPULabel($score) {
                     </div>
                     
                     <?php 
-                    $value_rating = getValueRating($product['price'], $performance_scores[$index]);
-                    $badge_class = '';
-                    if ($value_rating == 'Excellent Value') $badge_class = 'value-excellent';
-                    elseif ($value_rating == 'Good Value') $badge_class = 'value-good';
-                    elseif ($value_rating == 'Fair Value') $badge_class = 'value-fair';
-                    else $badge_class = 'value-premium';
-                    ?>
-                    <span class="value-badge <?php echo $badge_class; ?>">
-                        <?php echo $value_rating; ?>
-                    </span>
+                    if (!$is_accessory_mode) {
+                        $value_rating = getValueRating($product['price'], $performance_scores[$index]);
+                        $badge_class = '';
+                        if ($value_rating == 'Excellent Value') $badge_class = 'value-excellent';
+                        elseif ($value_rating == 'Good Value') $badge_class = 'value-good';
+                        elseif ($value_rating == 'Fair Value') $badge_class = 'value-fair';
+                        else $badge_class = 'value-premium';
+                        ?>
+                        <span class="value-badge <?php echo $badge_class; ?>">
+                            <?php echo $value_rating; ?>
+                        </span>
+                    <?php } ?>
                     
                     <div class="spec-comparison">
+                        <?php if (!$is_accessory_mode): ?>
                         <div class="spec-row">
                             <span class="spec-label">⚡ Performance</span>
                             <span class="spec-value <?php if ($performance_scores[$index] == $best_specs['performance']) echo 'best'; ?>">
@@ -1012,6 +1166,14 @@ function getGPULabel($score) {
                                 <?php echo htmlspecialchars($product['gpu']); ?>
                             </span>
                         </div>
+                        <?php else: ?>
+                        <div class="spec-row">
+                            <span class="spec-label">📝 Description</span>
+                            <span class="spec-value" style="font-size: 0.85rem; font-weight: normal;">
+                                <?php echo htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?>
+                            </span>
+                        </div>
+                        <?php endif; ?>
                         
                         <div class="spec-row">
                             <span class="spec-label">🎯 Best For</span>
@@ -1066,6 +1228,7 @@ function getGPULabel($score) {
             </div>
             
             <!-- Best Performance -->
+            <?php if (!$is_accessory_mode): ?>
             <div style="padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #3b82f6;">
                 <h4 style="color: #3b82f6; margin: 0 0 10px 0;">⚡ Best Performance</h4>
                 <p style="margin: 0; font-size: 0.95rem; color: #495057;">
@@ -1105,6 +1268,7 @@ function getGPULabel($score) {
                 }
                 ?>
             </div>
+            <?php endif; ?>
         </div>
         
         <!-- Price Difference Analysis -->
@@ -1433,6 +1597,176 @@ printStyles.textContent = `
     }
 `;
 document.head.appendChild(printStyles);
+
+// Score Breakdown Modal
+function showScoreBreakdown(index) {
+    const products = <?php echo json_encode($products); ?>;
+    const breakdowns = <?php echo json_encode($score_breakdowns); ?>;
+    const product = products[index];
+    const breakdown = breakdowns[index];
+    
+    if (!product || !breakdown) return;
+    
+    // Create modal
+    const modalId = 'breakdownModal';
+    let modal = document.getElementById(modalId);
+    
+    if (modal) modal.remove();
+    
+    modal = document.createElement('div');
+    modal.id = modalId;
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+        z-index: 10000; animation: fadeIn 0.2s ease;
+    `;
+    
+    const content = `
+        <div style="background: white; padding: 25px; border-radius: 15px; width: 90%; max-width: 450px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <button onclick="document.getElementById('${modalId}').remove()" style="position: absolute; top: 15px; right: 15px; border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            
+            <h3 style="margin: 0 0 5px 0; color: #1a1a1a;">${product.product_name}</h3>
+            <p style="margin: 0 0 20px 0; color: #666; font-size: 0.9rem;">Performance Score Breakdown</p>
+            
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: #f0f9ff; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold; color: #0284c7; border: 4px solid #bae6fd;">
+                    ${Math.round(breakdown.cpu + breakdown.gpu + breakdown.ram + breakdown.storage)}
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- CPU -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #333;">🔧 CPU</div>
+                        <div style="font-size: 0.75rem; color: #666;">Benchmark: ${Math.round(breakdown.cpu_raw).toLocaleString()}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 700; color: #0284c7;">${breakdown.cpu.toFixed(1)} / 35</div>
+                        <div style="width: 100px; height: 6px; background: #e0e0e0; border-radius: 3px; margin-top: 4px; overflow: hidden;">
+                            <div style="width: ${(breakdown.cpu/35)*100}%; height: 100%; background: #0284c7;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- GPU -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #333;">🎮 GPU</div>
+                        <div style="font-size: 0.75rem; color: #666;">Benchmark: ${Math.round(breakdown.gpu_raw).toLocaleString()}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 700; color: #7c3aed;">${breakdown.gpu.toFixed(1)} / 40</div>
+                        <div style="width: 100px; height: 6px; background: #e0e0e0; border-radius: 3px; margin-top: 4px; overflow: hidden;">
+                            <div style="width: ${(breakdown.gpu/40)*100}%; height: 100%; background: #7c3aed;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- RAM -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #333;">💾 RAM</div>
+                        <div style="font-size: 0.75rem; color: #666;">${product.ram_gb} GB</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 700; color: #059669;">${breakdown.ram} / 15</div>
+                        <div style="width: 100px; height: 6px; background: #e0e0e0; border-radius: 3px; margin-top: 4px; overflow: hidden;">
+                            <div style="width: ${(breakdown.ram/15)*100}%; height: 100%; background: #059669;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Storage -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #333;">💿 Storage</div>
+                        <div style="font-size: 0.75rem; color: #666;">${product.storage_gb} GB</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 700; color: #d97706;">${breakdown.storage} / 10</div>
+                        <div style="width: 100px; height: 6px; background: #e0e0e0; border-radius: 3px; margin-top: 4px; overflow: hidden;">
+                            <div style="width: ${(breakdown.storage/10)*100}%; height: 100%; background: #d97706;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; font-size: 0.8rem; color: #888; text-align: center;">
+                Scores are based on synthetic benchmarks and hardware specifications.
+            </div>
+        </div>
+    `;
+    
+    modal.innerHTML = content;
+    document.body.appendChild(modal);
+    
+    // Close on outside click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+// Highlight Differences Logic
+function toggleDifferences() {
+    const btn = document.getElementById('btn-diff');
+    const isActive = btn.classList.toggle('active');
+    
+    if (isActive) {
+        btn.style.background = '#e0f2fe';
+        btn.style.color = '#0284c7';
+        btn.style.borderColor = '#0284c7';
+    } else {
+        btn.style.background = 'white';
+        btn.style.color = '#64748b';
+        btn.style.borderColor = '#e2e8f0';
+    }
+    
+    const rows = document.querySelectorAll('.compare-table tbody tr');
+    
+    rows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td')).slice(1); // Skip label cell
+        if (cells.length < 2) return;
+        
+        const firstValue = cells[0].textContent.trim();
+        const allSame = cells.every(cell => cell.textContent.trim() === firstValue);
+        
+        if (isActive && allSame) {
+            row.style.display = 'none';
+        } else {
+            row.style.display = '';
+        }
+    });
+}
+
+// Remove Product Logic
+function removeProduct(productId) {
+    const urlParams = new URLSearchParams(window.location.search);
+    let ids = urlParams.get('ids');
+    
+    if (ids) {
+        let idArray = ids.split(',');
+        idArray = idArray.filter(id => id != productId);
+        
+        if (idArray.length < 2) {
+            alert('You need at least 2 products to compare.');
+            return;
+        }
+        
+        urlParams.set('ids', idArray.join(','));
+        window.location.search = urlParams.toString();
+    }
+}
+
+// Sync localStorage with URL on load
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ids = urlParams.get('ids');
+    if (ids) {
+        const idArray = ids.split(',');
+        localStorage.setItem('compare_ids', JSON.stringify(idArray));
+    }
+});
 </script>
 
 <?php include 'includes/footer.php'; ?>

@@ -100,32 +100,67 @@ $best_ram_winner = $analysis['winners']['ram'][0];
 $best_storage_winner = $analysis['winners']['storage'][0];
 
 // Generate detailed reasons
-$analysis['reasons']['ram'] = "Winner has " . max($rams) . "GB RAM, which is " . 
-    (max($rams) - min($rams)) . "GB more than the lowest option. ";
-    
+// RAM Analysis
+$ram_diff = max($rams) - min($rams);
+if ($ram_diff == 0) {
+    $analysis['reasons']['ram'] = "All compared products offer " . max($rams) . "GB of RAM. ";
+} else {
+    $analysis['reasons']['ram'] = "The winner leads with " . max($rams) . "GB RAM, providing " . 
+        $ram_diff . "GB more memory than the base option. ";
+}
+
 if (max($rams) >= 32) {
-    $analysis['reasons']['ram'] .= "Perfect for heavy multitasking, video editing, and gaming.";
+    $analysis['reasons']['ram'] .= "This capacity is professional-grade, ideal for 4K video editing, 3D rendering, and running virtual machines without slowdowns.";
 } elseif (max($rams) >= 16) {
-    $analysis['reasons']['ram'] .= "Great for productivity and moderate gaming.";
+    $analysis['reasons']['ram'] .= "This is the sweet spot for modern computing, allowing for heavy multitasking, gaming, and creative work.";
 } else {
-    $analysis['reasons']['ram'] .= "Sufficient for everyday tasks.";
+    $analysis['reasons']['ram'] .= "This amount is sufficient for web browsing, office documents, and media consumption.";
 }
 
-$analysis['reasons']['storage'] = "Winner offers " . max($storages) . "GB storage, providing " . 
-    (max($storages) - min($storages)) . "GB more space. ";
-    
+// Storage Analysis
+$storage_diff = max($storages) - min($storages);
+if ($storage_diff == 0) {
+    $analysis['reasons']['storage'] = "All products match with " . max($storages) . "GB of storage. ";
+} else {
+    $analysis['reasons']['storage'] = "The winner offers " . max($storages) . "GB storage, giving you " . 
+        $storage_diff . "GB of extra space. ";
+}
+
 if (max($storages) >= 1000) {
-    $analysis['reasons']['storage'] .= "Ample space for large media libraries and games.";
+    $analysis['reasons']['storage'] .= "This 1TB+ capacity can hold approximately 20 AAA games, 250,000 photos, or 500 hours of HD video.";
+} elseif (max($storages) >= 512) {
+    $analysis['reasons']['storage'] .= "This is a solid baseline, capable of holding the OS, key applications, and a moderate library of games or media.";
 } else {
-    $analysis['reasons']['storage'] .= "Adequate for documents and applications.";
+    $analysis['reasons']['storage'] .= "We recommend using cloud storage or an external drive for large media libraries.";
 }
 
-$analysis['reasons']['performance'] = "Highest overall performance score of " . 
-    max($analysis['scores']) . " points. This laptop excels in GPU capability, RAM capacity, and storage - making it the most powerful option for demanding tasks.";
+// Performance Analysis
+$best_perf_product = $products[$analysis['winners']['performance'][0]];
+$analysis['reasons']['performance'] = "Achieved the highest score of " . max($analysis['scores']) . "/100. ";
 
-$analysis['reasons']['value'] = "Best price at $" . number_format(min($prices), 2) . 
-    ", saving you $" . number_format(max($prices) - min($prices), 2) . 
-    " compared to the most expensive option.";
+// Identify specific strength
+$cpu_score = getCPUBenchmarkScore($best_perf_product['cpu']);
+$gpu_score = getGPUBenchmarkScore($best_perf_product['gpu']);
+
+if ($gpu_score > 15000) {
+    $analysis['reasons']['performance'] .= "Its dominance is driven by the powerful " . $best_perf_product['gpu'] . " GPU, making it a beast for gaming and 3D work.";
+} elseif ($cpu_score > 30000) {
+    $analysis['reasons']['performance'] .= "It excels primarily due to the high-end " . $best_perf_product['cpu'] . " processor, ensuring blazing fast computations.";
+} else {
+    $analysis['reasons']['performance'] .= "It offers the most balanced configuration across all specifications.";
+}
+
+// Value Analysis
+$price_diff = max($prices) - min($prices);
+$best_val_product = $products[$analysis['winners']['price'][0]];
+$perf_score = $analysis['scores'][$analysis['winners']['price'][0]];
+$price_per_point = $best_val_product['price'] / ($perf_score > 0 ? $perf_score : 1);
+
+$analysis['reasons']['value'] = "Best price point at $" . number_format(min($prices), 2) . ". ";
+if ($price_diff > 0) {
+    $analysis['reasons']['value'] .= "You save $" . number_format($price_diff, 2) . " compared to the most expensive option. ";
+}
+$analysis['reasons']['value'] .= "With a cost of roughly $" . number_format($price_per_point, 2) . " per performance point, it delivers exceptional bang for your buck.";
 
 // Simple HTML to PDF using browser print
 header('Content-Type: text/html; charset=utf-8');

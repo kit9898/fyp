@@ -1,0 +1,145 @@
+/* ML-Enhanced Recommendation Styles for Products Page */
+
+/* ML Status Banner */
+.ml-status-banner {
+    background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.ml-status-banner.offline {
+    background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.ml-status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 8px #10b981;
+}
+
+.ml-status-banner.offline .ml-status-dot {
+    background: #fbbf24;
+    box-shadow: 0 0 8px #fbbf24;
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.3); }
+}
+
+/* AI Pick Badge */
+.ai-pick-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 3px 10px rgba(139, 92, 246, 0.4);
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 3px 10px rgba(139, 92, 246, 0.4); }
+    to { box-shadow: 0 3px 20px rgba(139, 92, 246, 0.6); }
+}
+
+/* ML-Powered Card Border */
+.recommendation-card.ml-powered {
+    border: 2px solid transparent;
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%) border-box;
+}
+
+/* Rationale Box */
+.rationale-box {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 10px;
+    padding: 12px;
+    margin: 10px 20px;
+    border-left: 4px solid #8b5cf6;
+}
+
+.rationale-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #6366f1;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rationale-list {
+    font-size: 0.8rem;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.rationale-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+}
+
+.rationale-item::before {
+    content: "✓";
+    color: #10b981;
+    font-weight: bold;
+}
+
+/* Accessory Section */
+.accessory-section {
+    margin-top: 50px;
+    padding-top: 35px;
+    border-top: 2px solid #e2e8f0;
+}
+
+.accessory-section .section-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.accessory-section .section-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.accessory-section .section-subtitle {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ml-status-banner {
+        flex-direction: column;
+        text-align: center;
+    }
+}

@@ -4,8 +4,16 @@ include 'includes/header.php';
 
 // --- Multi-Step Quiz Logic ---
 $step = isset($_GET['step']) ? (int)$_GET['step'] : 0;
-$total_steps = 5; // Changed to 5 steps
+$category = $_GET['category'] ?? 'Laptop'; // Default to Laptop if not set
 
+// Determine Total Steps based on Category
+if ($category === 'Accessories') {
+    $total_steps = 3; // 1: Category, 2: Type, 3: Budget
+} else {
+    $total_steps = 6; // 1: Category, 2: Use Case, 3: Perf, 4: Screen, 5: Portability, 6: Budget
+}
+
+$accessory_type = $_GET['accessory_type'] ?? '';
 $use_case = $_GET['use_case'] ?? '';
 $performance = $_GET['performance'] ?? '';
 $screen_size = $_GET['screen_size'] ?? '';
@@ -15,667 +23,955 @@ $budget = $_GET['budget'] ?? '1500';
 $results = [];
 
 if ($step > $total_steps) {
-    // Try exact match first
-    $sql = "SELECT *, 0 as match_score FROM products WHERE 1=1";
-    $params = [];
-    $types = '';
-    $is_relaxed_search = false;
+    // --- RECOMMENDATION ENGINE ---
     
-    if (!empty($budget)) { 
-        $sql .= " AND price <= ?"; 
-        $params[] = $budget; 
-        $types .= 'd'; 
-    }
-    
-    if (!empty($use_case)) { 
-        $sql .= " AND primary_use_case = ?"; 
-        $params[] = $use_case; 
-        $types .= 's'; 
-    }
-    
-    if (!empty($performance)) {
-        if ($performance == 'light') $sql .= " AND ram_gb <= 8";
-        if ($performance == 'everyday') $sql .= " AND ram_gb >= 8 AND ram_gb <= 16";
-        if ($performance == 'heavy') $sql .= " AND ram_gb >= 16";
-    }
-    
-    if (!empty($screen_size)) {
-        if ($screen_size == 'small') $sql .= " AND display_size < 14";
-        if ($screen_size == 'medium') $sql .= " AND display_size >= 14 AND display_size < 16";
-        if ($screen_size == 'large') $sql .= " AND display_size >= 16";
-    }
-    
-    $sql .= " ORDER BY price DESC LIMIT 10";
-    $stmt = $conn->prepare($sql);
-    if (!empty($params)) { 
-        $stmt->bind_param($types, ...$params); 
-    }
-    $stmt->execute();
-    $result_set = $stmt->get_result();
-    
-    // Calculate match scores for exact matches
-    while($row = $result_set->fetch_assoc()) {
-        $match_score = 0;
+    if ($category === 'Accessories') {
+        // --- ACCESSORY LOGIC ---
+        $sql = "SELECT p.*, 
+                COALESCE(r.rating, 0) as user_rating,
+                (SELECT COUNT(*) FROM recommendation_ratings rr WHERE rr.product_id = p.product_id AND rr.rating = 1) as popularity_bonus
+                FROM products p 
+                LEFT JOIN recommendation_ratings r ON p.product_id = r.product_id AND r.user_id = ?
+                WHERE p.product_category != 'Laptop'
+        ";
         
-        // Performance match (0-30 points)
-        if ($performance == 'heavy' && $row['ram_gb'] >= 16) $match_score += 30;
-        elseif ($performance == 'everyday' && $row['ram_gb'] >= 8 && $row['ram_gb'] <= 16) $match_score += 30;
-        elseif ($performance == 'light' && $row['ram_gb'] <= 8) $match_score += 30;
-        else $match_score += 15;
-        
-        // Screen size match (0-20 points)
-        if ($screen_size == 'large' && $row['display_size'] >= 16) $match_score += 20;
-        elseif ($screen_size == 'small' && $row['display_size'] < 14) $match_score += 20;
-        elseif ($screen_size == 'medium' && $row['display_size'] >= 14 && $row['display_size'] < 16) $match_score += 20;
-        else $match_score += 10;
-        
-        // Use case match (0-30 points)
-        if ($row['primary_use_case'] == $use_case) $match_score += 30;
-        else $match_score += 10;
-        
-        // Budget efficiency (0-20 points)
-        $price_ratio = $row['price'] / $budget;
-        if ($price_ratio >= 0.8 && $price_ratio <= 1.0) $match_score += 20;
-        elseif ($price_ratio >= 0.6 && $price_ratio < 0.8) $match_score += 15;
-        else $match_score += 10;
-        
-        $row['match_score'] = $match_score;
-        $results[] = $row;
-    }
-    $stmt->close();
-    
-    // If no exact matches found, do relaxed search
-    if (empty($results)) {
-        $is_relaxed_search = true;
-        
-        // Get all products and score them by similarity
-        $sql = "SELECT * FROM products WHERE 1=1";
-        
-        // Keep budget as hard constraint (increase by 20%)
-        if (!empty($budget)) {
-            $relaxed_budget = $budget * 1.2;
-            $sql .= " AND price <= " . $relaxed_budget;
+        $params = [$_SESSION['user_id']];
+        $types = "i";
+
+        // Filter by Type (Loose match to catch 'Gaming Mouse', 'Wireless Mouse' etc.)
+        if (!empty($accessory_type)) {
+            $sql .= " AND (p.product_category LIKE ? OR p.product_name LIKE ?)";
+            $type_param = "%" . $accessory_type . "%";
+            $params[] = $type_param;
+            $params[] = $type_param;
+            $types .= "ss";
         }
-        
-        $result_set = $conn->query($sql);
+
+        // Filter by Budget
+        $sql .= " AND p.price <= ?";
+        $params[] = $budget;
+        $types .= "d";
+
+        // Sort by Rating/Popularity/Price
+        $sql .= " ORDER BY popularity_bonus DESC, user_rating DESC, p.price DESC LIMIT 6";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result_set = $stmt->get_result();
         
         while($row = $result_set->fetch_assoc()) {
-            $match_score = 0;
-            
-            // Performance match with partial credit
-            if ($performance == 'heavy') {
-                if ($row['ram_gb'] >= 16) $match_score += 30;
-                elseif ($row['ram_gb'] >= 12) $match_score += 20;
-                else $match_score += 10;
-            } elseif ($performance == 'everyday') {
-                if ($row['ram_gb'] >= 8 && $row['ram_gb'] <= 16) $match_score += 30;
-                elseif ($row['ram_gb'] >= 8 || $row['ram_gb'] >= 6) $match_score += 20;
-                else $match_score += 10;
-            } elseif ($performance == 'light') {
-                if ($row['ram_gb'] <= 8) $match_score += 30;
-                elseif ($row['ram_gb'] <= 12) $match_score += 20;
-                else $match_score += 10;
-            }
-            
-            // Screen size with tolerance
-            $display_diff = 0;
-            if ($screen_size == 'large') {
-                if ($row['display_size'] >= 16) $match_score += 20;
-                elseif ($row['display_size'] >= 15) $match_score += 15;
-                else $match_score += 8;
-            } elseif ($screen_size == 'small') {
-                if ($row['display_size'] < 14) $match_score += 20;
-                elseif ($row['display_size'] <= 14.5) $match_score += 15;
-                else $match_score += 8;
-            } elseif ($screen_size == 'medium') {
-                if ($row['display_size'] >= 14 && $row['display_size'] < 16) $match_score += 20;
-                elseif ($row['display_size'] >= 13.5 && $row['display_size'] < 16.5) $match_score += 15;
-                else $match_score += 8;
-            }
-            
-            // Use case match with partial credit
-            if ($row['primary_use_case'] == $use_case) {
-                $match_score += 30;
-            } else {
-                // Give partial credit for similar use cases
-                if (($use_case == 'Gaming' && $row['primary_use_case'] == 'Creative') ||
-                    ($use_case == 'Creative' && $row['primary_use_case'] == 'Gaming')) {
-                    $match_score += 15;
-                } elseif (($use_case == 'Business' && $row['primary_use_case'] == 'General Use') ||
-                          ($use_case == 'General Use' && $row['primary_use_case'] == 'Business')) {
-                    $match_score += 15;
-                } elseif (($use_case == 'Student' && ($row['primary_use_case'] == 'General Use' || $row['primary_use_case'] == 'Business'))) {
-                    $match_score += 15;
-                } else {
-                    $match_score += 8;
-                }
-            }
-            
-            // Budget scoring
-            $price_ratio = $row['price'] / $budget;
-            if ($price_ratio >= 0.8 && $price_ratio <= 1.0) $match_score += 20;
-            elseif ($price_ratio >= 0.6 && $price_ratio <= 1.2) $match_score += 15;
-            else $match_score += 8;
-            
-            $row['match_score'] = $match_score;
-            $row['is_alternative'] = true; // Flag as alternative match
+            // Simple score for accessories just to reuse the display logic if needed, 
+            // or we can just show them.
+            $row['total_score'] = 100; // Default match score for simple filter
             $results[] = $row;
         }
-    }
-    
-    // Sort by match score
-    usort($results, function($a, $b) {
-        return $b['match_score'] - $a['match_score'];
-    });
-    
-    // Limit to top 6
-    $results = array_slice($results, 0, 6);
-}
+        $stmt->close();
 
-// Helper function for match percentage
-function getMatchPercentage($score) {
-    return min(100, round($score));
+    } else {
+        // --- LAPTOP LOGIC (Advanced) ---
+        
+        // Base SQL
+        $sql = "SELECT p.*, 
+                COALESCE(r.rating, 0) as user_rating,
+                
+                -- 1. Use Case Score (30%)
+                (CASE 
+                    WHEN p.primary_use_case = ? THEN 30
+                    WHEN ? = 'General Use' AND p.primary_use_case IN ('Business', 'Student') THEN 20
+                    WHEN ? = 'Student' AND p.primary_use_case IN ('General Use', 'Business') THEN 20
+                    WHEN ? = 'Business' AND p.primary_use_case IN ('General Use', 'Student') THEN 20
+                    WHEN ? = 'Gaming' AND p.primary_use_case = 'Creative' THEN 15
+                    WHEN ? = 'Creative' AND p.primary_use_case = 'Gaming' THEN 15
+                    ELSE 5
+                END) as use_case_score,
+
+                -- 2. Performance Score (25%)
+                (CASE 
+                    WHEN ? = 'heavy' THEN 
+                        (CASE WHEN p.ram_gb >= 16 THEN 25 WHEN p.ram_gb >= 12 THEN 15 ELSE 0 END)
+                    WHEN ? = 'everyday' THEN 
+                        (CASE WHEN p.ram_gb >= 8 AND p.ram_gb <= 16 THEN 25 WHEN p.ram_gb >= 8 THEN 20 ELSE 5 END)
+                    WHEN ? = 'light' THEN 
+                        (CASE WHEN p.ram_gb <= 8 THEN 25 ELSE 15 END)
+                    ELSE 10
+                END) as perf_score,
+
+                -- 3. Screen/Portability Score (25%)
+                (CASE 
+                    WHEN ? = 'small' THEN 
+                        (CASE WHEN p.display_size < 14 THEN 25 WHEN p.display_size <= 14.5 THEN 15 ELSE 0 END)
+                    WHEN ? = 'medium' THEN 
+                        (CASE WHEN p.display_size >= 14 AND p.display_size < 16 THEN 25 ELSE 10 END)
+                    WHEN ? = 'large' THEN 
+                        (CASE WHEN p.display_size >= 16 THEN 25 WHEN p.display_size >= 15 THEN 15 ELSE 0 END)
+                    ELSE 10
+                END) as screen_score,
+
+                -- 4. Value Score (20%)
+                (CASE 
+                    WHEN p.price <= ? THEN 20
+                    WHEN p.price <= (? * 1.1) THEN 10
+                    ELSE 0
+                END) as value_score,
+
+                -- Popularity Bonus (Extra 5 points)
+                (SELECT COUNT(*) FROM recommendation_ratings rr WHERE rr.product_id = p.product_id AND rr.rating = 1) as popularity_bonus
+
+                FROM products p 
+                LEFT JOIN recommendation_ratings r ON p.product_id = r.product_id AND r.user_id = ?
+                WHERE 1=1
+        ";
+
+        // Params for the scoring logic
+        $params = [
+            $use_case, $use_case, $use_case, $use_case, $use_case, $use_case, // Use Case
+            $performance, $performance, $performance, // Performance
+            $screen_size, $screen_size, $screen_size, // Screen
+            $budget, $budget, // Value
+            $_SESSION['user_id'] // User ID for ratings
+        ];
+        $types = "ssssssssssssddi";
+
+        // Hard Filter: Don't show products way over budget (allow 20% flex)
+        $sql .= " AND p.price <= ?";
+        $params[] = $budget * 1.2;
+        $types .= "d";
+
+        // Category Filter
+        $sql .= " AND p.product_category = 'Laptop'";
+
+        $sql .= " ORDER BY (use_case_score + perf_score + screen_score + value_score + popularity_bonus) DESC, p.price ASC LIMIT 6";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result_set = $stmt->get_result();
+        
+        while($row = $result_set->fetch_assoc()) {
+            $row['total_score'] = $row['use_case_score'] + $row['perf_score'] + $row['screen_score'] + $row['value_score'] + $row['popularity_bonus'];
+            $results[] = $row;
+        }
+        $stmt->close();
+    }
 }
 ?>
 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-.match-badge {
-    display: inline-block;
+/* Modern Design System */
+:root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --bg-body: #f9fafb;
+    --bg-card: #ffffff;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+}
+
+body {
+    background-color: var(--bg-body);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+}
+
+.advisor-wrapper {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* Progress Bar */
+.progress-container {
+    margin-bottom: 40px;
+}
+
+.progress-track {
+    background: #e5e7eb;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background: var(--primary);
+    height: 100%;
+    transition: width 0.4s ease;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Quiz Card */
+.quiz-card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    padding: 40px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.quiz-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text-main);
+}
+
+.quiz-subtitle {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+}
+
+/* Selection Grid */
+.selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    text-align: left;
+}
+
+.option-card {
+    position: relative;
+    cursor: pointer;
+}
+
+.option-card input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.option-content {
+    background: #ffffff;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    height: 100%;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.option-card input:checked + .option-content {
+    border-color: var(--primary);
+    background: #eef2ff;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.option-icon {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+}
+
+.option-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
+.option-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+/* Range Slider */
+.range-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.range-value {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 20px;
+    display: block;
+}
+
+input[type=range] {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 28px;
+    height: 28px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: transform 0.1s;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+}
+
+/* Results Page */
+.results-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.result-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+.result-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.top-match-badge {
+    background: #10b981;
+    color: white;
+    text-align: center;
+    padding: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+}
+
+.result-img {
+    width: 100%;
+    height: 220px;
+    object-fit: contain;
+    padding: 20px;
+    background: #f9fafb;
+}
+
+.result-body {
+    padding: 24px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.match-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 600;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
-.match-excellent { background: #10b981; color: white; }
-.match-good { background: #3b82f6; color: white; }
-.match-fair { background: #f59e0b; color: white; }
 
-.recommendation-rationale {
-    background: #f8f9fa;
-    padding: 15px;
+.score-high { background: #d1fae5; color: #065f46; }
+.score-med { background: #e0e7ff; color: #3730a3; }
+
+.result-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: var(--text-main);
+}
+
+.result-brand {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+}
+
+.specs-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.spec-tag {
+    background: #f3f4f6;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.result-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-top: auto;
+    margin-bottom: 16px;
+}
+
+.btn-view {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: var(--primary);
+    color: white;
+    text-align: center;
     border-radius: 8px;
-    margin-top: 15px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s;
 }
 
-.recommendation-rationale h4 {
-    font-size: 0.95rem;
-    margin-bottom: 10px;
-    color: #333;
+.btn-view:hover {
+    background: var(--primary-hover);
 }
 
-.recommendation-rationale ul {
+.btn-restart {
+    display: inline-block;
+    margin-top: 40px;
+    padding: 12px 30px;
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-restart:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+/* Rationale Styles */
+.rationale-box {
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.rationale-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rationale-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.recommendation-rationale li {
-    padding: 6px 0;
-    font-size: 0.9rem;
-    color: #555;
+.rationale-item {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    padding-left: 16px;
     position: relative;
-    padding-left: 20px;
 }
 
-.recommendation-rationale li:before {
+.rationale-item::before {
     content: "✓";
     position: absolute;
     left: 0;
     color: #10b981;
     font-weight: bold;
 }
-
-.no-results-container {
-    text-align: center;
-    padding: 40px 20px;
-    background: #f8f9fa;
-    border-radius: 12px;
-    margin: 20px 0;
-}
-
-.alternative-recommendations {
-    margin-top: 30px;
-    padding: 20px;
-    background: #fff3cd;
-    border-radius: 8px;
-    border-left: 4px solid #ffc107;
-}
-
-.quiz-step-subtitle {
-    color: #666;
-    font-size: 0.95rem;
-    margin-top: 10px;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
 </style>
 
-<h2>Smart Laptop Advisor</h2>
-
-<div class="advisor-container">
-    <?php if ($step > $total_steps): // --- FINAL RESULTS VIEW --- ?>
-        <div class="quiz-step">
-            <h2>Your Personalized Recommendations</h2>
-            <div class="summary-box">
-                <h4>Your Preferences:</h4>
-                <ul>
-                    <li><strong>Use Case:</strong> <span><?php echo htmlspecialchars($use_case); ?></span></li>
-                    <li><strong>Performance Needs:</strong> <span><?php echo htmlspecialchars(ucfirst($performance)); ?></span></li>
-                    <li><strong>Screen Size:</strong> <span><?php echo htmlspecialchars(ucfirst($screen_size)); ?></span></li>
-                    <li><strong>Portability:</strong> <span><?php echo htmlspecialchars(ucfirst($portability)); ?></span></li>
-                    <li><strong>Budget:</strong> <span>Up to $<?php echo number_format((float)$budget, 2); ?></span></li>
-                </ul>
+<div class="advisor-wrapper">
+    
+    <?php if ($step <= $total_steps): ?>
+        <!-- PROGRESS BAR -->
+        <div class="progress-container">
+            <div class="progress-track">
+                <div class="progress-fill" style="width: <?php echo ($step / $total_steps) * 100; ?>%;"></div>
             </div>
-            
-            <?php if (!empty($results)): ?>
-                <?php if ($is_relaxed_search): ?>
-                    <div class="alternative-recommendations" style="margin: 20px auto; max-width: 700px;">
-                        <h4>⚠️ No Exact Matches Found</h4>
-                        <p style="margin: 10px 0;">We couldn't find laptops that match all your criteria perfectly, but here are the <strong>closest alternatives</strong> based on your preferences:</p>
-                    </div>
-                <?php else: ?>
-                    <p style="text-align: center; margin: 20px 0;">We found <strong><?php echo count($results); ?> perfect matches</strong> based on your criteria:</p>
-                <?php endif; ?>
-                <div class="product-grid">
-                    <?php foreach($results as $index => $row): ?>
-                        <?php
-                        // Calculate match percentage
-                        $match_percentage = getMatchPercentage($row['match_score']);
-                        
-                        // Adjust labeling for alternative matches
-                        if (isset($row['is_alternative']) && $row['is_alternative']) {
-                            // More lenient thresholds for alternatives
-                            $match_class = $match_percentage >= 70 ? 'match-good' : 
-                                          ($match_percentage >= 55 ? 'match-fair' : 'match-fair');
-                            $match_label = $match_percentage >= 70 ? 'Close Match' : 
-                                          ($match_percentage >= 55 ? 'Similar Option' : 'Alternative');
-                        } else {
-                            // Original thresholds for exact matches
-                            $match_class = $match_percentage >= 85 ? 'match-excellent' : 
-                                          ($match_percentage >= 70 ? 'match-good' : 'match-fair');
-                            $match_label = $match_percentage >= 85 ? 'Excellent Match' : 
-                                          ($match_percentage >= 70 ? 'Good Match' : 'Fair Match');
-                        }
-                        
-                        // Enhanced rationale logic
-                        $rationale_points = [];
-                        $compromises = []; // Track what doesn't match perfectly
-                        
-                        // 1. Performance match
-                        if ($performance == 'heavy' && $row['ram_gb'] >= 16) {
-                            $rationale_points[] = "<strong>{$row['ram_gb']}GB RAM</strong> handles demanding applications effortlessly";
-                        } elseif ($performance == 'heavy' && $row['ram_gb'] >= 12) {
-                            $rationale_points[] = "<strong>{$row['ram_gb']}GB RAM</strong> - close to your heavy performance needs";
-                            $compromises[] = "Slightly less RAM than ideal";
-                        } elseif ($performance == 'everyday' && $row['ram_gb'] >= 8) {
-                            $rationale_points[] = "<strong>{$row['ram_gb']}GB RAM</strong> ensures smooth multitasking";
-                        } elseif ($performance == 'light') {
-                            $rationale_points[] = "Optimized for efficient everyday computing";
-                        }
-                        
-                        // 2. Screen size match
-                        if ($screen_size == 'large' && $row['display_size'] >= 16) {
-                            $rationale_points[] = "Spacious <strong>{$row['display_size']}\" display</strong> for immersive viewing";
-                        } elseif ($screen_size == 'large' && $row['display_size'] >= 15) {
-                            $rationale_points[] = "<strong>{$row['display_size']}\" display</strong> - nearly matches your large screen preference";
-                            $compromises[] = "Slightly smaller screen";
-                        } elseif ($screen_size == 'small' && $row['display_size'] < 14) {
-                            $rationale_points[] = "Compact <strong>{$row['display_size']}\" screen</strong> for maximum portability";
-                        } elseif ($screen_size == 'small' && $row['display_size'] <= 14.5) {
-                            $rationale_points[] = "<strong>{$row['display_size']}\" display</strong> - still quite portable";
-                            $compromises[] = "Slightly larger than preferred";
-                        } elseif ($screen_size == 'medium') {
-                            $rationale_points[] = "Balanced <strong>{$row['display_size']}\" display</strong> for versatile use";
-                        }
-                        
-                        // 3. Use case specific
-                        if ($row['primary_use_case'] == $use_case) {
-                            if ($use_case == 'Gaming' && (stripos($row['gpu'], 'RTX') !== false || stripos($row['gpu'], 'RX') !== false)) {
-                                $rationale_points[] = "Powerful <strong>{$row['gpu']}</strong> delivers excellent gaming performance";
-                            } elseif ($use_case == 'Creative') {
-                                $rationale_points[] = "High-performance specs ideal for creative workflows";
-                            } elseif ($use_case == 'Business') {
-                                $rationale_points[] = "Professional design with reliable business features";
-                            } elseif ($use_case == 'Student') {
-                                $rationale_points[] = "Perfect balance of performance and value for students";
-                            } else {
-                                $rationale_points[] = "Optimized for <strong>{$row['primary_use_case']}</strong> tasks";
-                            }
-                        } else {
-                            // Different use case - explain why it might still work
-                            $rationale_points[] = "Designed for <strong>{$row['primary_use_case']}</strong> - versatile enough for your needs";
-                            $compromises[] = "Different primary use case";
-                        }
-                        
-                        // 4. Storage highlight
-                        if ($row['storage_gb'] >= 1024) {
-                            $rationale_points[] = "Generous <strong>{$row['storage_gb']}GB {$row['storage_type']}</strong> for all your files";
-                        }
-                        
-                        // 5. Value proposition
-                        $price_ratio = $row['price'] / $budget;
-                        if ($price_ratio >= 0.9 && $price_ratio <= 1.0) {
-                            $rationale_points[] = "Maximizes your budget with premium features";
-                        } elseif ($price_ratio > 1.0 && $price_ratio <= 1.2) {
-                            $rationale_points[] = "Slightly above budget but offers excellent value";
-                            $compromises[] = "Exceeds budget by $" . number_format($row['price'] - $budget, 0);
-                        } elseif ($price_ratio < 0.7) {
-                            $rationale_points[] = "Great value, leaving room in your budget";
-                        } else {
-                            $rationale_points[] = "Excellent price-to-performance ratio";
-                        }
-                        
-                        // Top pick badge
-                        $is_top_pick = $index === 0;
-                        
-                        // Limit to 3 points
-                        $rationale_points = array_slice($rationale_points, 0, 3);
-                        ?>
-                        <div class="product-card">
-                            <?php if ($is_top_pick): ?>
-                                <div style="background: #10b981; color: white; padding: 8px; text-align: center; font-weight: 600; font-size: 0.85rem;">
-                                    ⭐ <?php echo $is_relaxed_search ? 'BEST ALTERNATIVE' : 'TOP RECOMMENDATION'; ?>
-                                </div>
-                            <?php endif; ?>
-                            <a href="product_details.php?product_id=<?php echo $row['product_id']; ?>">
-                                <img src="<?php echo !empty($row['image_url']) ? htmlspecialchars($row['image_url']) : 'https://via.placeholder.com/280'; ?>" 
-                                     alt="<?php echo htmlspecialchars($row['product_name']); ?>">
-                                <div class="product-card-info">
-                                    <span class="match-badge <?php echo $match_class; ?>">
-                                        <?php echo $match_percentage; ?>% <?php echo $match_label; ?>
-                                    </span>
-                                    <p class="brand"><?php echo htmlspecialchars($row['brand']); ?></p>
-                                    <h3><?php echo htmlspecialchars($row['product_name']); ?></h3>
-                                    <p class="product-price">$<?php echo number_format($row['price'], 2); ?></p>
-                                </div>
-                            </a>
-                            <div class="recommendation-rationale">
-                                <h4>Why This Laptop?</h4>
-                                <ul>
-                                    <?php foreach ($rationale_points as $point): ?>
-                                        <li><?php echo $point; ?></li>
-                                    <?php endforeach; ?>
-                                </ul>
-                                <?php if (!empty($compromises) && count($compromises) > 0): ?>
-                                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #dee2e6;">
-                                        <p style="font-size: 0.85rem; color: #6c757d; margin: 0;">
-                                            <strong>Note:</strong> <?php echo implode(', ', array_slice($compromises, 0, 2)); ?>
-                                        </p>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php else: ?>
-                <div class="no-results-container">
-                    <h3>No Perfect Matches Found</h3>
-                    <p>We couldn't find laptops that match all your specific criteria.</p>
-                    <div class="alternative-recommendations">
-                        <h4>💡 Suggestions:</h4>
-                        <ul style="text-align: left; max-width: 500px; margin: 15px auto;">
-                            <li>Try increasing your budget</li>
-                            <li>Consider a different screen size</li>
-                            <li>Adjust your performance requirements</li>
-                        </ul>
-                    </div>
-                </div>
-            <?php endif; ?>
-            
-            <div style="text-align: center; margin-top: 30px;">
-                <a href="advisor.php" class="btn">Start New Search</a>
-                <a href="products.php" class="btn" style="margin-left: 10px;">Browse All Laptops</a>
+            <div class="progress-labels">
+                <span>Start</span>
+                <span>Step <?php echo $step; ?> of <?php echo $total_steps; ?></span>
+                <span>Results</span>
             </div>
         </div>
-        
-    <?php else: // --- QUIZ VIEW --- ?>
-        <?php if ($step > 0): ?>
-            <div class="progress-bar-container">
-                <div class="progress-bar" style="width: <?php echo (($step) / $total_steps) * 100; ?>%;"></div>
-                <div class="progress-text">Step <?php echo $step; ?> of <?php echo $total_steps; ?></div>
+    <?php endif; ?>
+
+    <?php if ($step == 0): ?>
+        <!-- STEP 0: WELCOME -->
+        <div class="quiz-card">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🤖</div>
+            <h1 class="quiz-title">Let's Find Your Perfect Match</h1>
+            <p class="quiz-subtitle">Answer a few quick questions and our AI-powered engine will find the best product for your needs.</p>
+            
+            <a href="?step=1" class="btn-view" style="max-width: 200px; margin: 0 auto; display: inline-block;">Start Advisor</a>
+        </div>
+
+    <?php elseif ($step == 1): ?>
+        <!-- STEP 1: CATEGORY SELECTION -->
+        <div class="quiz-card">
+            <h2 class="quiz-title">What are you looking for?</h2>
+            <p class="quiz-subtitle">We'll tailor the questions based on your product type.</p>
+            
+            <div class="selection-grid" style="justify-content: center;">
+                <!-- Laptop Option -->
+                <form action="advisor.php" method="GET" style="display: contents;">
+                    <input type="hidden" name="step" value="2">
+                    <input type="hidden" name="category" value="Laptop">
+                    <label class="option-card">
+                        <button type="submit" style="display: none;"></button>
+                        <div class="option-content" onclick="this.previousElementSibling.click()">
+                            <div class="option-icon">💻</div>
+                            <div class="option-title">Laptop</div>
+                            <div class="option-desc">I need a new computer for work, gaming, or school.</div>
+                        </div>
+                    </label>
+                </form>
+
+                <!-- Accessory Option -->
+                <form action="advisor.php" method="GET" style="display: contents;">
+                    <input type="hidden" name="step" value="2">
+                    <input type="hidden" name="category" value="Accessories">
+                    <label class="option-card">
+                        <button type="submit" style="display: none;"></button>
+                        <div class="option-content" onclick="this.previousElementSibling.click()">
+                            <div class="option-icon">🖱️</div>
+                            <div class="option-title">Accessories</div>
+                            <div class="option-desc">I'm looking for peripherals like mice, keyboards, or headsets.</div>
+                        </div>
+                    </label>
+                </form>
             </div>
-        <?php endif; ?>
+        </div>
+
+    <?php elseif ($step == 2 && $category === 'Accessories'): ?>
+        <!-- STEP 2 (Accessories): TYPE -->
+        <div class="quiz-card">
+            <h2 class="quiz-title">What type of accessory?</h2>
+            <p class="quiz-subtitle">Select the category you are interested in.</p>
+            
+            <form action="advisor.php" method="GET">
+                <input type="hidden" name="step" value="3">
+                <input type="hidden" name="category" value="Accessories">
+                
+                <div class="selection-grid">
+                    <label class="option-card">
+                        <input type="radio" name="accessory_type" value="Mouse" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🖱️</div>
+                            <div class="option-title">Mouse</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="accessory_type" value="Keyboard" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">⌨️</div>
+                            <div class="option-title">Keyboard</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="accessory_type" value="Headset" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🎧</div>
+                            <div class="option-title">Headset</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="accessory_type" value="Monitor" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🖥️</div>
+                            <div class="option-title">Monitor</div>
+                        </div>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+    <?php elseif ($step == 3 && $category === 'Accessories'): ?>
+        <!-- STEP 3 (Accessories): BUDGET -->
+        <div class="quiz-card">
+            <h2 class="quiz-title">What's your budget?</h2>
+            <p class="quiz-subtitle">We'll find the best value within your range.</p>
+            
+            <form action="advisor.php" method="GET">
+                <input type="hidden" name="step" value="4">
+                <input type="hidden" name="category" value="Accessories">
+                <input type="hidden" name="accessory_type" value="<?php echo htmlspecialchars($accessory_type); ?>">
+                
+                <div class="range-container">
+                    <span class="range-value" id="budgetValue">$100</span>
+                    <input type="range" name="budget" id="budgetRange" min="10" max="500" step="10" value="100">
+                    <div style="display: flex; justify-content: space-between; color: var(--text-muted); margin-top: 10px;">
+                        <span>$10</span>
+                        <span>$500+</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-view" style="max-width: 300px; margin: 40px auto 0;">Show Accessories ✨</button>
+            </form>
+        </div>
         
-        <?php switch ($step):
-            case 0: ?>
-                <div class="quiz-step text-center">
-                    <h3 class="quiz-step-title">Find Your Perfect Laptop Match</h3>
-                    <p style="max-width: 600px; margin: 0 auto 1rem auto; color: #666;">
-                        Answer 5 quick questions and we'll recommend laptops tailored specifically to your needs, 
-                        backed by smart matching technology.
-                    </p>
-                    <div style="display: flex; justify-content: center; gap: 30px; margin: 30px 0; flex-wrap: wrap;">
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem; color: #3b82f6;">🎯</div>
-                            <div style="font-weight: 600; margin-top: 8px;">Personalized</div>
+        <script>
+            const range = document.getElementById('budgetRange');
+            const value = document.getElementById('budgetValue');
+            range.addEventListener('input', (e) => {
+                value.textContent = '$' + parseInt(e.target.value).toLocaleString();
+            });
+        </script>
+
+    <?php elseif ($step == 2 && $category !== 'Accessories'): ?>
+        <!-- STEP 2 (Laptop): USE CASE -->
+        <div class="quiz-card">
+            <h2 class="quiz-title">What will you use it for?</h2>
+            <p class="quiz-subtitle">We'll prioritize features based on your primary activity.</p>
+            
+            <form action="advisor.php" method="GET">
+                <input type="hidden" name="step" value="3">
+                <input type="hidden" name="category" value="<?php echo htmlspecialchars($category); ?>">
+                <div class="selection-grid">
+                    <label class="option-card">
+                        <input type="radio" name="use_case" value="General Use" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🌐</div>
+                            <div class="option-title">General Use</div>
+                            <div class="option-desc">Web browsing, streaming, email, and light tasks.</div>
                         </div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem; color: #3b82f6;">⚡</div>
-                            <div style="font-weight: 600; margin-top: 8px;">Fast</div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="use_case" value="Student" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">📚</div>
+                            <div class="option-title">Student</div>
+                            <div class="option-desc">Note-taking, research, assignments, and portability.</div>
                         </div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 2rem; color: #3b82f6;">✓</div>
-                            <div style="font-weight: 600; margin-top: 8px;">Accurate</div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="use_case" value="Business" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">💼</div>
+                            <div class="option-title">Business</div>
+                            <div class="option-desc">Productivity, multitasking, meetings, and reliability.</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="use_case" value="Gaming" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🎮</div>
+                            <div class="option-title">Gaming</div>
+                            <div class="option-desc">High-performance graphics for modern games.</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="use_case" value="Creative" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🎨</div>
+                            <div class="option-title">Creative</div>
+                            <div class="option-desc">Video editing, 3D rendering, and graphic design.</div>
+                        </div>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+    <?php elseif ($step == 3 && $category !== 'Accessories'): ?>
+        <!-- STEP 3 (Laptop): PERFORMANCE -->
+        <div class="quiz-card">
+            <h2 class="quiz-title">How much power do you need?</h2>
+            <p class="quiz-subtitle">This determines the processor and memory requirements.</p>
+            
+            <form action="advisor.php" method="GET">
+                <input type="hidden" name="step" value="4">
+                <input type="hidden" name="category" value="<?php echo htmlspecialchars($category); ?>">
+                <input type="hidden" name="use_case" value="<?php echo htmlspecialchars($use_case); ?>">
+                
+                <div class="selection-grid">
+                    <label class="option-card">
+                        <input type="radio" name="performance" value="light" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🍃</div>
+                            <div class="option-title">Light</div>
+                            <div class="option-desc">Basic tasks. I don't run many apps at once.</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="performance" value="everyday" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">⚡</div>
+                            <div class="option-title">Balanced</div>
+                            <div class="option-desc">Smooth multitasking. I keep many tabs open.</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="performance" value="heavy" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🚀</div>
+                            <div class="option-title">Heavy Duty</div>
+                            <div class="option-desc">Intense workloads, large files, and pro software.</div>
+                        </div>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+    <?php elseif ($step == 4 && $category !== 'Accessories'): ?>
+        <!-- STEP 4 (Laptop): SCREEN SIZE -->
+        <div class="quiz-card">
+            <h2 class="quiz-title">Pick your preferred size</h2>
+            <p class="quiz-subtitle">Balance between portability and screen real estate.</p>
+            
+            <form action="advisor.php" method="GET">
+                <input type="hidden" name="step" value="5">
+                <input type="hidden" name="category" value="<?php echo htmlspecialchars($category); ?>">
+                <input type="hidden" name="use_case" value="<?php echo htmlspecialchars($use_case); ?>">
+                <input type="hidden" name="performance" value="<?php echo htmlspecialchars($performance); ?>">
+                
+                <div class="selection-grid">
+                    <label class="option-card">
+                        <input type="radio" name="screen_size" value="small" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">📱</div>
+                            <div class="option-title">Compact (13-14")</div>
+                            <div class="option-desc">Ultra-portable, fits in any bag. Great for travel.</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="screen_size" value="medium" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">💻</div>
+                            <div class="option-title">Standard (15")</div>
+                            <div class="option-desc">The sweet spot. Good screen size and portability.</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="screen_size" value="large" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🖥️</div>
+                            <div class="option-title">Large (16"+)</div>
+                            <div class="option-desc">Maximum workspace. Best for editing and gaming.</div>
+                        </div>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+    <?php elseif ($step == 5 && $category !== 'Accessories'): ?>
+        <!-- STEP 5 (Laptop): PORTABILITY -->
+        <div class="quiz-card">
+            <h2 class="quiz-title">How mobile are you?</h2>
+            <p class="quiz-subtitle">We'll check the weight and battery life for you.</p>
+            
+            <form action="advisor.php" method="GET">
+                <input type="hidden" name="step" value="6">
+                <input type="hidden" name="category" value="<?php echo htmlspecialchars($category); ?>">
+                <input type="hidden" name="use_case" value="<?php echo htmlspecialchars($use_case); ?>">
+                <input type="hidden" name="performance" value="<?php echo htmlspecialchars($performance); ?>">
+                <input type="hidden" name="screen_size" value="<?php echo htmlspecialchars($screen_size); ?>">
+                
+                <div class="selection-grid">
+                    <label class="option-card">
+                        <input type="radio" name="portability" value="stationary" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🏠</div>
+                            <div class="option-title">Mostly Stationary</div>
+                            <div class="option-desc">It will mostly stay on a desk. Weight doesn't matter.</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="portability" value="occasional" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">🚶</div>
+                            <div class="option-title">Occasional</div>
+                            <div class="option-desc">I take it to coffee shops or meetings sometimes.</div>
+                        </div>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="portability" value="frequent" required onchange="this.form.submit()">
+                        <div class="option-content">
+                            <div class="option-icon">✈️</div>
+                            <div class="option-title">Road Warrior</div>
+                            <div class="option-desc">I carry it everywhere, every day. Lightness is key.</div>
+                        </div>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+    <?php elseif ($step == 6 && $category !== 'Accessories'): ?>
+        <!-- STEP 6 (Laptop): BUDGET -->
+        <div class="quiz-card">
+            <h2 class="quiz-title">What's your budget?</h2>
+            <p class="quiz-subtitle">We'll find the best value within your range.</p>
+            
+            <form action="advisor.php" method="GET">
+                <input type="hidden" name="step" value="7">
+                <input type="hidden" name="category" value="<?php echo htmlspecialchars($category); ?>">
+                <input type="hidden" name="use_case" value="<?php echo htmlspecialchars($use_case); ?>">
+                <input type="hidden" name="performance" value="<?php echo htmlspecialchars($performance); ?>">
+                <input type="hidden" name="screen_size" value="<?php echo htmlspecialchars($screen_size); ?>">
+                <input type="hidden" name="portability" value="<?php echo htmlspecialchars($portability); ?>">
+                
+                <div class="range-container">
+                    <span class="range-value" id="budgetValue">$1,500</span>
+                    <input type="range" name="budget" id="budgetRange" min="500" max="5000" step="100" value="1500">
+                    <div style="display: flex; justify-content: space-between; color: var(--text-muted); margin-top: 10px;">
+                        <span>$500</span>
+                        <span>$5,000+</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-view" style="max-width: 300px; margin: 40px auto 0;">Reveal My Matches ✨</button>
+            </form>
+        </div>
+        
+        <script>
+            const range = document.getElementById('budgetRange');
+            const value = document.getElementById('budgetValue');
+            range.addEventListener('input', (e) => {
+                value.textContent = '$' + parseInt(e.target.value).toLocaleString();
+            });
+        </script>
+
+    <?php else: ?>
+        <!-- RESULTS PAGE -->
+        <div class="results-header">
+            <h1 class="quiz-title">We Found <?php echo count($results); ?> Perfect Matches!</h1>
+            <?php if ($category === 'Accessories'): ?>
+                <p class="quiz-subtitle">Showing <strong><?php echo htmlspecialchars($accessory_type); ?></strong> options under <strong>$<?php echo number_format($budget); ?></strong>.</p>
+            <?php else: ?>
+                <p class="quiz-subtitle">Based on your needs for <strong><?php echo htmlspecialchars($use_case); ?></strong>, <strong><?php echo ucfirst($performance); ?></strong> performance, and budget of <strong>$<?php echo number_format($budget); ?></strong>.</p>
+            <?php endif; ?>
+        </div>
+
+        <?php if (empty($results)): ?>
+            <div class="quiz-card">
+                <div style="font-size: 3rem; margin-bottom: 20px;">🔍</div>
+                <h3>No exact matches found</h3>
+                <p>Try increasing your budget or adjusting your filters to see more options.</p>
+                <a href="advisor.php" class="btn-restart">Start Over</a>
+            </div>
+        <?php else: ?>
+            <div class="results-grid">
+                <?php foreach($results as $index => $row): ?>
+                    <div class="result-card">
+                        <?php if ($index === 0): ?>
+                            <div class="top-match-badge">🏆 TOP RECOMMENDATION</div>
+                        <?php endif; ?>
+                        
+                        <img src="<?php echo !empty($row['image_url']) ? htmlspecialchars($row['image_url']) : 'https://via.placeholder.com/300'; ?>" 
+                             class="result-img" alt="<?php echo htmlspecialchars($row['product_name']); ?>">
+                        
+                        <div class="result-body">
+                            <?php if ($category !== 'Accessories'): ?>
+                                <div class="match-score <?php echo $row['total_score'] > 80 ? 'score-high' : 'score-med'; ?>">
+                                    <?php echo min(100, round($row['total_score'])); ?>% Match
+                                </div>
+                            <?php endif; ?>
+                            
+                            <h3 class="result-title"><?php echo htmlspecialchars($row['product_name']); ?></h3>
+                            <div class="result-brand"><?php echo htmlspecialchars($row['brand']); ?></div>
+                            
+                            <?php if ($category !== 'Accessories'): ?>
+                                <div class="specs-list">
+                                    <span class="spec-tag"><?php echo $row['cpu']; ?></span>
+                                    <span class="spec-tag"><?php echo $row['ram_gb']; ?>GB RAM</span>
+                                    <span class="spec-tag"><?php echo $row['storage_gb']; ?>GB SSD</span>
+                                    <span class="spec-tag"><?php echo $row['display_size']; ?>"</span>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <div class="result-price">$<?php echo number_format($row['price'], 2); ?></div>
+
+                            <?php
+                            if ($category !== 'Accessories') {
+                                // Generate Rationale for Laptops
+                                $reasons = [];
+                                
+                                // Use Case
+                                if ($row['use_case_score'] >= 25) {
+                                    $reasons[] = "Perfect match for <strong>" . htmlspecialchars($use_case) . "</strong>";
+                                } elseif ($row['use_case_score'] >= 15) {
+                                    $reasons[] = "Capable for " . htmlspecialchars($use_case);
+                                }
+                                
+                                // Performance
+                                if ($row['perf_score'] >= 25) {
+                                    $reasons[] = "<strong>High Performance</strong> specs for your needs";
+                                } elseif ($row['perf_score'] >= 20) {
+                                    $reasons[] = "Solid performance for everyday tasks";
+                                }
+                                
+                                // Screen/Portability
+                                if ($row['screen_score'] >= 25) {
+                                    $reasons[] = "Ideal <strong>" . $row['display_size'] . "\" screen</strong> size";
+                                }
+                                
+                                // Value
+                                if ($row['value_score'] >= 20) {
+                                    $reasons[] = "<strong>Great Value</strong> within your budget";
+                                }
+                                
+                                // Popularity
+                                if ($row['popularity_bonus'] > 0) {
+                                    $reasons[] = "Highly rated by other users";
+                                }
+                                
+                                // Limit to 3 reasons
+                                $reasons = array_slice($reasons, 0, 3);
+                                
+                                if (!empty($reasons)): ?>
+                                    <div class="rationale-box">
+                                        <div class="rationale-title">💡 Why This Laptop?</div>
+                                        <ul class="rationale-list">
+                                            <?php foreach ($reasons as $reason): ?>
+                                                <li class="rationale-item"><?php echo $reason; ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+                                <?php endif; 
+                            }
+                            ?>
+                            
+                            <a href="product_details.php?product_id=<?php echo $row['product_id']; ?>" class="btn-view">View Details</a>
                         </div>
                     </div>
-                    <a href="?step=1" class="btn btn-primary btn-lg">Get Started</a>
-                </div>
-            <?php break; ?>
+                <?php endforeach; ?>
+            </div>
             
-            <?php case 1: ?>
-                <div class="quiz-step">
-                    <h3 class="quiz-step-title">What's your primary use case?</h3>
-                    <p class="quiz-step-subtitle">This helps us match you with laptops optimized for your needs</p>
-                    <form class="quiz-form" action="advisor.php" method="GET">
-                        <input type="hidden" name="step" value="2">
-                        <div class="selection-grid">
-                            <label class="selection-card">
-                                <input type="radio" name="use_case" value="General Use" required>
-                                <div class="card-content">
-                                    <div style="font-size: 2rem; margin-bottom: 10px;">🌐</div>
-                                    <strong>General Use</strong>
-                                    <p>Browsing, Email, Streaming</p>
-                                </div>
-                            </label>
-                            <label class="selection-card">
-                                <input type="radio" name="use_case" value="Student" required>
-                                <div class="card-content">
-                                    <div style="font-size: 2rem; margin-bottom: 10px;">📚</div>
-                                    <strong>Student</strong>
-                                    <p>Notes, Research, Projects</p>
-                                </div>
-                            </label>
-                            <label class="selection-card">
-                                <input type="radio" name="use_case" value="Business" required>
-                                <div class="card-content">
-                                    <div style="font-size: 2rem; margin-bottom: 10px;">💼</div>
-                                    <strong>Business</strong>
-                                    <p>Productivity, Meetings, Travel</p>
-                                </div>
-                            </label>
-                            <label class="selection-card">
-                                <input type="radio" name="use_case" value="Gaming" required>
-                                <div class="card-content">
-                                    <div style="font-size: 2rem; margin-bottom: 10px;">🎮</div>
-                                    <strong>Gaming</strong>
-                                    <p>AAA Titles, High FPS</p>
-                                </div>
-                            </label>
-                            <label class="selection-card">
-                                <input type="radio" name="use_case" value="Creative" required>
-                                <div class="card-content">
-                                    <div style="font-size: 2rem; margin-bottom: 10px;">🎨</div>
-                                    <strong>Creative Work</strong>
-                                    <p>Video Editing, Design, 3D</p>
-                                </div>
-                            </label>
-                        </div>
-                    </form>
-                </div>
-            <?php break; ?>
-            
-            <?php case 2: ?>
-                <div class="quiz-step">
-                    <h3 class="quiz-step-title">What performance level do you need?</h3>
-                    <p class="quiz-step-subtitle">This determines the processing power and memory</p>
-                    <form class="quiz-form" action="advisor.php" method="GET">
-                        <input type="hidden" name="step" value="3">
-                        <input type="hidden" name="use_case" value="<?php echo htmlspecialchars($use_case); ?>">
-                        <div class="selection-grid">
-                            <label class="selection-card">
-                                <input type="radio" name="performance" value="light" required>
-                                <div class="card-content">
-                                    <strong>Light Tasks</strong>
-                                    <p>Web browsing, documents, email</p>
-                                    <small style="color: #888;">≤8GB RAM</small>
-                                </div>
-                            </label>
-                            <label class="selection-card">
-                                <input type="radio" name="performance" value="everyday" required>
-                                <div class="card-content">
-                                    <strong>Everyday Use</strong>
-                                    <p>Streaming, multitasking, light editing</p>
-                                    <small style="color: #888;">8-16GB RAM</small>
-                                </div>
-                            </label>
-                            <label class="selection-card">
-                                <input type="radio" name="performance" value="heavy" required>
-                                <div class="card-content">
-                                    <strong>Heavy Workloads</strong>
-                                    <p>Gaming, video editing, development</p>
-                                    <small style="color: #888;">≥16GB RAM</small>
-                                </div>
-                            </label>
-                        </div>
-                    </form>
-                </div>
-            <?php break; ?>
-            
-            <?php case 3: ?>
-                <div class="quiz-step">
-                    <h3 class="quiz-step-title">What screen size do you prefer?</h3>
-                    <p class="quiz-step-subtitle">Balance between portability and screen real estate</p>
-                    <form class="quiz-form" action="advisor.php" method="GET">
-                        <input type="hidden" name="step" value="4">
-                        <input type="hidden" name="use_case" value="<?php echo htmlspecialchars($use_case); ?>">
-                        <input type="hidden" name="performance" value="<?php echo htmlspecialchars($performance); ?>">
-                        <div class="selection-grid">
-                            <label class="selection-card">
-                                <input type="radio" name="screen_size" value="small" required>
-                                <div class="card-content">
-                                    <strong>Compact</strong>
-                                    <p>Under 14" - Ultra portable</p>
-                                </div>
-                            </label>
-                            <label class="selection-card">
-                                <input type="radio" name="screen_size" value="medium" required>
-                                <div class="card-content">
-                                    <strong>Standard</strong>
-                                    <p>14" - 15.6" - Best balance</p>
-                                </div>
-                            </label>
-                            <label class="selection-card">
-                                <input type="radio" name="screen_size" value="large" required>
-                                <div class="card-content">
-                                    <strong>Large</strong>
-                                    <p>16"+ - Immersive viewing</p>
-                                </div>
-                            </label>
-                        </div>
-                    </form>
-                </div>
-            <?php break; ?>
-            
-            <?php case 4: ?>
-                <div class="quiz-step">
-                    <h3 class="quiz-step-title">How important is portability?</h3>
-                    <p class="quiz-step-subtitle">Will you carry it around often?</p>
-                    <form class="quiz-form" action="advisor.php" method="GET">
-                        <input type="hidden" name="step" value="5">
-                        <input type="hidden" name="use_case" value="<?php echo htmlspecialchars($use_case); ?>">
-                        <input type="hidden" name="performance" value="<?php echo htmlspecialchars($performance); ?>">
-                        <input type="hidden" name="screen_size" value="<?php echo htmlspecialchars($screen_size); ?>">
-                        <div class="selection-grid">
-                            <label class="selection-card">
-                                <input type="radio" name="portability" value="stationary" required>
-                                <div class="card-content">
-                                    <strong>Mostly Stationary</strong>
-                                    <p>Desktop replacement</p>
-                                </div>
-                            </label>
-                            <label class="selection-card">
-                                <input type="radio" name="portability" value="occasional" required>
-                                <div class="card-content">
-                                    <strong>Occasional Travel</strong>
-                                    <p>Sometimes on the go</p>
-                                </div>
-                            </label>
-                            <label class="selection-card">
-                                <input type="radio" name="portability" value="frequent" required>
-                                <div class="card-content">
-                                    <strong>Highly Mobile</strong>
-                                    <p>Daily commute/travel</p>
-                                </div>
-                            </label>
-                        </div>
-                    </form>
-                </div>
-            <?php break; ?>
-            
-            <?php case 5: ?>
-                <div class="quiz-step">
-                    <h3 class="quiz-step-title">What's your budget?</h3>
-                    <p class="quiz-step-subtitle">Set your maximum spending limit</p>
-                    <form class="quiz-form" action="advisor.php" method="GET">
-                        <input type="hidden" name="step" value="6">
-                        <input type="hidden" name="use_case" value="<?php echo htmlspecialchars($use_case); ?>">
-                        <input type="hidden" name="performance" value="<?php echo htmlspecialchars($performance); ?>">
-                        <input type="hidden" name="screen_size" value="<?php echo htmlspecialchars($screen_size); ?>">
-                        <input type="hidden" name="portability" value="<?php echo htmlspecialchars($portability); ?>">
-                        <div class="form-group">
-                            <label for="budget" class="budget-label">
-                                <span id="budget-value">$<?php echo htmlspecialchars($budget); ?></span>
-                            </label>
-                            <input type="range" class="form-range" id="budget" name="budget" 
-                                   min="500" max="4000" step="100" 
-                                   value="<?php echo htmlspecialchars($budget); ?>">
-                            <div style="display: flex; justify-content: space-between; margin-top: 10px; color: #888; font-size: 0.85rem;">
-                                <span>$500</span>
-                                <span>$4,000</span>
-                            </div>
-                        </div>
-                        <div class="quiz-nav">
-                            <button type="submit" class="btn btn-accent btn-lg">Show My Matches 🎯</button>
-                        </div>
-                    </form>
-                </div>
-            <?php break; ?>
-        <?php endswitch; ?>
+            <div style="text-align: center;">
+                <a href="advisor.php" class="btn-restart">Start New Search</a>
+            </div>
+        <?php endif; ?>
+
     <?php endif; ?>
+
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const radioForms = document.querySelectorAll('.quiz-form');
-    radioForms.forEach(form => {
-        const radios = form.querySelectorAll('input[type="radio"]');
-        radios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                form.submit();
-            });
-        });
-    });
-
-    const budgetSlider = document.getElementById('budget');
-    const budgetValue = document.getElementById('budget-value');
-    if (budgetSlider) {
-        budgetSlider.addEventListener('input', (event) => {
-            budgetValue.textContent = '$' + parseInt(event.target.value).toLocaleString();
-        });
-    }
-});
-</script>
 
 <?php include 'includes/footer.php'; ?>

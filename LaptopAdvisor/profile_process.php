@@ -41,7 +41,7 @@ if (isset($_POST['update_details'])) {
     // Update database with new details including address
     if (!empty($image_path)) {
         // Update with new image
-        $stmt = $conn->prepare("UPDATE users SET full_name = ?, primary_use_case = ?, profile_image = ?, 
+        $stmt = $conn->prepare("UPDATE users SET full_name = ?, primary_use_case = ?, profile_image_url = ?, 
                                 default_shipping_name = ?, default_shipping_address = ?, default_shipping_city = ?, 
                                 default_shipping_state = ?, default_shipping_zip = ?, default_shipping_country = ?, 
                                 default_shipping_phone = ? 
