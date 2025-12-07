@@ -8,12 +8,13 @@ require_once 'includes/db_connect.php';
 // ===================== LOGIC SECTION =====================
 
 // Fetch overall KPIs (User Satisfaction)
+// Fetch overall KPIs (User Satisfaction)
 $kpi_query = "SELECT 
     COUNT(*) as total_ratings,
     SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as total_likes,
     SUM(CASE WHEN rating = -1 THEN 1 ELSE 0 END) as total_dislikes
-    FROM recommendation_ratings
-    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+    FROM recommendation_ratings";
+    // Removed WHERE created_at constraint for all-time stats
 $kpi_result = mysqli_query($conn, $kpi_query);
 $kpis = mysqli_fetch_assoc($kpi_result);
 
@@ -31,7 +32,6 @@ $persona_perf_query = "SELECT
     FROM personas p
     LEFT JOIN users u ON u.primary_use_case = p.name
     LEFT JOIN recommendation_ratings r ON u.user_id = r.user_id
-    WHERE r.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) OR r.created_at IS NULL
     GROUP BY p.persona_id
     ORDER BY total_ratings DESC";
 $persona_perf_result = mysqli_query($conn, $persona_perf_query);
@@ -62,7 +62,6 @@ $dist_query = "SELECT
     CASE WHEN rating = 1 THEN 'Likes (Positive)' ELSE 'Dislikes (Negative)' END as rating_type,
     COUNT(*) as count
     FROM recommendation_ratings
-    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
     GROUP BY rating";
 $dist_result = mysqli_query($conn, $dist_query);
 

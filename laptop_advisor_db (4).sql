@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 04, 2025 at 05:14 AM
+-- Generation Time: Dec 07, 2025 at 05:29 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -59,26 +59,29 @@ INSERT INTO `admin_activity_log` (`log_id`, `admin_id`, `action`, `module`, `des
 (9, 1, 'login', NULL, 'Admin logged in successfully', NULL, NULL, '::1', NULL, NULL, NULL, NULL, '2025-12-02 03:37:38'),
 (10, 1, 'login', NULL, 'Admin logged in successfully', NULL, NULL, '::1', NULL, NULL, NULL, NULL, '2025-12-02 11:29:42'),
 (11, 1, 'login', NULL, 'Admin logged in successfully', NULL, NULL, '::1', NULL, NULL, NULL, NULL, '2025-12-02 11:31:17'),
-(12, 1, 'login', NULL, 'Admin logged in successfully', NULL, NULL, '::1', NULL, NULL, NULL, NULL, '2025-12-02 18:38:24'),
-(13, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-02 20:17:05'),
-(14, 1, 'update', 'orders', 'Toggled flag status for Order #25 to Flagged', 'order', 25, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/ajax/transaction_actions.php', NULL, '2025-12-03 05:34:26'),
-(15, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-03 05:59:08'),
-(16, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-03 06:19:51'),
-(17, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-03 06:20:33'),
-(18, 1, 'update', 'products', 'Updated product: Pavilion 15', 'product', 8, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-03 06:20:55'),
-(19, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-03 06:23:02'),
-(20, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-03 06:29:55'),
-(21, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-03 06:30:28'),
-(22, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-03 06:33:10'),
-(23, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-03 06:41:58'),
-(24, 1, 'update', 'products', 'Updated product: Pavilion 15', 'product', 8, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-04 01:27:18'),
-(25, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-04 01:27:26'),
-(26, 1, 'update', 'products', 'Updated product: Pavilion 15', 'product', 8, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-04 01:28:06'),
-(27, 1, 'update', 'products', 'Updated product: ROG Strix G15', 'product', 7, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-04 01:32:09'),
-(28, 1, 'update', 'orders', 'Toggled flag status for Order #25 to Unflagged', 'order', 25, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/ajax/transaction_actions.php', NULL, '2025-12-04 01:33:48'),
-(29, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-04 02:40:38'),
-(30, 1, 'create', 'products', 'Added new product: Asus gggg', 'product', 129, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-04 02:42:06'),
-(31, 1, 'update', 'products', 'Updated product: Asus gggg', 'product', 129, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-04 02:42:25');
+(12, 1, 'login', 'auth', 'Admin logged in successfully', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/login.php', NULL, '2025-12-07 15:14:29'),
+(13, 1, 'update', 'products', 'Updated product: Asus ROG Strix G16', 'product', 128, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_products.php', NULL, '2025-12-07 15:14:35'),
+(14, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:22:13'),
+(15, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:22:15'),
+(16, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:22:17'),
+(17, 1, 'update', 'admin_users', 'Updated personal profile', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_profile.php', NULL, '2025-12-07 15:23:38'),
+(18, 1, 'update', 'admin_users', 'Updated personal profile', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_profile.php', NULL, '2025-12-07 15:23:48'),
+(19, 1, 'update', 'admin_users', 'Updated personal profile', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_profile.php', NULL, '2025-12-07 15:23:49'),
+(20, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:24:23'),
+(21, 1, 'logout', 'auth', 'Admin logged out', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/logout.php', NULL, '2025-12-07 15:24:29'),
+(22, 1, 'login', 'auth', 'Admin logged in successfully', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/login.php', NULL, '2025-12-07 15:24:31'),
+(23, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:24:52'),
+(24, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:25:15'),
+(25, 1, 'login', 'auth', 'Admin logged in successfully', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/login.php', NULL, '2025-12-07 15:25:52'),
+(26, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:25:58'),
+(27, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:30:22'),
+(28, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:30:24'),
+(29, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:30:26'),
+(30, 1, 'logout', 'auth', 'Admin logged out', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/logout.php', NULL, '2025-12-07 15:35:07'),
+(31, 1, 'login', 'auth', 'Admin logged in successfully', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/login.php', NULL, '2025-12-07 15:35:16'),
+(32, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 15:56:17'),
+(33, 1, 'logout', 'auth', 'Admin logged out', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/logout.php', NULL, '2025-12-07 16:13:38'),
+(34, 1, 'update', 'settings', 'Updated personal preferences', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, '/fyp/admin/admin_settings.php', NULL, '2025-12-07 16:16:43');
 
 -- --------------------------------------------------------
 
@@ -111,9 +114,9 @@ INSERT INTO `admin_sessions` (`session_id`, `admin_id`, `ip_address`, `user_agen
 ('7d7ab7204a215e7ff33e7ae6d8b0cc7e8e41c80aafe3a8ac69c2982afbe02136', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '2025-11-22 04:34:23', '2025-11-22 04:34:23', '2025-11-23 04:34:23', 1),
 ('8dd810838b06ecb04f0dabc70db18acc422fd087f6672642649f0a97524cae27', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '2025-11-22 04:34:31', '2025-11-22 04:34:31', '2025-11-23 04:34:31', 1),
 ('9dc7628840225b89fd580e0584845d2c1a32f16bed8c713599a1ff6980ee99c7', 2, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '2025-11-22 04:35:07', '2025-11-22 04:35:07', '2025-11-23 04:35:07', 1),
-('a3577db8d1e331813c9c669598804b5b5587d47120174836c8a3fcfbdf1431e6', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '2025-12-03 02:38:24', '2025-12-03 02:38:24', '2025-12-04 02:38:24', 1),
 ('c413ddfda91a8cadd37df9d45ce663c101d1ff00fa9aaaa0c6df38374830ef95', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '2025-12-02 19:29:42', '2025-12-02 19:29:42', '2025-12-03 19:29:42', 1),
-('e9ee9f9532698841ed7956ad667311a8e3d92c888c9a010314e880a13dbb2ecf', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '2025-12-01 14:36:36', '2025-12-01 14:36:36', '2025-12-02 14:36:36', 1);
+('e9ee9f9532698841ed7956ad667311a8e3d92c888c9a010314e880a13dbb2ecf', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0', '2025-12-01 14:36:36', '2025-12-01 14:36:36', '2025-12-02 14:36:36', 1),
+('ebc0c1d6934f72fa7e86e0f23bd98a37eaed04162996392c418ceb297a66bffd', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-07 23:24:31', '2025-12-07 23:24:31', '2025-12-08 23:24:31', 1);
 
 -- --------------------------------------------------------
 
@@ -154,7 +157,7 @@ CREATE TABLE `admin_users` (
 --
 
 INSERT INTO `admin_users` (`admin_id`, `admin_code`, `first_name`, `last_name`, `email`, `password_hash`, `role_id`, `status`, `last_login`, `login_count`, `failed_login_attempts`, `last_failed_login`, `lockout_until`, `two_factor_enabled`, `two_factor_secret`, `profile_picture`, `phone`, `timezone`, `language`, `email_notifications`, `force_password_change`, `password_last_changed`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'ADMIN-001', 'Sarah', 'Johnson', 'sarah.johnson@smartlaptop.com', '$2y$10$16u7PX4cGXybAi5et0rXTuNPdX8XiOQYQBUwHfmPun7IBiQGMrwL2', 1, 'active', '2025-12-03 02:38:24', 3488, 0, NULL, NULL, 0, NULL, NULL, NULL, 'America/New_York', 'en', 1, 0, NULL, NULL, '2025-11-21 20:12:32', '2025-12-02 18:38:24'),
+(1, 'ADMIN-001', 'Admin', 'Cho Choong Kit', 'sarah.johnson@smartlaptop.com', '$2y$10$16u7PX4cGXybAi5et0rXTuNPdX8XiOQYQBUwHfmPun7IBiQGMrwL2', 1, 'active', '2025-12-07 23:35:16', 3491, 0, NULL, NULL, 0, NULL, NULL, NULL, 'America/New_York', 'en', 1, 0, NULL, NULL, '2025-11-21 20:12:32', '2025-12-07 15:35:16'),
 (2, 'ADMIN-002', 'Michael', 'Chen', 'michael.chen@smartlaptop.com', '$2y$10$16u7PX4cGXybAi5et0rXTuNPdX8XiOQYQBUwHfmPun7IBiQGMrwL2', 2, 'active', '2025-11-22 04:35:49', 1, 0, NULL, NULL, 0, NULL, NULL, NULL, 'America/New_York', 'en', 1, 0, NULL, NULL, '2025-11-21 20:12:32', '2025-11-24 17:11:28'),
 (3, 'ADMIN-003', 'Emily', 'Rodriguez', 'emily.rodriguez@smartlaptop.com', '$2y$10$16u7PX4cGXybAi5et0rXTuNPdX8XiOQYQBUwHfmPun7IBiQGMrwL2', 4, 'active', NULL, 98, 0, NULL, NULL, 0, NULL, NULL, NULL, 'America/New_York', 'en', 1, 0, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:34:41'),
 (4, 'ADMIN-004', 'David', 'Kim', 'david.kim@smartlaptop.com', '$2y$10$16u7PX4cGXybAi5et0rXTuNPdX8XiOQYQBUwHfmPun7IBiQGMrwL2', 3, 'active', NULL, 45, 0, NULL, NULL, 0, NULL, NULL, NULL, 'America/New_York', 'en', 1, 0, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:34:41');
@@ -472,17 +475,9 @@ INSERT INTO `conversations` (`conversation_id`, `session_id`, `user_id`, `user_i
 (18, 'chat_692f26c7c010e_68233206bf39a780', 4, '::1', 'web', '2025-12-03 01:49:59', NULL, 1644, 5, 0, 0, 'neutral', 0.00, 'general_chat', NULL, NULL, 0, NULL, '2025-12-02 17:49:59', '2025-12-02 18:17:27'),
 (19, 'chat_692f2d6a5ee15_9aa9efb95330a180', 4, '::1', 'web', '2025-12-03 02:18:18', NULL, 0, 1, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-02 18:18:18', '2025-12-02 18:18:18'),
 (20, 'chat_692f2d8300e24_829515c16c98da82', 4, '::1', 'web', '2025-12-03 02:18:43', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-02 18:18:43', '2025-12-02 18:18:43'),
-(21, 'chat_692f2da269488_9a26044b586d4b06', 4, '::1', 'web', '2025-12-03 02:19:14', NULL, 1423, 4, 0, 0, 'neutral', 0.00, 'no_results', NULL, NULL, 0, NULL, '2025-12-02 18:19:14', '2025-12-02 18:42:57'),
+(21, 'chat_692f2da269488_9a26044b586d4b06', 4, '::1', 'web', '2025-12-03 02:19:14', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-02 18:19:14', '2025-12-02 18:19:14'),
 (22, 'chat_692f2dddeef23_deaaa511d61f5e9b', 4, '::1', 'web', '2025-12-03 02:20:13', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-02 18:20:13', '2025-12-02 18:20:13'),
-(23, 'chat_692f3366195f4_957c63d425dc47cc', 6, '::1', 'web', '2025-12-03 02:43:50', NULL, 16, 2, 0, 0, 'neutral', 0.00, 'product_recommendation', NULL, NULL, 0, NULL, '2025-12-02 18:43:50', '2025-12-02 18:44:06'),
-(24, 'chat_692f33a96e6be_14fe6789d308390f', 6, '::1', 'web', '2025-12-03 02:44:57', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, 3.0, 0, NULL, '2025-12-02 18:44:57', '2025-12-02 18:44:58'),
-(25, 'chat_692f35e11b854_5d8cdd18123e0d73', 6, '::1', 'web', '2025-12-03 02:54:25', NULL, 804, 8, 0, 0, 'neutral', 0.00, 'product_recommendation', NULL, NULL, 0, NULL, '2025-12-02 18:54:25', '2025-12-02 19:07:49'),
-(26, 'chat_692f37fb56f58_7ee1cd60704fc09e', 6, '::1', 'web', '2025-12-03 03:03:23', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, 3.0, 0, NULL, '2025-12-02 19:03:23', '2025-12-02 19:03:24'),
-(27, 'chat_692f3933b529f_2e672539afe3120b', 6, '::1', 'web', '2025-12-03 03:08:35', NULL, 514, 9, 0, 0, 'neutral', 0.00, 'product_recommendation', NULL, NULL, 0, NULL, '2025-12-02 19:08:35', '2025-12-02 19:17:09'),
-(28, 'debug_session_1764702739', NULL, NULL, 'web', '2025-12-03 03:12:19', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, 3.0, 0, NULL, '2025-12-02 19:12:19', '2025-12-02 19:12:20'),
-(29, 'chat_692f3b3fb51e8_01c5473c0a05c78d', 6, '::1', 'web', '2025-12-03 03:17:19', NULL, 112697, 2, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-02 19:17:19', '2025-12-04 02:35:36'),
-(30, 'chat_6930f39a89439_fab5142e78cfd2a6', 6, '::1', 'web', '2025-12-04 10:36:10', NULL, 0, 1, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-04 02:36:10', '2025-12-04 02:36:10'),
-(31, 'chat_6930f3d5f18b8_84b6c1bb01bebb42', 6, '::1', 'web', '2025-12-04 10:37:09', NULL, 52, 1, 0, 0, 'positive', 0.00, 'general_chat', NULL, NULL, 0, NULL, '2025-12-04 02:37:09', '2025-12-04 02:38:07');
+(23, 'chat_692f18cb0d84f_caa9f98f5311ebb6', 6, '::1', 'web', '2025-12-07 16:37:18', NULL, 0, 0, 0, 0, 'neutral', 0.00, 'general_chat', NULL, NULL, 0, NULL, '2025-12-07 08:37:18', '2025-12-07 08:37:23');
 
 -- --------------------------------------------------------
 
@@ -671,68 +666,8 @@ INSERT INTO `conversation_messages` (`message_id`, `conversation_id`, `message_t
 (160, 19, 'bot', 'Hello! I\'m your Smart Laptop Advisor. How can I help you find the perfect laptop today?', NULL, NULL, NULL, '2025-12-03 02:18:18', NULL, '2025-12-02 18:18:18'),
 (161, 22, 'user', 'hi', NULL, NULL, NULL, '2025-12-03 02:20:13', NULL, '2025-12-02 18:20:13'),
 (162, 22, 'bot', 'Hello! 👋 I\'m your Smart Laptop Advisor. How can I help you today with laptops, specs, store policies, shipping, returns, or ordering?', NULL, NULL, NULL, '2025-12-03 02:20:15', 1647, '2025-12-02 18:20:15'),
-(163, 21, 'user', 'check the price of the rog laptop', NULL, NULL, NULL, '2025-12-03 02:39:46', NULL, '2025-12-02 18:39:46'),
-(164, 21, 'bot', 'I’m sorry, but we don’t have a specific **ROG** laptop matching the details you’re looking for in our current inventory.  \n\nYou can:\n\n* **Browse our full catalog** to see all available ASUS ROG models and other gaming laptops.  \n* **Adjust your budget or key requirements** (e.g., CPU, GPU, screen size) so I can suggest a similar device that fits your needs.\n\nLet me know if you’d like me to recommend an alternative gaming laptop based on a price range or specific specs you have in mind!', NULL, NULL, NULL, '2025-12-03 02:39:51', NULL, '2025-12-02 18:39:51'),
-(165, 21, 'user', 'rog laptop check price please', NULL, NULL, NULL, '2025-12-03 02:40:37', NULL, '2025-12-02 18:40:37'),
-(166, 21, 'bot', 'I’m sorry, but I don’t see a specific ROG laptop matching the details you’re looking for in our current inventory.  \n\nYou can:\n\n- **Browse our full catalog** on the website to see all available models.  \n- **Adjust your budget or specify any key features** (CPU, GPU, screen size, etc.) you need, and I can suggest similar options that are in stock.\n\nLet me know how you’d like to proceed, and I’ll help you find the right laptop!', NULL, NULL, NULL, '2025-12-03 02:40:45', NULL, '2025-12-02 18:40:45'),
-(167, 21, 'user', 'ROG', NULL, NULL, NULL, '2025-12-03 02:41:01', NULL, '2025-12-02 18:41:01'),
-(168, 21, 'bot', 'I’m sorry, but we don’t have a specific ROG model that matches the details you’re looking for in our current inventory.  \n\nYou can explore our full catalog on the website to see all available gaming laptops, or let us know if you’d like to adjust your budget or requirements and we’ll find the best alternatives for you.  \n\nHow else can I assist you with your laptop search?', NULL, NULL, NULL, '2025-12-03 02:41:05', NULL, '2025-12-02 18:41:05'),
-(169, 21, 'user', 'hi', NULL, NULL, NULL, '2025-12-03 02:42:57', NULL, '2025-12-02 18:42:57'),
-(170, 21, 'bot', 'Hello! I\'m your Smart Laptop Advisor. How can I help you find the perfect laptop today?', NULL, NULL, NULL, '2025-12-03 02:42:57', NULL, '2025-12-02 18:42:57'),
-(171, 23, 'user', 'recommend a laptop for me', NULL, NULL, NULL, '2025-12-03 02:43:50', NULL, '2025-12-02 18:43:50'),
-(172, 23, 'bot', 'Here are three great choices from our current inventory that cover different needs and budgets:\n\n| # | Laptop | Price | Key Specs | Why it\'s a fit |\n|---|---|---|---|---|\n| 1 | IdeaPad Slim 3 (Lenovo) | $649.00 | • AMD Ryzen 5<br>• Integrated Radeon graphics<br>• 8 GB RAM | • Ideal for students on a budget<br>• Light and portable for campus use<br>• Sufficient performance for everyday tasks |\n| 2 | HP Pavilion 15 (HP) | $799.99 | • Intel Core i5‑1235U<br>• Intel Iris Xe graphics<br>• 8 GB RAM | • Balanced performance for study and light media creation<br>• 15‑inch display offers comfortable workspace<br>• Slightly higher specs than the IdeaPad at a modest price increase |\n| 3 | ASUS ROG Strix G15 (ASUS) | $1,299.99 | • AMD Ryzen 7 7735HS<br>• NVIDIA RTX 4060<br>• 16 GB RAM | • Powerful for gaming and demanding creative work<br>• High‑refresh rate display for smooth gameplay<br>• Future‑proof GPU for video editing and 3D tasks |\n\n**Quick recommendation**  \nIf you need a reliable, affordable laptop for schoolwork and everyday use, the **IdeaPad Slim 3** is the best value. For a bit more power without a big jump in price, the **HP Pavilion 15** offers a nice balance. If gaming or heavy creative work is a priority, the **ASUS ROG Strix G15** gives you top‑tier performance.  \n\nLet me know which use case matters most to you, and I can narrow it down further!', NULL, NULL, NULL, '2025-12-03 02:43:55', NULL, '2025-12-02 18:43:55'),
-(173, 23, 'user', 'Can you tell me the price 	ASUS ROG Strix G15 (ASUS)', NULL, NULL, NULL, '2025-12-03 02:44:06', NULL, '2025-12-02 18:44:06'),
-(174, 23, 'bot', 'Here’s the information for the ASUS ROG Strix G15 models we have in stock:\n\n| # | Laptop | Price | Key Specs | Why it\'s a fit |\n|---|---|---|---|---|\n| 1 | ASUS ROG Strix G15 (ASUS) | $1,299.99 | • AMD Ryzen 7 7735HS<br>• NVIDIA RTX 4060<br>• 16 GB RAM | • Excellent 1080p gaming performance at a solid price point<br>• Great balance of CPU and GPU for most modern games |\n| 2 | ROG Strix G15 (Asus) | $1,899.99 | • AMD Ryzen 9<br>• NVIDIA RTX 3070<br>• 16 GB RAM | • Higher‑end GPU for 1440p or high‑refresh‑rate 1080p gaming<br>• More future‑proof for upcoming titles |\n| 3 | Asus ROG Strix G16 (Asus) | $5,000.00 | • Intel i7‑13650HX<br>• NVIDIA RTX 4060<br>• 32 GB RAM | • Premium build with extra RAM for heavy multitasking and creative workloads<br>• Larger 16‑inch display for an immersive experience |\n\n**Quick recommendation**  \nIf you’re looking for the ASUS ROG Strix G15 you mentioned, the **ASUS ROG Strix G15 (ASUS) at $1,299.99** offers strong gaming performance and great value.', NULL, NULL, NULL, '2025-12-03 02:44:13', NULL, '2025-12-02 18:44:13'),
-(175, 24, 'user', 'How much is this', NULL, NULL, NULL, '2025-12-03 02:44:57', NULL, '2025-12-02 18:44:57'),
-(176, 24, 'bot', 'I’m happy to help! Could you let me know which laptop you’re interested in, or share the name/model you’d like the price for?', NULL, NULL, NULL, '2025-12-03 02:45:00', 2280, '2025-12-02 18:45:00'),
-(177, 24, 'user', 'Looking for a computer', NULL, NULL, NULL, '2025-12-03 02:45:16', NULL, '2025-12-02 18:45:16'),
-(178, 24, 'bot', 'Sure! I can help you find the perfect laptop. Could you tell me a bit more about what you’ll be using it for and your budget range?  \n\n- Gaming, video editing, or everyday work?  \n- Any preferred screen size or performance requirements?  \n\nLet me know and I’ll suggest the best options from our inventory.', NULL, NULL, NULL, '2025-12-03 02:45:20', 1500, '2025-12-02 18:45:20'),
-(179, 25, 'user', 'my budget only 1000 i want to find a laptop for my business career only', NULL, NULL, NULL, '2025-12-03 02:54:53', NULL, '2025-12-02 18:54:53'),
-(180, 25, 'bot', 'I’m sorry—I don’t have a laptop in our current inventory that exactly matches a business‑focused model under $1,000.  \n\nYou might want to:\n\n1. **Browse our full catalog** – we have a wider selection that may include suitable business laptops at a slightly higher price point.  \n2. **Adjust the budget or specific requirements** – increasing the budget a bit or being flexible on features (e.g., storage type or screen size) can open up more options.\n\nIf you need help navigating the catalog or have any other questions about shipping, returns, or payment, just let me know!', NULL, NULL, NULL, '2025-12-03 02:54:57', NULL, '2025-12-02 18:54:57'),
-(181, 25, 'user', 'my budget under 1000 what laptop recommend for me', NULL, NULL, NULL, '2025-12-03 02:57:05', NULL, '2025-12-02 18:57:05'),
-(182, 25, 'bot', 'I\'m sorry, but we don’t have any laptops in our current inventory that match a budget under $1,000. \n\nYou might consider:\n\n* Checking our full catalog for any upcoming deals or new arrivals.  \n* Adjusting your budget slightly higher to open up more options.  \n* Expanding your criteria (e.g., looking at refurbished models or lower‑spec devices).\n\nIf you’d like help exploring any of these alternatives, just let me know!', NULL, NULL, NULL, '2025-12-03 02:57:09', NULL, '2025-12-02 18:57:09'),
-(183, 25, 'user', 'my budget under 1000 what laptop recommend for me', NULL, NULL, NULL, '2025-12-03 03:02:07', NULL, '2025-12-02 19:02:07'),
-(184, 25, 'bot', 'Here are two great options that stay well within your $1,000 budget:\n\n| # | Laptop | Price | Key Specs | Why it’s a fit |\n|---|---|---|---|---|\n| 1 | Lenovo IdeaPad Slim 3 | $649.00 | • AMD Ryzen 5 5625U<br>• Integrated Radeon Graphics<br>• 8 GB RAM | • Excellent performance for everyday tasks and light multitasking<br>• Lightweight and portable – perfect for students on the go |\n| 2 | HP Pavilion 15 | $799.99 | • Intel Core i5‑1235U<br>• Intel Iris Xe Graphics<br>• 8 GB RAM | • Strong CPU and graphics for studying, streaming, and casual photo/video work<br>• Slightly larger 15‑inch display gives more screen real‑estate for productivity |\n\n**Quick recommendation**  \nIf you want a slightly more powerful CPU‑GPU combo and a larger screen for multitasking, the **HP Pavilion 15** is the better pick. If you prefer a lower price and a slimmer, lighter chassis, the **Lenovo IdeaPad Slim 3** offers solid performance for student use. Both come with free shipping on orders over $1,000 and a 30‑day return policy. Let me know if you’d like help adding one to your cart!', NULL, NULL, NULL, '2025-12-03 03:02:13', NULL, '2025-12-02 19:02:13'),
-(185, 25, 'user', 'recommendation for the Gaming laptop', NULL, NULL, NULL, '2025-12-03 03:03:02', NULL, '2025-12-02 19:03:02'),
-(186, 25, 'bot', 'Here are the gaming‑focused laptops we have right now:\n\n| # | Laptop | Price | Key Specs | Why it’s a fit |\n|---|---|---|---|---|\n| 1 | ASUS ROG Strix G15 (Ryzen 7) | $1,299.99 | • AMD Ryzen 7 7735HS<br>• NVIDIA RTX 4060<br>• 16 GB RAM | • Strong 1080p/1440p performance for most modern games<br>• Excellent price‑to‑performance ratio |\n| 2 | ASUS ROG Strix G15 (Ryzen 9) | $1,899.99 | • AMD Ryzen 9<br>• NVIDIA RTX 3070<br>• 16 GB RAM | • Higher‑end GPU for smoother 1440p or entry‑level 4K gaming<br>• Future‑proof with more compute power |\n| 3 | Razer Blade 15 | $2,999.50 | • Intel Core i7<br>• NVIDIA RTX 3080<br>• 16 GB RAM | • Premium build and ultra‑high graphics performance (high‑refresh 4K or 1440p)<br>• Ideal for demanding AAA titles and streaming |\n\n**Quick recommendation**  \nIf you want the best balance of performance and price, the **ASUS ROG Strix G15 with Ryzen 7 and RTX 4060** is the top pick. It handles current games smoothly while staying well under $1,300. For extra power (1440p‑high‑refresh or light 4K), step up to the Ryzen 9/RTX 3070 model. If you’re after a premium, ultra‑high‑end experience and don’t mind the higher cost, the Razer Blade 15 with RTX 3080 delivers it.', NULL, NULL, NULL, '2025-12-03 03:03:09', NULL, '2025-12-02 19:03:09'),
-(187, 26, 'user', 'recommendation for the Gaming laptop', NULL, NULL, NULL, '2025-12-03 03:03:23', NULL, '2025-12-02 19:03:23'),
-(188, 26, 'bot', 'Here are the gaming laptops we currently have in stock, grouped by price range and performance:\n\n| # | Laptop | Price | Key Specs | Why it\'s a fit |\n|---|---|---|---|---|\n| 1 | ASUS ROG Strix G15 | $1299.99 | • AMD Ryzen 7 7735HS<br>• NVIDIA RTX 4060<br>• 16 GB RAM<br>• 1 TB SSD<br>• 15.6\" display | • Excellent performance for 1080p‑high‑refresh gaming<br>• Good value‑to‑price ratio<br>• RGB lighting adds gamer flair |\n| 2 | Asus ROG Strix G15 | $1899.99 | • AMD Ryzen 9<br>• NVIDIA RTX 3070<br>• 16 GB RAM<br>• 1 TB SSD<br>• 15.6\" display | • Stronger GPU for higher settings & 144‑Hz+ screens<br>• Ideal for demanding titles and future‑proofing<br>• Still under $2k |\n| 3 | Razer Blade 15 | $2999.50 | • Intel Core i7<br>• NVIDIA RTX 3080<br>• 16 GB RAM<br>• 1 TB SSD<br>• 15.6\" display | • Premium build with sleek, thin chassis<br>• Top‑tier GPU for ultra‑high graphics<br>• Great for both gaming and content creation |\n| 4 | Asus ROG Strix G16 | $5000.00 | • Intel i7‑13650HX<br>• NVIDIA RTX 4060 (up‑to 140W TGP)<br>• 32 GB RAM<br>• 1 TB SSD<br>• 15.6\" display | • Massive 32 GB RAM for extreme multitasking<br>• High‑power GPU for maximum performance<br>• Best for enthusiasts who want no compromises |\n\n**Quick recommendation**  \nIf you want the best overall gaming experience without breaking the $2,000 mark, the **Asus ROG Strix G15** ($1,899.99) offers a powerful RTX 3070 GPU and a Ryzen 9 CPU, delivering smooth high‑refresh gameplay for current and upcoming titles. If budget isn’t a concern and you prefer a premium, lightweight chassis, the **Razer Blade 15** is the top‑tier choice.', NULL, NULL, NULL, '2025-12-03 03:03:29', 5468, '2025-12-02 19:03:29'),
-(189, 25, 'user', 'recommendation for the Gaming laptop', NULL, NULL, NULL, '2025-12-03 03:06:55', NULL, '2025-12-02 19:06:55'),
-(190, 25, 'bot', '| # | Laptop | Price | Key Specs | Why it\'s a fit |\n|---|---|---|---|---|\n| 1 | ASUS ROG Strix G15 | $1299.99 | • AMD Ryzen 7 7735HS<br>• NVIDIA RTX 4060<br>• 16 GB RAM | • Excellent 1080p‑1440p gaming performance<br>• Best value for a solid gaming rig |\n| 2 | ASUS ROG Strix G15 (Ryzen 9) | $1899.99 | • AMD Ryzen 9<br>• NVIDIA RTX 3070<br>• 16 GB RAM | • Higher‑end GPU for smoother 1440p/4K gaming<br>• Strong CPU for demanding titles and streaming |\n| 3 | Razer Blade 15 | $2999.50 | • Intel Core i7<br>• NVIDIA RTX 3080<br>• 16 GB RAM | • Flagship performance for ultra‑high‑resolution gaming<br>• Premium build and thin‑and‑light design |\n\n**Quick recommendation**  \nIf you want the best overall gaming experience without going into premium‑price territory, the **ASUS ROG Strix G15 with Ryzen 9 and RTX 3070 ($1899.99)** offers the strongest GPU and CPU combo for smooth high‑resolution play and streaming, while still being more affordable than the top‑tier Razer Blade. If budget is tighter, the $1299.99 model still delivers great performance for most modern games.', NULL, NULL, NULL, '2025-12-03 03:07:08', NULL, '2025-12-02 19:07:08'),
-(191, 25, 'user', 'High performance laptop', NULL, NULL, NULL, '2025-12-03 03:07:21', NULL, '2025-12-02 19:07:21'),
-(192, 25, 'bot', 'Excellent! I can help you find a powerful gaming laptop. What\'s your budget range, and what types of games do you plan to play? This will help me recommend the best GPU and specs for your needs.', NULL, NULL, NULL, '2025-12-03 03:07:21', NULL, '2025-12-02 19:07:21'),
-(193, 25, 'user', 'no budget', NULL, NULL, NULL, '2025-12-03 03:07:31', NULL, '2025-12-02 19:07:31'),
-(194, 25, 'bot', 'I’m sorry, but we don’t have any laptops in our current inventory to recommend. If you have specific needs (gaming, business, creative work, etc.) or would like to know about our store policies, feel free to let me know and I’ll be happy to help!', NULL, NULL, NULL, '2025-12-03 03:07:40', NULL, '2025-12-02 19:07:40'),
-(195, 25, 'user', 'High performance laptop', NULL, NULL, NULL, '2025-12-03 03:07:49', NULL, '2025-12-02 19:07:49'),
-(196, 25, 'bot', 'Excellent! I can help you find a powerful gaming laptop. What\'s your budget range, and what types of games do you plan to play? This will help me recommend the best GPU and specs for your needs.', NULL, NULL, NULL, '2025-12-03 03:07:49', NULL, '2025-12-02 19:07:49'),
-(197, 27, 'user', 'I need a gaming laptop', NULL, NULL, NULL, '2025-12-03 03:08:41', NULL, '2025-12-02 19:08:41'),
-(198, 27, 'bot', 'Excellent! I can help you find a powerful gaming laptop. What\'s your budget range, and what types of games do you plan to play? This will help me recommend the best GPU and specs for your needs.', NULL, NULL, NULL, '2025-12-03 03:08:41', NULL, '2025-12-02 19:08:41'),
-(199, 27, 'user', 'I need a gaming laptop', NULL, NULL, NULL, '2025-12-03 03:09:08', NULL, '2025-12-02 19:09:08'),
-(200, 27, 'bot', 'Here are the gaming laptops we have in stock that match your needs:\n\n| # | Laptop | Price | Key Specs | Why it\'s a fit |\n|---|---|---|---|---|\n| 1 | ASUS ROG Strix G15 (AMD) | $1,299.99 | • AMD Ryzen 7 7735HS<br>• NVIDIA RTX 4060<br>• 16 GB RAM | • Strong performance for modern games at 1080p<br>• Good value for a solid GPU‑CPU combo |\n| 2 | ASUS ROG Strix G15 (AMD) | $1,899.99 | • AMD Ryzen 9<br>• NVIDIA RTX 3070<br>• 16 GB RAM | • Higher‑end GPU for higher frame rates and future‑proofing<br>• Powerful CPU for demanding titles and multitasking |\n| 3 | Razer Blade 15 | $2,999.50 | • Intel Core i7<br>• NVIDIA RTX 3080<br>• 16 GB RAM | • Premium build with top‑tier GPU for 1440p/4K gaming<br>• Ideal for enthusiasts who want the best performance |\n\n**Quick recommendation**  \nIf you want a balance of performance and price, the **ASUS ROG Strix G15 with the RTX 3070 ($1,899.99)** offers excellent gaming power without the premium cost of the Razer Blade. If budget is tighter, the RTX 4060 model still handles most games smoothly at 1080p. For the ultimate high‑resolution experience, the Razer Blade 15 is the top choice. Let me know which one you’d like to explore further or if you have any other questions!', NULL, NULL, NULL, '2025-12-03 03:09:16', NULL, '2025-12-02 19:09:16'),
-(201, 27, 'user', 'I need a gaming laptop', NULL, NULL, NULL, '2025-12-03 03:09:25', NULL, '2025-12-02 19:09:25'),
-(202, 27, 'bot', 'Excellent! I can help you find a powerful gaming laptop. What\'s your budget range, and what types of games do you plan to play? This will help me recommend the best GPU and specs for your needs.', NULL, NULL, NULL, '2025-12-03 03:09:25', NULL, '2025-12-02 19:09:25'),
-(203, 27, 'user', 'gaming_laptop', NULL, NULL, NULL, '2025-12-03 03:09:38', NULL, '2025-12-02 19:09:38'),
-(204, 27, 'bot', '| # | Laptop | Price | Key Specs | Why it\'s a fit |\n|---|---|---|---|---|\n| 1 | ASUS ROG Strix G15 | $1299.99 | • AMD Ryzen 7 7735HS<br>• NVIDIA RTX 4060<br>• 16 GB RAM | • Strong gaming performance at a budget‑friendly price<br>• Modern GPU handles 1080p‑1440p titles smoothly |\n| 2 | ROG Strix G15 (Asus) | $1899.99 | • AMD Ryzen 9<br>• NVIDIA RTX 3070<br>• 16 GB RAM | • Higher‑end CPU & GPU for higher frame rates and ray‑tracing<br>• Ideal for 1440p gaming and future‑proofing |\n| 3 | Blade 15 (Razer) | $2999.50 | • Intel Core i7<br>• NVIDIA RTX 3080<br>• 16 GB RAM | • Premium build & display quality<br>• Top‑tier RTX 3080 for 4K or high‑refresh gaming |\n\n**Quick recommendation**  \nIf you want the best balance of performance and price, the **ROG Strix G15 (Asus) at $1,899.99** offers a powerful RTX 3070 and Ryzen 9 CPU, delivering excellent 1440p gaming without the premium cost of the Blade 15.', NULL, NULL, NULL, '2025-12-03 03:09:44', NULL, '2025-12-02 19:09:44'),
-(205, 27, 'user', 'Laptop for gaming', NULL, NULL, NULL, '2025-12-03 03:09:48', NULL, '2025-12-02 19:09:48'),
-(206, 27, 'bot', 'Excellent! I can help you find a powerful gaming laptop. What\'s your budget range, and what types of games do you plan to play? This will help me recommend the best GPU and specs for your needs.', NULL, NULL, NULL, '2025-12-03 03:09:48', NULL, '2025-12-02 19:09:48'),
-(207, 28, 'user', 'Laptop for gaming', 'gaming_laptop', 1.000, NULL, '2025-12-03 03:12:19', NULL, '2025-12-02 19:12:19'),
-(208, 28, 'bot', 'Here are the gaming laptops we have in stock that match your need:\n\n| # | Laptop | Price | Key Specs | Why it\'s a fit |\n|---|---|---|---|---|\n| 1 | ASUS ROG Strix G15 | $1299.99 | • AMD Ryzen 7 7735HS<br>• NVIDIA RTX 4060<br>• 16 GB RAM<br>• 1 TB SSD<br>• 15.6” display | • Best value‑for‑performance for most gamers<br>• Strong GPU for 1080p‑144Hz gaming<br>• Plenty of storage for games |\n| 2 | Asus ROG Strix G15 (RTX 3070) | $1899.99 | • AMD Ryzen 9<br>• NVIDIA RTX 3070<br>• 16 GB RAM<br>• 1 TB SSD<br>• 15.6” display | • Higher‑end GPU for smoother 1440p or high‑refresh 1080p<br>• Faster CPU for demanding titles<br>• Still portable at 15.6” |\n| 3 | Razer Blade 15 | $2999.50 | • Intel Core i7<br>• NVIDIA RTX 3080<br>• 16 GB RAM<br>• 1 TB SSD<br>• 15.6” display | • Premium build and sleek design<br>• Top‑tier RTX 3080 for 1440p/4K gaming<br>• Excellent thermal engineering |\n| 4 | Asus ROG Strix G16 | $5000.00 | • Intel i7‑13650HX<br>• NVIDIA RTX 4060 (up to 140 W TGP)<br>• 32 GB RAM<br>• 1 TB SSD<br>• 15.6” display | • Massive 32 GB RAM for future‑proofing & multitasking<br>• Powerful CPU & high‑TGP GPU for max performance<br>• Ideal for ultra‑high settings or streaming while gaming |\n\n**Quick recommendation**  \nIf you want a solid gaming experience without breaking the bank, the **ASUS ROG Strix G15** at **$1,299.99** offers excellent performance for 1080p high‑refresh gaming and a generous 1 TB SSD. For higher resolutions or the best future‑proofing, consider the **Razer Blade 15** or the **Asus ROG Strix G16**, though they come at a premium price.  \n\nLet me know if you’d like help with ordering, financing options, or any other details!', NULL, NULL, NULL, '2025-12-03 03:12:25', 4622, '2025-12-02 19:12:25'),
-(209, 27, 'user', 'My budget is only $1000', NULL, NULL, NULL, '2025-12-03 03:15:32', NULL, '2025-12-02 19:15:32'),
-(210, 27, 'bot', 'I’m sorry, but we don’t have any laptops in our current inventory that fall within a $1,000 budget. If you’d like, I can let you know about other devices or accessories we have available, or let you know when new laptops arrive that match your price range. How would you like to proceed?', NULL, NULL, NULL, '2025-12-03 03:15:39', NULL, '2025-12-02 19:15:39'),
-(211, 27, 'user', 'My budget is only 1000', NULL, NULL, NULL, '2025-12-03 03:15:59', NULL, '2025-12-02 19:15:59'),
-(212, 27, 'bot', 'I’m sorry, but our current inventory only includes accessories (keyboards and headsets) and does not have any laptops listed at the moment. Could you let me know what type of laptop you’re looking for (e.g., gaming, business, creative work) and any specific features you need? I’ll be happy to help you find the best option within your $1,000 budget once we have the relevant models available.', NULL, NULL, NULL, '2025-12-03 03:16:04', NULL, '2025-12-02 19:16:04'),
-(213, 27, 'user', 'gaming laptop', NULL, NULL, NULL, '2025-12-03 03:16:46', NULL, '2025-12-02 19:16:46'),
-(214, 27, 'bot', 'Excellent! I can help you find a powerful gaming laptop. What\'s your budget range, and what types of games do you plan to play? This will help me recommend the best GPU and specs for your needs.', NULL, NULL, NULL, '2025-12-03 03:16:46', NULL, '2025-12-02 19:16:46'),
-(215, 27, 'user', 'gaming laptop', NULL, NULL, NULL, '2025-12-03 03:17:09', NULL, '2025-12-02 19:17:09'),
-(216, 27, 'bot', 'Excellent! I can help you find a powerful gaming laptop. What\'s your budget range, and what types of games do you plan to play? This will help me recommend the best GPU and specs for your needs.', NULL, NULL, NULL, '2025-12-03 03:17:09', NULL, '2025-12-02 19:17:09'),
-(217, 29, 'user', 'High performance laptop', NULL, NULL, NULL, '2025-12-03 03:17:19', NULL, '2025-12-02 19:17:19'),
-(218, 29, 'bot', 'Excellent! I can help you find a powerful gaming laptop. What\'s your budget range, and what types of games do you plan to play? This will help me recommend the best GPU and specs for your needs.', NULL, NULL, NULL, '2025-12-03 03:17:19', NULL, '2025-12-02 19:17:19'),
-(219, 29, 'user', 'hello', NULL, NULL, NULL, '2025-12-04 10:35:36', NULL, '2025-12-04 02:35:36'),
-(220, 29, 'bot', 'Hello! I\'m your Smart Laptop Advisor. How can I help you find the perfect laptop today?', NULL, NULL, NULL, '2025-12-04 10:35:36', NULL, '2025-12-04 02:35:36'),
-(221, 30, 'user', 'hello', NULL, NULL, NULL, '2025-12-04 10:36:10', NULL, '2025-12-04 02:36:10'),
-(222, 30, 'bot', 'Hello! I\'m your Smart Laptop Advisor. How can I help you find the perfect laptop today?', NULL, NULL, NULL, '2025-12-04 10:36:10', NULL, '2025-12-04 02:36:10'),
-(223, 31, 'user', 'good', NULL, NULL, NULL, '2025-12-04 10:38:01', NULL, '2025-12-04 02:38:01'),
-(224, 31, 'bot', 'I’m glad you’re doing well! How can I help you today with laptops, specifications, or any store‑related questions?', NULL, NULL, NULL, '2025-12-04 10:38:07', NULL, '2025-12-04 02:38:07');
+(163, 23, 'user', 's', NULL, NULL, NULL, '2025-12-07 16:37:18', NULL, '2025-12-07 08:37:18'),
+(164, 23, 'bot', 'I’m sorry, I can only help with laptops and store‑related questions. How can I assist you today?', NULL, NULL, NULL, '2025-12-07 16:37:23', NULL, '2025-12-07 08:37:23');
 
 -- --------------------------------------------------------
 
@@ -785,14 +720,13 @@ CREATE TABLE `intents` (
 --
 
 INSERT INTO `intents` (`intent_id`, `intent_name`, `display_name`, `description`, `category`, `is_active`, `priority`, `confidence_threshold`, `usage_count`, `success_count`, `last_used_at`, `created_at`, `updated_at`) VALUES
-(1, 'greeting', 'Greetings & Welcome', 'User greets the chatbot or starts a conversation', 'greeting', 1, 10, 0.750, 9, 9, '2025-12-03 02:45:00', '2025-11-21 19:57:10', '2025-12-02 18:45:00'),
-(2, 'find_laptop', 'Laptop Search Requests', 'User wants to find or search for a laptop', 'product_inquiry', 1, 90, 0.750, 2, 2, '2025-12-03 02:45:20', '2025-11-21 19:57:10', '2025-12-02 18:45:20'),
-(3, 'gaming_laptop', 'Gaming Laptop Requests', 'User is looking for a gaming laptop', 'recommendation', 1, 5, 0.750, 2, 2, '2025-12-03 03:12:25', '2025-11-21 19:57:10', '2025-12-02 19:12:25'),
+(1, 'greeting', 'Greetings & Welcome', 'User greets the chatbot or starts a conversation', 'greeting', 1, 100, 0.750, 8, 8, '2025-12-03 02:20:15', '2025-11-21 19:57:10', '2025-12-02 18:20:15'),
+(2, 'find_laptop', 'Laptop Search Requests', 'User wants to find or search for a laptop', 'product_inquiry', 1, 90, 0.750, 1, 1, '2025-11-25 04:06:52', '2025-11-21 19:57:10', '2025-11-24 20:06:52'),
+(3, 'gaming_laptop', 'Gaming Laptop Requests', 'User is looking for a gaming laptop', 'recommendation', 1, 85, 0.750, 0, 0, NULL, '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (4, 'budget_question', 'Budget Related Queries', 'User specifies their budget or price range', 'support', 1, 80, 0.750, 0, 0, NULL, '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (5, 'goodbye', 'Farewell & Thanks', 'User thanks the bot or says goodbye', 'greeting', 1, 70, 0.750, 0, 0, NULL, '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (7, 'greeting_copy', 'Greetings & Welcome (Copy)', 'User greets the chatbot or starts a conversation', 'greeting', 1, 10, 0.750, 0, 0, NULL, '2025-11-24 19:54:54', '2025-11-24 19:57:48'),
-(8, 'warranty_info', 'Warranty Information', 'Provides users with details about product warranty coverage, duration, and claim procedures.', 'support', 1, 6, 0.750, 4, 4, '2025-11-25 04:08:26', '2025-11-24 19:55:31', '2025-11-24 20:08:26'),
-(10, 'check_price', 'Check Price', 'Handles user requests to check the price of a product or service.\r\n', 'product_inquiry', 1, 5, 0.750, 0, 0, NULL, '2025-12-02 18:39:29', '2025-12-02 18:39:29');
+(8, 'warranty_info', 'Warranty Information', 'Provides users with details about product warranty coverage, duration, and claim procedures.', 'support', 1, 6, 0.750, 4, 4, '2025-11-25 04:08:26', '2025-11-24 19:55:31', '2025-11-24 20:08:26');
 
 -- --------------------------------------------------------
 
@@ -825,8 +759,7 @@ INSERT INTO `intent_responses` (`response_id`, `intent_id`, `response_text`, `re
 (4, 4, 'Perfect! With your budget of [BUDGET], I can show you some excellent options. Let me find laptops that offer the best value in your price range.', 'text', NULL, 1, 1, 0, 1, '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (5, 5, 'You\'re very welcome! I\'m glad I could help you find the perfect laptop. If you have any questions in the future, don\'t hesitate to ask. Have a great day! 🎓', 'text', NULL, 1, 1, 0, 1, '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (7, 7, 'Hello! I\'m your Smart Laptop Advisor. How can I help you find the perfect laptop today?', 'text', NULL, 1, 0, 0, 1, '2025-11-24 19:54:54', '2025-11-24 19:54:54'),
-(8, 8, 'Our products come with a standard warranty that covers manufacturing defects. Warranty duration and claim steps may vary depending on the product. Please share your product name or model so I can provide exact details.', 'text', NULL, 1, 0, 0, 1, '2025-11-24 19:55:31', '2025-11-24 19:55:31'),
-(9, 10, 'Sure! Please tell me the product name or model so I can check the latest price for you.\r\n', 'text', NULL, 1, 0, 0, 1, '2025-12-02 18:39:29', '2025-12-02 18:39:29');
+(8, 8, 'Our products come with a standard warranty that covers manufacturing defects. Warranty duration and claim steps may vary depending on the product. Please share your product name or model so I can provide exact details.', 'text', NULL, 1, 0, 0, 1, '2025-11-24 19:55:31', '2025-11-24 19:55:31');
 
 -- --------------------------------------------------------
 
@@ -850,8 +783,7 @@ CREATE TABLE `inventory_logs` (
 INSERT INTO `inventory_logs` (`log_id`, `product_id`, `change_amount`, `change_type`, `note`, `created_at`) VALUES
 (1, 121, 20, 'restock', '', '2025-12-02 13:21:38'),
 (2, 117, -46, 'adjustment', 'Manual update via inventory page', '2025-12-02 13:21:50'),
-(3, 117, 11, 'restock', '', '2025-12-02 13:21:52'),
-(4, 128, 51, 'adjustment', 'Manual update via inventory page', '2025-12-04 01:32:25');
+(3, 117, 11, 'restock', '', '2025-12-02 13:21:52');
 
 -- --------------------------------------------------------
 
@@ -892,7 +824,9 @@ INSERT INTO `orders` (`order_id`, `user_id`, `total_amount`, `order_status`, `sh
 (9, 2, 649.00, 'Pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-28 06:09:52', 'Credit Card', 0),
 (10, 1, 649.00, 'Shipped', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-28 07:23:33', 'Credit Card', 0),
 (24, 4, 900.00, 'Completed', 'GWK', 'Tingkat Lahat Mines 4', 'Lahat', 'Perak', '31500', 'Malaysia', '+60165076821', '2025-12-01 15:59:29', 'Credit Card', 0),
-(25, 4, 5000.00, 'Delivered', 'GWK', 'Tingkat Lahat Mines 4', 'Lahat', 'Perak', '31500', 'Malaysia', '+60165076821', '2025-12-02 15:22:42', 'Credit Card', 0);
+(25, 4, 5000.00, 'Shipped', 'GWK', 'Tingkat Lahat Mines 4', 'Lahat', 'Perak', '31500', 'Malaysia', '+60165076821', '2025-12-02 15:22:42', 'Credit Card', 0),
+(26, 6, 279.98, 'Pending', 'GYZ', 'asdsdad', 'Lahat', 'Perak', '31500', 'Malaysia', '+60115076821', '2025-12-07 08:38:53', 'Credit Card', 0),
+(27, 6, 5000.00, 'Pending', 'GYZ', 'asdsdad', 'Lahat', 'Perak', '31500', 'Malaysia', '+60115076821', '2025-12-07 16:14:21', 'Credit Card', 0);
 
 -- --------------------------------------------------------
 
@@ -926,7 +860,9 @@ INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`
 (11, 9, 4, 1, 649.00),
 (12, 10, 4, 1, 649.00),
 (28, 24, 117, 3, 300.00),
-(29, 25, 128, 1, 5000.00);
+(29, 25, 128, 1, 5000.00),
+(30, 26, 124, 2, 139.99),
+(31, 27, 128, 1, 5000.00);
 
 -- --------------------------------------------------------
 
@@ -1059,6 +995,7 @@ CREATE TABLE `products` (
   `storage_gb` int(11) DEFAULT NULL,
   `storage_type` varchar(50) DEFAULT 'SSD',
   `display_size` decimal(4,2) DEFAULT NULL,
+  `battery_life` varchar(50) DEFAULT NULL,
   `image_url` varchar(255) DEFAULT NULL,
   `description` text DEFAULT NULL,
   `primary_use_case` varchar(100) DEFAULT NULL COMMENT 'e.g., Gaming, Business, General'
@@ -1068,25 +1005,24 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`product_id`, `product_name`, `product_category`, `related_to_category`, `brand`, `price`, `stock_quantity`, `min_stock_level`, `cpu`, `gpu`, `ram_gb`, `storage_gb`, `storage_type`, `display_size`, `image_url`, `description`, `primary_use_case`) VALUES
-(1, 'Creator Z16', 'laptop', NULL, 'MSI', 2499.99, 50, 10, 'Intel Core i7', 'NVIDIA RTX 3060', 16, 1024, 'SSD', 16.00, 'images/laptop1.png', 'A powerful laptop for creative professionals.', 'Creative'),
-(2, 'ZenBook Duo', 'laptop', NULL, 'Asus', 1999.00, 50, 10, 'Intel Core i9', 'NVIDIA RTX 3070', 32, 1024, 'SSD', 14.00, 'images/laptop2.png', 'Dual-screen laptop for ultimate productivity.', 'Business'),
-(3, 'Blade 15', 'laptop', NULL, 'Razer', 2999.50, 50, 10, 'Intel Core i7', 'NVIDIA RTX 3080', 16, 1024, 'SSD', 15.60, 'images/laptop3.png', 'The ultimate gaming laptop with a sleek design.', 'Gaming'),
-(4, 'IdeaPad Slim 3', 'laptop', NULL, 'Lenovo', 649.00, 50, 10, 'AMD Ryzen 5', 'Integrated Radeon', 8, 512, 'SSD', 15.60, 'images/laptop4.jpg', 'Great for students and everyday tasks.', 'Student'),
-(5, 'MacBook Pro 16', 'laptop', NULL, 'Apple', 3499.00, 50, 10, 'Apple M2 Pro', 'Integrated', 16, 1024, 'SSD', 16.20, 'images/laptop5.png', 'Powerful performance for professionals and creatives.', 'Creative'),
-(6, 'Spectre x360', 'laptop', NULL, 'HP', 1450.00, 50, 10, 'Intel Core i7', 'Intel Iris Xe', 16, 512, 'SSD', 13.50, 'images/laptop6.png', 'A versatile 2-in-1 laptop with a premium feel.', 'Business'),
-(7, 'ROG Strix G15', 'laptop', NULL, 'Asus', 1899.99, 49, 10, 'AMD Ryzen 9', 'NVIDIA RTX 3070', 16, 1024, 'SSD', 15.60, 'images/laptop7.png', 'High-refresh-rate gaming powerhouse.', 'Gaming'),
-(8, 'Pavilion 15', 'mouse', NULL, 'HP', 799.00, 40, 10, 'Intel Core i5', 'Intel Iris Xe', 12, 512, 'SSD', 15.60, 'LaptopAdvisor/images/product_692fd6c72964f.png', 'A reliable all-rounder for work and entertainment.', 'General'),
-(117, 'Logitech G ', 'mouse', 'Gaming', 'Logitech ', 300.00, 12, 10, '', '', 0, 0, 'SSD', 0.00, 'LaptopAdvisor/images/product_692d9b1204696.webp', '', 'Gaming'),
-(118, 'Dell XPS 15', 'laptop', NULL, 'Dell', 1599.99, 50, 10, 'Intel Core i7-13700H', 'NVIDIA RTX 4050', 16, 512, 'SSD', 15.60, NULL, 'Premium business laptop with stunning display and powerful performance', 'Business'),
-(119, 'MacBook Pro 14', 'laptop', NULL, 'Apple', 1999.99, 50, 10, 'Apple M3 Pro', 'Integrated', 18, 512, 'SSD', 14.20, NULL, 'Professional-grade laptop for creative work with excellent display', 'Creative'),
-(120, 'ASUS ROG Strix G15', 'laptop', NULL, 'ASUS', 1299.99, 50, 10, 'AMD Ryzen 7 7735HS', 'NVIDIA RTX 4060', 16, 1000, 'SSD', 15.60, NULL, 'High-performance gaming laptop with RGB lighting', 'Gaming'),
-(121, 'Lenovo ThinkPad X1', 'laptop', NULL, 'Lenovo', 1399.99, 20, 10, 'Intel Core i5-1340P', 'Intel Iris Xe', 16, 512, 'SSD', 14.00, NULL, 'Business ultrabook with legendary keyboard and security features', 'Business'),
-(122, 'HP Pavilion 15', 'laptop', NULL, 'HP', 799.99, 50, 10, 'Intel Core i5-1235U', 'Intel Iris Xe', 8, 512, 'SSD', 15.60, NULL, 'Affordable laptop perfect for students and everyday computing', 'Student'),
-(124, 'Razer BlackWidow V3', 'keyboard', 'Gaming', 'Razer', 139.99, 50, 10, '', '', 0, 0, '', 0.00, NULL, 'Mechanical gaming keyboard with Razer Green switches and RGB', 'Gaming'),
-(125, 'SteelSeries Arctis 7', 'headset', 'Gaming', 'SteelSeries', 149.99, 50, 10, '', '', 0, 0, '', 0.00, NULL, 'Wireless gaming headset with lossless audio and 24-hour battery', 'Gaming'),
-(128, 'Asus ROG Strix G16', 'laptop', NULL, 'Asus', 5000.00, 100, 10, ' i7-13650HX', 'NVIDIA GeForce RTX 4060', 32, 1024, 'SSD', 15.60, 'LaptopAdvisor/images/product_692f0409da2d4.webp', 'Power Power Up Your Gaming – Windows 11, 13th Gen Intel Core i7-13650HX Processor And NVIDIA GeForce RTX 4060 Laptop GPU, Up To 140W TGP To Win More Games\r\n\r\n', 'Gaming'),
-(129, 'Asus gggg', 'laptop', NULL, 'Asus', 5000.00, 50, 10, ' i7-13650HX', 'NVIDIA GeForce RTX 4060', 32, 1024, 'SSD', 15.60, 'LaptopAdvisor/images/product_6930f51140a1b.webp', 'ssss', 'Gaming');
+INSERT INTO `products` (`product_id`, `product_name`, `product_category`, `related_to_category`, `brand`, `price`, `stock_quantity`, `min_stock_level`, `cpu`, `gpu`, `ram_gb`, `storage_gb`, `storage_type`, `display_size`, `battery_life`, `image_url`, `description`, `primary_use_case`) VALUES
+(1, 'Creator Z16', 'laptop', NULL, 'MSI', 2499.99, 50, 10, 'Intel Core i7', 'NVIDIA RTX 3060', 16, 1024, 'SSD', 16.00, NULL, 'images/laptop1.png', 'A powerful laptop for creative professionals.', 'Creative'),
+(2, 'ZenBook Duo', 'laptop', NULL, 'Asus', 1999.00, 50, 10, 'Intel Core i9', 'NVIDIA RTX 3070', 32, 1024, 'SSD', 14.00, NULL, 'images/laptop2.png', 'Dual-screen laptop for ultimate productivity.', 'Business'),
+(3, 'Blade 15', 'laptop', NULL, 'Razer', 2999.50, 50, 10, 'Intel Core i7', 'NVIDIA RTX 3080', 16, 1024, 'SSD', 15.60, NULL, 'images/laptop3.png', 'The ultimate gaming laptop with a sleek design.', 'Gaming'),
+(4, 'IdeaPad Slim 3', 'laptop', NULL, 'Lenovo', 649.00, 50, 10, 'AMD Ryzen 5', 'Integrated Radeon', 8, 512, 'SSD', 15.60, NULL, 'images/laptop4.jpg', 'Great for students and everyday tasks.', 'Student'),
+(5, 'MacBook Pro 16', 'laptop', NULL, 'Apple', 3499.00, 50, 10, 'Apple M2 Pro', 'Integrated', 16, 1024, 'SSD', 16.20, NULL, 'images/laptop5.png', 'Powerful performance for professionals and creatives.', 'Creative'),
+(6, 'Spectre x360', 'laptop', NULL, 'HP', 1450.00, 50, 10, 'Intel Core i7', 'Intel Iris Xe', 16, 512, 'SSD', 13.50, NULL, 'images/laptop6.png', 'A versatile 2-in-1 laptop with a premium feel.', 'Business'),
+(7, 'ROG Strix G15', 'laptop', NULL, 'Asus', 1899.99, 49, 10, 'AMD Ryzen 9', 'NVIDIA RTX 3070', 16, 1024, 'SSD', 15.60, NULL, 'images/laptop7.png', 'High-refresh-rate gaming powerhouse.', 'Gaming'),
+(8, 'Pavilion 15', 'mouse', NULL, 'HP', 799.00, 40, 10, 'Intel Core i5', 'Intel Iris Xe', 12, 512, 'SSD', 15.60, NULL, 'LaptopAdvisor/images/product_692eee166259e.jpg', 'A reliable all-rounder for work and entertainment.', 'General'),
+(117, 'Logitech G ', 'mouse', 'Gaming', 'Logitech ', 300.00, 12, 10, '', '', 0, 0, 'SSD', 0.00, NULL, 'LaptopAdvisor/images/product_692d9b1204696.webp', '', 'Gaming'),
+(118, 'Dell XPS 15', 'laptop', NULL, 'Dell', 1599.99, 50, 10, 'Intel Core i7-13700H', 'NVIDIA RTX 4050', 16, 512, 'SSD', 15.60, NULL, NULL, 'Premium business laptop with stunning display and powerful performance', 'Business'),
+(119, 'MacBook Pro 14', 'laptop', NULL, 'Apple', 1999.99, 50, 10, 'Apple M3 Pro', 'Integrated', 18, 512, 'SSD', 14.20, NULL, NULL, 'Professional-grade laptop for creative work with excellent display', 'Creative'),
+(120, 'ASUS ROG Strix G15', 'laptop', NULL, 'ASUS', 1299.99, 50, 10, 'AMD Ryzen 7 7735HS', 'NVIDIA RTX 4060', 16, 1000, 'SSD', 15.60, NULL, NULL, 'High-performance gaming laptop with RGB lighting', 'Gaming'),
+(121, 'Lenovo ThinkPad X1', 'laptop', NULL, 'Lenovo', 1399.99, 20, 10, 'Intel Core i5-1340P', 'Intel Iris Xe', 16, 512, 'SSD', 14.00, NULL, NULL, 'Business ultrabook with legendary keyboard and security features', 'Business'),
+(122, 'HP Pavilion 15', 'laptop', NULL, 'HP', 799.99, 50, 10, 'Intel Core i5-1235U', 'Intel Iris Xe', 8, 512, 'SSD', 15.60, NULL, NULL, 'Affordable laptop perfect for students and everyday computing', 'Student'),
+(124, 'Razer BlackWidow V3', 'keyboard', 'Gaming', 'Razer', 139.99, 48, 10, '', '', 0, 0, '', 0.00, NULL, NULL, 'Mechanical gaming keyboard with Razer Green switches and RGB', 'Gaming'),
+(125, 'SteelSeries Arctis 7', 'headset', 'Gaming', 'SteelSeries', 149.99, 50, 10, '', '', 0, 0, '', 0.00, NULL, NULL, 'Wireless gaming headset with lossless audio and 24-hour battery', 'Gaming'),
+(128, 'Asus ROG Strix G16', 'laptop', NULL, 'Asus', 5000.00, 48, 10, ' i7-13650HX', 'NVIDIA GeForce RTX 4060', 32, 1024, 'SSD', 15.60, '10 hours', 'LaptopAdvisor/images/product_692f0409da2d4.webp', 'Power Power Up Your Gaming – Windows 11, 13th Gen Intel Core i7-13650HX Processor And NVIDIA GeForce RTX 4060 Laptop GPU, Up To 140W TGP To Win More Games\r\n\r\n', 'Gaming');
 
 -- --------------------------------------------------------
 
@@ -1113,23 +1049,13 @@ INSERT INTO `product_media` (`media_id`, `product_id`, `media_url`, `media_type`
 (15, 117, 'LaptopAdvisor/images/product_117_692d9b1206834.webp', 'image', 3, '2025-12-01 13:41:38'),
 (16, 117, 'LaptopAdvisor/images/product_117_692d9b1207046.webp', 'image', 4, '2025-12-01 13:41:38'),
 (17, 117, 'LaptopAdvisor/images/product_117_692d9b1207ba7.webp', 'image', 5, '2025-12-01 13:41:38'),
-(18, 117, 'https://youtu.be/EcGoLXoYMqI?si=ejbqoRmpLp4KWm0n', 'video', 6, '2025-12-01 13:41:38'),
+(18, 117, 'http://youtu.be/EcGoLXoYMqI?si=ejbqoRmpLp4KWm0n', 'video', 6, '2025-12-01 13:41:38'),
 (26, 8, 'LaptopAdvisor/images/product_8_692eee1113b23.webp', 'image', 1, '2025-12-02 13:48:01'),
 (27, 8, 'LaptopAdvisor/images/product_8_692eee1114424.webp', 'image', 2, '2025-12-02 13:48:01'),
 (28, 128, 'LaptopAdvisor/images/product_128_692f0409dae41.webp', 'image', 1, '2025-12-02 15:21:45'),
 (29, 128, 'LaptopAdvisor/images/product_128_692f0409db6b7.webp', 'image', 2, '2025-12-02 15:21:45'),
-(31, 128, 'LaptopAdvisor/images/product_128_692f0409dc4f1.webp', 'image', 4, '2025-12-02 15:21:45'),
-(32, 128, 'LaptopAdvisor/images/product_128_692fd746cef0e.webp', 'image', 5, '2025-12-03 06:23:02'),
-(33, 128, 'LaptopAdvisor/images/product_128_692fd746cf8b5.webp', 'image', 6, '2025-12-03 06:23:02'),
-(34, 128, 'LaptopAdvisor/images/product_128_692fd746d0260.webp', 'image', 7, '2025-12-03 06:23:02'),
-(35, 128, 'LaptopAdvisor/images/product_128_692fd746d0c9a.webp', 'image', 8, '2025-12-03 06:23:02'),
-(37, 8, 'https://www.youtube.com/watch?v=rUkBdCarqow', 'video', 100, '2025-12-04 01:27:18'),
-(38, 128, 'https://www.youtube.com/watch?v=rUkBdCarqow', 'video', 100, '2025-12-04 01:27:26'),
-(39, 7, 'LaptopAdvisor/images/product_7_6930e4992cad9.webp', 'image', 1, '2025-12-04 01:32:09'),
-(40, 7, 'LaptopAdvisor/images/product_7_6930e4992d5ce.webp', 'image', 2, '2025-12-04 01:32:09'),
-(41, 128, 'LaptopAdvisor/images/product_128_6930f4a636ad9.webp', 'image', 101, '2025-12-04 02:40:38'),
-(42, 129, 'https://www.youtube.com/watch?v=rUkBdCarqow', 'video', 1, '2025-12-04 02:42:06'),
-(43, 129, 'LaptopAdvisor/images/product_129_6930f511424c3.webp', 'image', 2, '2025-12-04 02:42:25');
+(30, 128, 'LaptopAdvisor/images/product_128_692f0409dbdfa.webp', 'image', 3, '2025-12-02 15:21:45'),
+(31, 128, 'LaptopAdvisor/images/product_128_692f0409dc4f1.webp', 'image', 4, '2025-12-02 15:21:45');
 
 -- --------------------------------------------------------
 
@@ -1366,13 +1292,13 @@ INSERT INTO `system_settings` (`setting_id`, `setting_key`, `setting_value`, `se
 (1, 'site_name', 'Smart Laptop Advisor', 'string', 'general', 'Website name', 1, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (2, 'site_description', 'Your intelligent companion for finding the perfect laptop tailored to your needs.', 'text', 'general', 'Website description', 1, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (3, 'admin_email', 'admin@smartlaptopadvisor.com', 'string', 'general', 'Primary admin email', 0, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
-(4, 'timezone', ' Asia/Kuala_Lumpur', 'string', 'general', 'System timezone', 0, 1, NULL, NULL, '2025-12-02 19:27:56', '2025-11-21 20:12:32'),
+(4, 'timezone', 'America/New_York', 'string', 'general', 'System timezone', 0, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (5, 'currency', 'USD', 'string', 'general', 'Default currency', 1, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (6, 'language', 'en', 'string', 'general', 'Default language', 1, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (7, 'ai_provider', 'openai', 'string', 'ai', 'AI service provider', 0, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (8, 'ai_api_key', 'sk-************', 'string', 'ai', 'AI API key (encrypted)', 0, 0, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (9, 'ai_max_recommendations', '5', 'integer', 'ai', 'Maximum recommendations per query', 0, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
-(10, 'ai_confidence_threshold', '852', 'integer', 'ai', 'Minimum confidence threshold (%)', 0, 1, NULL, NULL, '2025-12-04 02:15:00', '2025-11-21 20:12:32'),
+(10, 'ai_confidence_threshold', '85', 'integer', 'ai', 'Minimum confidence threshold (%)', 0, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (11, 'ai_learning_mode', 'continuous', 'string', 'ai', 'AI learning mode', 0, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (12, 'ai_enable_feedback', '1', 'boolean', 'ai', 'Enable user feedback collection', 0, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (13, 'smtp_host', 'smtp.gmail.com', 'string', 'email', 'SMTP server host', 0, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
@@ -1399,11 +1325,7 @@ INSERT INTO `system_settings` (`setting_id`, `setting_key`, `setting_value`, `se
 (34, 'enable_minification', '1', 'boolean', 'performance', 'Minify CSS/JS resources', 0, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (35, 'maintenance_mode', '0', 'boolean', 'maintenance', 'Enable maintenance mode', 0, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
 (36, 'maintenance_message', 'We\'re currently performing scheduled maintenance to improve your experience. Please check back soon!', 'text', 'maintenance', 'Maintenance mode message', 1, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
-(37, 'estimated_downtime', '', 'string', 'maintenance', 'Estimated downtime', 1, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32'),
-(38, 'support_email', 'support@laptopadvisor.com', 'text', 'general', 'Email address displayed for customer support.', 0, 1, NULL, NULL, '2025-12-04 03:57:24', '2025-12-04 03:57:24'),
-(39, 'contact_phone', '+1 (555) 123-4567', 'text', 'general', 'Contact phone number.', 0, 1, NULL, NULL, '2025-12-04 03:57:24', '2025-12-04 03:57:24'),
-(40, 'company_address', '123 Tech Blvd, Silicon Valley, CA', 'text', 'general', 'Physical address of the company.', 0, 1, NULL, NULL, '2025-12-04 03:57:24', '2025-12-04 03:57:24'),
-(41, 'password_expiry_days', '90', 'integer', 'security', 'Days before a password expires (0 for no expiry).', 0, 1, NULL, NULL, '2025-12-04 03:57:24', '2025-12-04 03:57:24');
+(37, 'estimated_downtime', '', 'string', 'maintenance', 'Estimated downtime', 1, 1, NULL, NULL, '2025-11-21 20:12:32', '2025-11-21 20:12:32');
 
 -- --------------------------------------------------------
 
@@ -1462,6 +1384,14 @@ CREATE TABLE `training_phrases` (
 --
 
 INSERT INTO `training_phrases` (`phrase_id`, `intent_id`, `phrase_text`, `is_active`, `added_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Hello', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(2, 1, 'Hi', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(3, 1, 'Hi there', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(4, 1, 'Good morning', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(5, 1, 'Good afternoon', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(6, 1, 'Good evening', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(7, 1, 'Hey', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(8, 1, 'Greetings', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (9, 2, 'I need a laptop', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (10, 2, 'Looking for a computer', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (11, 2, 'Find me a laptop', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
@@ -1474,6 +1404,16 @@ INSERT INTO `training_phrases` (`phrase_id`, `intent_id`, `phrase_text`, `is_act
 (18, 2, 'Show me your best laptops', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (19, 2, 'I need a new computer', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (20, 2, 'Looking to purchase a laptop', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(21, 3, 'Gaming laptop', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(22, 3, 'Laptop for gaming', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(23, 3, 'Best gaming computer', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(24, 3, 'I need a gaming laptop', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(25, 3, 'High performance laptop', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(26, 3, 'Laptop for games', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(27, 3, 'Show me gaming laptops', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(28, 3, 'I want a laptop for playing games', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(29, 3, 'What\'s the best gaming laptop', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
+(30, 3, 'Need a laptop to run AAA games', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (31, 4, 'My budget is $1000', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (32, 4, 'Under $800', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
 (33, 4, 'Around 1500 dollars', 1, 'system', '2025-11-21 19:57:10', '2025-11-21 19:57:10'),
@@ -1503,31 +1443,7 @@ INSERT INTO `training_phrases` (`phrase_id`, `intent_id`, `phrase_text`, `is_act
 (72, 7, 'Good afternoon', 1, NULL, '2025-11-24 19:57:48', '2025-11-24 19:57:48'),
 (73, 7, 'Good evening', 1, NULL, '2025-11-24 19:57:48', '2025-11-24 19:57:48'),
 (74, 7, 'Hey', 1, NULL, '2025-11-24 19:57:48', '2025-11-24 19:57:48'),
-(75, 7, 'Greetings', 1, NULL, '2025-11-24 19:57:48', '2025-11-24 19:57:48'),
-(76, 10, 'How much is this', 1, 'admin', '2025-12-02 18:39:29', '2025-12-02 18:39:29'),
-(77, 10, 'What is the price', 1, 'admin', '2025-12-02 18:39:29', '2025-12-02 18:39:29'),
-(78, 10, 'Check the price', 1, 'admin', '2025-12-02 18:39:29', '2025-12-02 18:39:29'),
-(79, 10, 'Price of this product', 1, 'admin', '2025-12-02 18:39:29', '2025-12-02 18:39:29'),
-(80, 10, 'How much does this cost', 1, 'admin', '2025-12-02 18:39:29', '2025-12-02 18:39:29'),
-(81, 10, 'Can you tell me the price', 1, 'admin', '2025-12-02 18:39:29', '2025-12-02 18:39:29'),
-(82, 1, 'Hello', 1, NULL, '2025-12-02 18:43:22', '2025-12-02 18:43:22'),
-(83, 1, 'Hi', 1, NULL, '2025-12-02 18:43:22', '2025-12-02 18:43:22'),
-(84, 1, 'Hi there', 1, NULL, '2025-12-02 18:43:22', '2025-12-02 18:43:22'),
-(85, 1, 'Good morning', 1, NULL, '2025-12-02 18:43:22', '2025-12-02 18:43:22'),
-(86, 1, 'Good afternoon', 1, NULL, '2025-12-02 18:43:22', '2025-12-02 18:43:22'),
-(87, 1, 'Good evening', 1, NULL, '2025-12-02 18:43:22', '2025-12-02 18:43:22'),
-(88, 1, 'Hey', 1, NULL, '2025-12-02 18:43:22', '2025-12-02 18:43:22'),
-(89, 1, 'Greetings', 1, NULL, '2025-12-02 18:43:22', '2025-12-02 18:43:22'),
-(100, 3, 'Gaming laptop', 1, NULL, '2025-12-02 19:09:22', '2025-12-02 19:09:22'),
-(101, 3, 'Laptop for gaming', 1, NULL, '2025-12-02 19:09:22', '2025-12-02 19:09:22'),
-(102, 3, 'Best gaming computer', 1, NULL, '2025-12-02 19:09:22', '2025-12-02 19:09:22'),
-(103, 3, 'I need a gaming laptop', 1, NULL, '2025-12-02 19:09:22', '2025-12-02 19:09:22'),
-(104, 3, 'High performance laptop', 1, NULL, '2025-12-02 19:09:22', '2025-12-02 19:09:22'),
-(105, 3, 'Laptop for games', 1, NULL, '2025-12-02 19:09:22', '2025-12-02 19:09:22'),
-(106, 3, 'Show me gaming laptops', 1, NULL, '2025-12-02 19:09:22', '2025-12-02 19:09:22'),
-(107, 3, 'I want a laptop for playing games', 1, NULL, '2025-12-02 19:09:22', '2025-12-02 19:09:22'),
-(108, 3, 'What\'s the best gaming laptop', 1, NULL, '2025-12-02 19:09:22', '2025-12-02 19:09:22'),
-(109, 3, 'Need a laptop to run AAA games', 1, NULL, '2025-12-02 19:09:22', '2025-12-02 19:09:22');
+(75, 7, 'Greetings', 1, NULL, '2025-11-24 19:57:48', '2025-11-24 19:57:48');
 
 -- --------------------------------------------------------
 
@@ -1562,7 +1478,7 @@ INSERT INTO `users` (`user_id`, `full_name`, `email`, `password_hash`, `status`,
 (2, 'xuan', 'chan123@GMAIL.COM', '$2y$10$UqWAFCaxniqS5NKJDYgndOWtGvfVlv3rwWfdJVo.f0mbUMkYPmY16', 'pending', 'uploads/default.png', 'Student', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-28 06:08:01'),
 (3, 'xuan', 'abc@gmail.com', '$2y$10$WbU7EDXaKg0EcfW.B.spWOqvSqrLro1z9NCpw9DW.Z8xMhe04PRMm', 'pending', 'uploads/default.png', 'Student', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-11 14:17:17'),
 (4, 'GYZ', 'GYZ@gmail.com', '$2y$10$b2eGc843Cu2g7Q0AyP4w1ulwZTmgomHrPv4QpFC9XtHSOAhlCOrqa', 'active', 'uploads/6920af2dc9395-donk.jpg', 'Business', 'GWK', 'Tingkat Lahat Mines 4', 'Lahat', 'Perak', '31500', 'Malaysia', '+60165076821', '2025-11-21 18:27:28'),
-(6, 'gyz', 'chock-am22@student.tarc.edu.my', '$2y$10$VzgL/FZDSCQeqhGiGgtxae3fX9.z/4QLAIlDDDmk.GhqSNczOI0tm', 'pending', 'uploads/default.png', 'General Use', '', '', '', '', '', '', '', '2025-12-02 07:00:41');
+(6, 'cck', 'chock-am22@student.tarc.edu.my', '$2y$10$VzgL/FZDSCQeqhGiGgtxae3fX9.z/4QLAIlDDDmk.GhqSNczOI0tm', 'pending', 'uploads/default.png', 'General Use', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-02 07:00:41');
 
 -- --------------------------------------------------------
 
@@ -1866,7 +1782,7 @@ ALTER TABLE `weightage_history`
 -- AUTO_INCREMENT for table `admin_activity_log`
 --
 ALTER TABLE `admin_activity_log`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT for table `admin_users`
@@ -1908,13 +1824,13 @@ ALTER TABLE `chat_history`
 -- AUTO_INCREMENT for table `conversations`
 --
 ALTER TABLE `conversations`
-  MODIFY `conversation_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `conversation_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `conversation_messages`
 --
 ALTER TABLE `conversation_messages`
-  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=225;
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=165;
 
 --
 -- AUTO_INCREMENT for table `coupons`
@@ -1926,31 +1842,31 @@ ALTER TABLE `coupons`
 -- AUTO_INCREMENT for table `intents`
 --
 ALTER TABLE `intents`
-  MODIFY `intent_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `intent_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `intent_responses`
 --
 ALTER TABLE `intent_responses`
-  MODIFY `response_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `response_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `inventory_logs`
 --
 ALTER TABLE `inventory_logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `password_reset_tokens`
@@ -1974,13 +1890,13 @@ ALTER TABLE `personas`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=130;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=129;
 
 --
 -- AUTO_INCREMENT for table `product_media`
 --
 ALTER TABLE `product_media`
-  MODIFY `media_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `media_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `product_reviews`
@@ -2016,7 +1932,7 @@ ALTER TABLE `role_permissions`
 -- AUTO_INCREMENT for table `system_settings`
 --
 ALTER TABLE `system_settings`
-  MODIFY `setting_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `setting_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `system_settings_history`
@@ -2034,7 +1950,7 @@ ALTER TABLE `temp_vouchers`
 -- AUTO_INCREMENT for table `training_phrases`
 --
 ALTER TABLE `training_phrases`
-  MODIFY `phrase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=110;
+  MODIFY `phrase_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT for table `users`

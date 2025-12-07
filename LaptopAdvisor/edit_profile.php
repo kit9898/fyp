@@ -479,17 +479,23 @@ if (empty($user['profile_image_url'])) {
                     <span>Primary Interest</span>
                 </label>
                 <select id="primary_use_case" name="primary_use_case">
-                    <option value="General Use" <?php if($user['primary_use_case'] == 'General Use') echo 'selected'; ?>>
-                        💻 General Use
-                    </option>
                     <option value="Student" <?php if($user['primary_use_case'] == 'Student') echo 'selected'; ?>>
                         🎓 Student
                     </option>
-                    <option value="Business" <?php if($user['primary_use_case'] == 'Business') echo 'selected'; ?>>
-                        💼 Business
+                    <option value="Professional" <?php if($user['primary_use_case'] == 'Professional' || $user['primary_use_case'] == 'Business') echo 'selected'; ?>>
+                        💼 Professional
                     </option>
-                    <option value="Gaming" <?php if($user['primary_use_case'] == 'Gaming') echo 'selected'; ?>>
-                        🎮 Gaming
+                    <option value="Creative" <?php if($user['primary_use_case'] == 'Creative') echo 'selected'; ?>>
+                        🎨 Creative
+                    </option>
+                    <option value="Gamer" <?php if($user['primary_use_case'] == 'Gamer' || $user['primary_use_case'] == 'Gaming') echo 'selected'; ?>>
+                        🎮 Gamer
+                    </option>
+                    <option value="Developer" <?php if($user['primary_use_case'] == 'Developer') echo 'selected'; ?>>
+                        💻 Developer
+                    </option>
+                    <option value="Home User" <?php if($user['primary_use_case'] == 'Home User' || $user['primary_use_case'] == 'General Use') echo 'selected'; ?>>
+                        🏠 Home User
                     </option>
                 </select>
                 <small>This helps us provide you with personalized product recommendations</small>

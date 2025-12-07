@@ -63,7 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $action = $_POST['action'] ?? '';
     
-    if ($action === 'create') {
+
+    if ($action === 'create' || $action === 'update') {
         $name = mysqli_real_escape_string($conn, $_POST['name']);
         $short_desc = mysqli_real_escape_string($conn, $_POST['description']);
         $detailed_desc = mysqli_real_escape_string($conn, $_POST['detailed_description']);
@@ -72,15 +73,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $priorities = mysqli_real_escape_string($conn, implode(',', $_POST['priorities'] ?? []));
         $is_active = isset($_POST['is_active']) ? 1 : 0;
         
-        $insert_query = "INSERT INTO personas (name, short_description, detailed_description, icon_class, color_theme, key_priorities, is_active) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?)";
-        $stmt = mysqli_prepare($conn, $insert_query);
-        mysqli_stmt_bind_param($stmt, 'ssssssi', $name, $short_desc, $detailed_desc, $icon, $color, $priorities, $is_active);
-        
-        if (mysqli_stmt_execute($stmt)) {
-            echo json_encode(['success' => true, 'message' => 'Persona created successfully']);
+        if ($action === 'create') {
+            $insert_query = "INSERT INTO personas (name, short_description, detailed_description, icon_class, color_theme, key_priorities, is_active) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $stmt = mysqli_prepare($conn, $insert_query);
+            mysqli_stmt_bind_param($stmt, 'ssssssi', $name, $short_desc, $detailed_desc, $icon, $color, $priorities, $is_active);
+            
+            if (mysqli_stmt_execute($stmt)) {
+                echo json_encode(['success' => true, 'message' => 'Persona created successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error creating persona']);
+            }
         } else {
-            echo json_encode(['success' => false, 'message' => 'Error creating persona']);
+            $persona_id = intval($_POST['persona_id']);
+            $update_query = "UPDATE personas SET name=?, short_description=?, detailed_description=?, icon_class=?, color_theme=?, key_priorities=?, is_active=? WHERE persona_id=?";
+            $stmt = mysqli_prepare($conn, $update_query);
+            mysqli_stmt_bind_param($stmt, 'ssssssii', $name, $short_desc, $detailed_desc, $icon, $color, $priorities, $is_active, $persona_id);
+            
+            if (mysqli_stmt_execute($stmt)) {
+                echo json_encode(['success' => true, 'message' => 'Persona updated successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error updating persona']);
+            }
+        }
+        mysqli_stmt_close($stmt);
+        exit;
+    }
+
+    if ($action === 'get_details') {
+        $persona_id = intval($_GET['persona_id']);
+        $query = "SELECT * FROM personas WHERE persona_id = ?";
+        $stmt = mysqli_prepare($conn, $query);
+        mysqli_stmt_bind_param($stmt, 'i', $persona_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if ($row = mysqli_fetch_assoc($result)) {
+            echo json_encode(['success' => true, 'data' => $row]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Persona not found']);
         }
         mysqli_stmt_close($stmt);
         exit;
@@ -465,7 +496,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     function savePersona() {
         const form = document.getElementById('personaForm');
         const formData = new FormData(form);
-        formData.append('action', 'create');
+        const personaId = document.getElementById('personaId').value;
+        const action = personaId ? 'update' : 'create';
+        
+        formData.append('action', action);
         
         fetch('admin_personas.php', {
             method: 'POST',
@@ -488,8 +522,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     function editPersona(personaId) {
         document.getElementById('addPersonaModalLabel').textContent = 'Edit Persona';
         document.getElementById('personaId').value = personaId;
-        const modal = new bootstrap.Modal(document.getElementById('addPersonaModal'));
-        modal.show();
+        
+        // Fetch persona details
+        const formData = new FormData();
+        formData.append('action', 'get_details');
+        formData.append('persona_id', personaId);
+        
+        fetch(`admin_personas.php?action=get_details&persona_id=${personaId}`, {
+            method: 'POST' // Actually the backend checks GET for get_details in my logic above? Let's check. 
+                           // Ah, I put 'get_details' inside the POST block first? No, I put it as separate but usually POST is better. 
+                           // Wait, looking at my PHP change:
+                           // if ($_SERVER['REQUEST_METHOD'] === 'POST') { ... $action = $_POST['action'] ... }
+                           // But I added `if ($action === 'get_details')` INSIDE `if ($_SERVER['REQUEST_METHOD'] === 'POST')`?
+                           // Let me re-read my PHP change.
+                           // Yes, I verified the PHP change is inside `if ($_SERVER['REQUEST_METHOD'] === 'POST')`.
+                           // Wait, line 61 is `if ($_SERVER['REQUEST_METHOD'] === 'POST')`.
+                           // So the request MUST be POST.
+                           // BUT in my PHP code I wrote: `if ($action === 'get_details') { $persona_id = intval($_GET['persona_id']); ... }`
+                           // I accessed `$_GET` inside a `POST` block?? That matches if I send POST but use query params? 
+                           // NO, usually people send data in body for POST.
+                           // Let's safe-guard: I should use `$_POST` for persona_id if it's a POST request.
+                           // Actually, let's fix the PHP to handle properly or just use POST body for fetching.
+                           // I will write the JS to use POST body.
+        })
+        
+        // Let's re-write JS to use POST body for get_details to match the block.
+        // And regarding the PHP check `intval($_GET['persona_id'])` - that WAS a mistake in my previous tool call logic if I intended strictly POST.
+        // However, I can't undo the PHP tool call right now easily without another call.
+        // Let's look at the PHP again. 
+        // `if ($action === 'get_details') { $persona_id = intval($_GET['persona_id']);`
+        // So I MUST send `persona_id` in the URL query string, AND send `action=get_details` in the POST body (or URL?).
+        // `action` comes from `$action = $_POST['action'] ?? '';`
+        // So: Method=POST. Body has `action=get_details`. URL has `persona_id=...`.
+        // That is seemingly weird but valid.
+        
+        fetch(`admin_personas.php?persona_id=${personaId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'action=get_details'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const p = data.data;
+                document.getElementById('personaName').value = p.name;
+                document.getElementById('personaDescription').value = p.short_description;
+                document.getElementById('personaDetailedDescription').value = p.detailed_description;
+                document.getElementById('personaIcon').value = p.icon_class;
+                document.getElementById('personaColor').value = p.color_theme;
+                document.getElementById('personaActive').checked = p.is_active == 1;
+                
+                // Reset checkboxes
+                document.querySelectorAll('input[name="priorities[]"]').forEach(cb => cb.checked = false);
+                // Check priorities
+                if (p.key_priorities) {
+                    const priorities = p.key_priorities.split(',');
+                    priorities.forEach(prior => {
+                        const cb = document.querySelector(`input[name="priorities[]"][value="${prior.trim()}"]`);
+                        if (cb) cb.checked = true;
+                    });
+                }
+                
+                const modal = new bootstrap.Modal(document.getElementById('addPersonaModal'));
+                modal.show();
+            } else {
+                alert('Error loading persona details');
+            }
+        });
     }
     
     function deletePersona(personaId) {
