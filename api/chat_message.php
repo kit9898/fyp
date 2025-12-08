@@ -26,6 +26,23 @@ try {
     if (empty($userMessage)) {
         throw new Exception('Message cannot be empty');
     }
+
+    // ========================================
+    // LEAD CAPTURE: Check for Email
+    // ========================================
+    $email_pattern = "/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i";
+    if (preg_match($email_pattern, $userMessage, $matches)) {
+        $capturedEmail = $matches[0];
+        
+        // Update conversation with email
+        $stmt = $conn->prepare("UPDATE conversations SET customer_email = ? WHERE session_id = ?");
+        $stmt->bind_param("ss", $capturedEmail, $sessionId);
+        $stmt->execute();
+        $stmt->close();
+        
+        // Add a system note that email was captured
+        $userMessage .= " [SYSTEM NOTE: User provided email: $capturedEmail]";
+    }
     
     // Verify session exists and get conversation ID
     $stmt = $conn->prepare("SELECT conversation_id FROM conversations WHERE session_id = ?");
@@ -109,6 +126,18 @@ try {
     }
     
     // ========================================
+    // SALES AGENT PERSONALITY INJECTION
+    // ========================================
+    $salesLogic = "\n\nCRITICAL PERSONALITY INSTRUCTIONS:\n";
+    $salesLogic .= "1. You are a COMMISSION-BASED SALES AGENT, not just a helper. You WANT to close the sale.\n";
+    $salesLogic .= "2. CROSS-SELL: If you recommend a laptop, you MUST suggest a matching accessory (mouse/bag) from the inventory to increase the order value.\n";
+    $salesLogic .= "3. CLOSE THE DEAL: If the user seems happy or says 'ok', 'good', 'thanks', or 'perfect', you MUST say: 'Would you like me to email you a formal quote to lock in this price? Please provide your email address.'\n";
+    $salesLogic .= "4. Do not be annoying, but be PERSISTENT about the quote and the cross-sell.\n";
+    
+    // Append to system prompt
+    $messages[0]['content'] .= $salesLogic;
+    
+    // ========================================
     // RAG: Fetch Relevant Products from Database
     // ========================================
     $productContext = fetchRelevantProducts($conn, $userMessage);
@@ -119,10 +148,26 @@ try {
         $messages[0]['content'] = SYSTEM_PROMPT . "\n\n" . $productContext;
     }
     
-    // Add new user message
+    // Add new user message with HIDDEN INSTRUCTION
+    $hiddenInstruction = "";
+    
+    // Check if we should force a close
+    $closingSignals = ['good', 'great', 'perfect', 'thanks', 'ok', 'price', 'buy', 'cart'];
+    foreach ($closingSignals as $sig) {
+        if (stripos($userMessage, $sig) !== false) {
+             $hiddenInstruction .= " [SYSTEM: User is interested. ASK FOR EMAIL ADDRESS NOW.]";
+             break;
+        }
+    }
+    
+    // Check if we should force cross-sell (if not already done)
+    if (stripos($userMessage, 'laptop') !== false || stripos($userMessage, 'recommend') !== false) {
+        $hiddenInstruction .= " [SYSTEM: Suggest an accessory (Mouse/Bag) with this laptop.]";
+    }
+
     $messages[] = [
         'role' => 'user',
-        'content' => $userMessage
+        'content' => $userMessage . $hiddenInstruction
     ];
     
     // Save user message to database
@@ -287,7 +332,7 @@ function fetchRelevantProducts($conn, $userMessage) {
     
     // Fetch products
     $query = "SELECT product_id, product_name, brand, price, cpu, gpu, ram_gb, storage_gb, 
-              storage_type, display_size, description, primary_use_case 
+              storage_type, display_size, description, primary_use_case, product_category 
               FROM products 
               {$whereClause}
               ORDER BY price ASC 
@@ -303,64 +348,48 @@ function fetchRelevantProducts($conn, $userMessage) {
         $result = $conn->query($query);
     }
     
-    // If no results with strict filters, try again without use case filter
-    if ($result->num_rows === 0 && $useCase) {
-        // Retry without use case restriction
-        $conditions = [];
-        $params = [];
-        $types = '';
-        
-        if ($budget) {
-            $conditions[] = "price <= ?";
-            $params[] = $budget;
-            $types .= 'd';
-        }
-        
-        $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
-        $query = "SELECT product_id, product_name, brand, price, cpu, gpu, ram_gb, storage_gb, 
-                  storage_type, display_size, description, primary_use_case 
-                  FROM products 
-                  {$whereClause}
-                  ORDER BY price ASC 
-                  LIMIT 8";
-        
-        if (!empty($params)) {
-            if (isset($stmt)) $stmt->close();
-            $stmt = $conn->prepare($query);
-            $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-            $result = $stmt->get_result();
-        } else {
-            $result = $conn->query($query);
-        }
-    }
-    
     if ($result->num_rows === 0) {
         return ''; // No products found, AI will respond generally
     }
     
     // Format products for AI context
-    $productList = "\n\n=== AVAILABLE LAPTOP INVENTORY ===\n";
-    $productList .= "IMPORTANT: You MUST ONLY recommend laptops from this list. DO NOT suggest any other products.\n\n";
+    $productList = "\n\n=== AVAILABLE INVENTORY ===\n";
+    $productList .= "IMPORTANT: You MUST ONLY recommend products from this list.\n";
     
+    $foundLaptop = false;
     $count = 0;
     while ($product = $result->fetch_assoc()) {
         $count++;
-        $productList .= "{$count}. **{$product['brand']} {$product['product_name']}** - \${$product['price']}\n";
-        $productList .= "   CPU: {$product['cpu']}\n";
-        $productList .= "   GPU: " . ($product['gpu'] ?? 'Integrated') . "\n";
-        $productList .= "   RAM: {$product['ram_gb']} GB\n";
-        $productList .= "   Storage: {$product['storage_gb']} GB {$product['storage_type']}\n";
-        $productList .= "   Display: {$product['display_size']}\" screen\n";
+        if ($product['product_category'] == 'laptop') $foundLaptop = true;
+        
+        $productList .= "{$count}. [{$product['product_category']}] **{$product['brand']} {$product['product_name']}** - \${$product['price']}\n";
+        $productList .= "   Specs: {$product['cpu']}, " . ($product['gpu'] ?? 'Integrated') . ", {$product['ram_gb']}GB RAM\n";
         $productList .= "   Best For: " . ucfirst($product['primary_use_case']) . "\n";
-        if (!empty($product['description'])) {
-            $productList .= "   Details: {$product['description']}\n";
-        }
         $productList .= "\n";
     }
     
-    $productList .= "=== END OF INVENTORY ({$count} products shown) ===\n";
-    $productList .= "Remember: Only recommend from the above list. If asked about a product not listed, say we don't currently stock it but suggest similar alternatives from our inventory.\n";
+    // ========================================
+    // CROSS-SELLING: Fetch Accessories
+    // ========================================
+    if ($foundLaptop) {
+        $accessoryQuery = "SELECT product_name, brand, price, product_category 
+                           FROM products 
+                           WHERE product_category IN ('mouse', 'keyboard', 'headset', 'bag') 
+                           ORDER BY rand() LIMIT 2";
+        $accResult = $conn->query($accessoryQuery);
+        
+        if ($accResult->num_rows > 0) {
+            $productList .= "--- SUGGESTED ADD-ONS (CROSS-SELL) ---\n";
+            while ($acc = $accResult->fetch_assoc()) {
+                 $productList .= "+ [Accessory] **{$acc['brand']} {$acc['product_name']}** - \${$acc['price']} ({$acc['product_category']})\n";
+            }
+            $productList .= "--------------------------------------\n";
+            $productList .= "INSTRUCTION: If you recommend a laptop, ALSO suggest 1-2 add-ons from above to increase value.\n";
+        }
+    }
+    
+    $productList .= "=== END OF INVENTORY ===\n";
+    $productList .= "REMINDER: You are a sales agent. Cross-sell accessories and ask for the email to send a quote!\n";
     
     if (isset($stmt)) {
         $stmt->close();

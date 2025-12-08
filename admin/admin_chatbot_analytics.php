@@ -81,6 +81,14 @@ $resolution_result = $conn->query($resolution_query);
 $resolution_data = $resolution_result->fetch_assoc();
 $today_analytics['resolution_rate'] = $resolution_data['resolution_rate'] ?? 0;
 
+// Leads Captured (Emails Collected)
+$leads_query = "SELECT COUNT(DISTINCT conversation_id) as leads_count 
+FROM conversations 
+WHERE customer_email IS NOT NULL AND DATE(started_at) = CURDATE()";
+$leads_result = $conn->query($leads_query);
+$leads_data = $leads_result->fetch_assoc();
+$today_analytics['leads_count'] = $leads_data['leads_count'] ?? 0;
+
 // 2. Fetch 7-day trend data
 $trend_data = [];
 foreach ($dates as $date) {
@@ -273,6 +281,27 @@ foreach ($trend_data as $day) {
                         <div class="col-md-8">
                             <h6 class="text-muted font-semibold">Satisfaction</h6>
                             <h6 class="font-extrabold mb-0"><?php echo number_format($today_analytics['satisfaction_score'] ?? 0, 1); ?>/5.0</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- New Row for Business Leads -->
+    <div class="row">
+         <div class="col-6 col-lg-3 col-md-6">
+            <div class="card">
+                <div class="card-body px-3 py-4-5">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="stats-icon orange" style="background: #ff9f43;">
+                                <i class="bi bi-envelope-check-fill"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <h6 class="text-muted font-semibold">Leads Captured</h6>
+                            <h6 class="font-extrabold mb-0"><?php echo number_format($today_analytics['leads_count'] ?? 0); ?></h6>
                         </div>
                     </div>
                 </div>

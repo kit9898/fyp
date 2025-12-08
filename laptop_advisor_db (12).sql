@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 08, 2025 at 12:21 PM
+-- Generation Time: Dec 08, 2025 at 01:08 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -565,7 +565,8 @@ INSERT INTO `conversations` (`conversation_id`, `session_id`, `user_id`, `user_i
 (21, 'chat_692f2da269488_9a26044b586d4b06', 4, '::1', 'web', '2025-12-03 02:19:14', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-02 18:19:14', '2025-12-02 18:19:14'),
 (22, 'chat_692f2dddeef23_deaaa511d61f5e9b', 4, '::1', 'web', '2025-12-03 02:20:13', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-02 18:20:13', '2025-12-02 18:20:13'),
 (23, 'chat_692f18cb0d84f_caa9f98f5311ebb6', 6, '::1', 'web', '2025-12-07 16:37:18', NULL, 0, 0, 0, 0, 'neutral', 0.00, 'general_chat', NULL, NULL, 0, NULL, '2025-12-07 08:37:18', '2025-12-07 08:37:23'),
-(24, 'chat_69364fc6ec1f8_4cdcb665d9db2528', 6, '::1', 'web', '2025-12-08 12:10:46', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-08 04:10:46', '2025-12-08 04:10:46');
+(24, 'chat_69364fc6ec1f8_4cdcb665d9db2528', 6, '::1', 'web', '2025-12-08 12:10:46', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-08 04:10:46', '2025-12-08 04:10:46'),
+(25, 'chat_6936ba4ec327c_fb0c492fd62bd1b3', 6, '::1', 'web', '2025-12-08 19:45:18', NULL, 0, 0, 0, 0, 'neutral', 0.00, NULL, NULL, NULL, 0, NULL, '2025-12-08 11:45:18', '2025-12-08 11:45:18');
 
 -- --------------------------------------------------------
 
@@ -2695,8 +2696,8 @@ INSERT INTO `products` (`product_id`, `product_name`, `product_category`, `relat
 (5, 'MacBook Pro 16', 'laptop', NULL, 'Apple', 3499.00, 50, 10, 'Apple M2 Pro', 'Integrated', 16, 1024, 'SSD', 16.20, NULL, 'images/laptop5.png', 'Powerful performance for professionals and creatives.', 'Creative', 1),
 (6, 'Spectre x360', 'laptop', NULL, 'HP', 1450.00, 50, 10, 'Intel Core i7', 'Intel Iris Xe', 16, 512, 'SSD', 13.50, NULL, 'images/laptop6.png', 'A versatile 2-in-1 laptop with a premium feel.', 'Professional', 1),
 (7, 'ROG Strix G15', 'laptop', NULL, 'Asus', 1899.99, 49, 10, 'AMD Ryzen 9', 'NVIDIA RTX 3070', 16, 1024, 'SSD', 15.60, '', 'images/laptop7.png', 'High-refresh-rate gaming powerhouse.', 'Gamer', 1),
-(8, 'Pavilion 15', 'mouse', NULL, 'HP', 799.00, 40, 10, 'Intel Core i5', 'Intel Iris Xe', 12, 512, 'SSD', 15.60, NULL, 'LaptopAdvisor/images/product_692eee166259e.jpg', 'A reliable all-rounder for work and entertainment.', 'Home User', 0),
-(117, 'Logitech G ', 'mouse', 'Gaming', 'Logitech ', 300.00, 12, 10, '', '', 0, 0, 'SSD', 0.00, NULL, 'LaptopAdvisor/images/product_692d9b1204696.webp', '', 'Gamer', 0),
+(8, 'Pavilion 15', 'mouse', NULL, 'HP', 799.00, 40, 10, 'Intel Core i5', 'Intel Iris Xe', 12, 512, 'SSD', 15.60, NULL, 'LaptopAdvisor/images/product_8_692eee1113b23.webp', 'A reliable all-rounder for work and entertainment.', 'Home User', 0),
+(117, 'Logitech G ', 'mouse', 'Gaming', 'Logitech ', 300.00, 12, 10, '', '', 0, 0, 'SSD', 0.00, NULL, 'LaptopAdvisor/images/product_692d9b1204696.png', '', 'Gamer', 0),
 (124, 'Razer BlackWidow V3', 'keyboard', 'Gaming', 'Razer', 139.99, 48, 10, '', '', 0, 0, '', 0.00, NULL, NULL, 'Mechanical gaming keyboard with Razer Green switches and RGB', 'Gamer', 0),
 (128, 'Asus ROG Strix G16', 'laptop', NULL, 'Asus', 5000.00, 47, 10, ' i7-13650HX', 'NVIDIA GeForce RTX 4060', 32, 1024, 'SSD', 15.60, '', 'LaptopAdvisor/images/product_692f0409da2d4.webp', 'Power Power Up Your Gaming – Windows 11, 13th Gen Intel Core i7-13650HX Processor And NVIDIA GeForce RTX 4060 Laptop GPU, Up To 140W TGP To Win More Games\r\n\r\n', 'Developer', 1),
 (179, 'ASUS ROG Strix Scar 18 (2024)', 'laptop', NULL, 'ASUS', 3899.00, 50, 10, 'Intel Core i9-14900HX', 'NVIDIA GeForce RTX 4090', 32, 2000, 'SSD', 18.00, '', 'LaptopAdvisor/images/product_69367cd44bfff.jpg', 'Ultimate gaming powerhouse with 18-inch Mini LED display.', 'Gamer', 1),
@@ -3593,7 +3594,7 @@ ALTER TABLE `chat_history`
 -- AUTO_INCREMENT for table `conversations`
 --
 ALTER TABLE `conversations`
-  MODIFY `conversation_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `conversation_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `conversation_messages`

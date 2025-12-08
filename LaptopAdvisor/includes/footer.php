@@ -185,8 +185,20 @@
         showTypingIndicator();
         isSending = true;
         
+        // Get currency info
+        const currency = localStorage.getItem('selected_currency') || 'USD';
+        let rate = 1;
         try {
-            const response = await fetch('/fyp/LaptopAdvisor/chatbot_process.php', {
+            const storedRates = JSON.parse(localStorage.getItem('currency_rates'));
+            if (storedRates && storedRates.rates && storedRates.rates[currency]) {
+                rate = storedRates.rates[currency];
+            }
+        } catch (e) {
+            console.error('Error parsing currency rates', e);
+        }
+
+        try {
+            const response = await fetch('chatbot_process.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -194,7 +206,9 @@
                 body: JSON.stringify({
                     action: 'send_message',
                     session_id: sessionId,
-                    message: userInput
+                    message: userInput,
+                    currency: currency,
+                    exchange_rate: rate
                 })
             });
             
