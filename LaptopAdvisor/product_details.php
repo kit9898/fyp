@@ -289,6 +289,12 @@ function getUseCaseBadge($use_case) {
                     <?php endforeach; ?>
                 </div>
 
+                <!-- Pass gallery data to JS -->
+                <script>
+                    const productGallery = <?php echo json_encode($gallery_items); ?>;
+                    let currentLightboxIndex = 0;
+                </script>
+
                 <!-- 2. Main Large Image/Video Area -->
                 <div class="main-image-area" id="mainMediaContainer" onclick="openLightbox()">
                     <?php 
@@ -818,8 +824,89 @@ function getUseCaseBadge($use_case) {
 <!-- Lightbox Overlay -->
 <div id="imageLightbox" class="lightbox-overlay" onclick="closeLightbox(event)">
     <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+    
+    <!-- Navigation Arrows (Absolute Positioned) -->
+    <a class="lightbox-prev" onclick="navigateLightbox(-1)">&#10094;</a>
+    <a class="lightbox-next" onclick="navigateLightbox(1)">&#10095;</a>
+    
     <div id="lightboxContentWrapper" class="lightbox-content"></div>
 </div>
+
+<style>
+/* Lightbox Navigation Styles */
+.lightbox-overlay {
+    /* Flex centering for content only */
+    display: none; /* Default hidden */
+    flex-direction: column; /* Or just center content */
+    align-items: center;
+    justify-content: center;
+    
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; 
+    background-color: rgba(0,0,0,0.9);
+}
+
+.lightbox-prev, .lightbox-next {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    width: auto;
+    padding: 16px;
+    margin-top: -50px;
+    color: white;
+    font-weight: bold;
+    font-size: 35px;
+    transition: 0.6s ease;
+    border-radius: 0 3px 3px 0;
+    user-select: none;
+    text-decoration: none;
+    z-index: 1001; 
+}
+.lightbox-next {
+    right: 0;
+    border-radius: 3px 0 0 3px;
+}
+.lightbox-prev {
+    left: 0;
+    border-radius: 3px 0 0 3px;
+}
+
+.lightbox-prev:hover, .lightbox-next:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #f1f1f1;
+}
+
+/* Ensure content doesn't push arrows off screen */
+.lightbox-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Close button remains absolute */
+.lightbox-close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+    z-index: 1002;
+}
+.lightbox-close:hover,
+.lightbox-close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>
 
 <script>
 // --- MEDIA GALLERY FUNCTIONS ---
@@ -874,24 +961,88 @@ function openLightbox() {
     var currentMedia = container.querySelector('img, video');
     
     if (currentMedia) {
-        wrapper.innerHTML = ''; // Clear previous content
-        var clone = currentMedia.cloneNode(true);
+        // Find index of current media to sync navigation
+        const currentSrc = currentMedia.src;
+        // Simple logic to find index based on src matching, or default to 0
+        // Because src might be full URL, we might need a better way. 
+        // Ideally, swapMedia sets a global index. 
+        // For now, let's look for match in productGallery
         
-        // Ensure video controls are enabled in lightbox
-        if (clone.tagName === 'VIDEO') {
-            clone.controls = true;
-            clone.autoplay = true;
-            clone.style.width = "100%";
-            clone.style.height = "auto";
-        } else {
-            clone.style.maxHeight = "90vh";
-            clone.style.maxWidth = "90vw";
-        }
+        let foundIndex = productGallery.findIndex(item => {
+            // Check if item.url is contained in currentSrc (decoding needed potentially)
+            // This is a loose check.
+            return currentSrc.includes(item.url.split('/').pop()); 
+        });
+        currentLightboxIndex = foundIndex !== -1 ? foundIndex : 0;
         
-        wrapper.appendChild(clone);
-        modal.style.display = "block";
+        showLightboxContent(currentLightboxIndex);
+        modal.style.display = "flex"; // Flex
         document.body.style.overflow = "hidden"; 
     }
+}
+
+function navigateLightbox(n) {
+    currentLightboxIndex += n;
+    if (currentLightboxIndex >= productGallery.length) {
+        currentLightboxIndex = 0;
+    } else if (currentLightboxIndex < 0) {
+        currentLightboxIndex = productGallery.length - 1;
+    }
+    showLightboxContent(currentLightboxIndex);
+}
+
+function showLightboxContent(index) {
+    const wrapper = document.getElementById("lightboxContentWrapper");
+    wrapper.innerHTML = '';
+    
+    const item = productGallery[index];
+    let url = item.url;
+    let type = item.type;
+    
+    // Process URL same as PHP (simple check)
+    // Note: JS side simple path fix if needed, but array usually has raw DB paths.
+    // product_details.php logic for main media display was complex. 
+    // Let's reuse what we have in the array, assuming it's valid enough or was processed.
+    // Actually, PHP $gallery_items has raw 'type' and 'url'.
+    // We need to resolve path like PHP does.
+    
+    // Quick path resolution for JS equivalent of PHP logic (simplified)
+    if (type === 'image' && !url.startsWith('http')) {
+        if (!url.startsWith('LaptopAdvisor/') && !url.startsWith('images/')) {
+            url = 'images/' + url.split('/').pop(); 
+        } else if (url.startsWith('LaptopAdvisor/')) {
+            url = '../' + url;
+        }
+    }
+    
+    // Handle video/youtube type
+    let element;
+    if (type === 'video') {
+         // Check if it's youtube url actually stored as video type
+         const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+         if (ytMatch) {
+             element = document.createElement('iframe');
+             element.src = 'https://www.youtube.com/embed/' + ytMatch[1];
+             element.style.width = "80vw"; // Reduced
+             element.style.height = "80vh";
+             element.frameBorder = 0;
+         } else {
+             element = document.createElement('video');
+             element.src = url;
+             element.controls = true;
+             element.autoplay = true;
+             element.style.maxWidth = "80vw"; // Reduced
+             element.style.maxHeight = "90vh";
+         }
+    } else {
+        element = document.createElement('img');
+        element.src = url;
+        element.style.maxWidth = "80vw"; // Reduced
+        element.style.maxHeight = "90vh"; 
+        element.style.objectFit = "contain";
+    }
+    
+    wrapper.appendChild(element);
 }
 
 function closeLightbox(event) {
@@ -1093,30 +1244,6 @@ function openReviewLightbox(url, type) {
     let element;
     if (type === 'video') {
         element = document.createElement('video');
-        element.src = url;
-        element.controls = true;
-        element.autoplay = true;
-        element.style.maxWidth = '90vw';
-        element.style.maxHeight = '90vh';
-    } else {
-        element = document.createElement('img');
-        element.src = url;
-        element.style.maxWidth = '90vw';
-        element.style.maxHeight = '90vh';
-        element.style.objectFit = 'contain';
-    }
-    
-    wrapper.appendChild(element);
-    modal.style.display = "block";
-    document.body.style.overflow = "hidden";
-}
-</script>
-
-
-<!-- Sticky Compare Bar -->
-<div class="sticky-compare-bar" id="compareBar">
-    <span class="compare-count" id="compareCount">0 Selected</span>
-    <button class="btn btn-secondary" onclick="clearCompare()" style="margin-top: 0; padding: 8px 20px; background: #6c757d; color: white; border: none;">
         Clear
     </button>
     <button class="btn btn-primary" onclick="goToCompare()" id="compareNowBtn" style="margin-top: 0; padding: 8px 20px;">

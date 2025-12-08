@@ -252,6 +252,44 @@ $low_rated_reviews = $conn->query("SELECT COUNT(*) as c FROM product_reviews WHE
                     document.getElementById('reviewModalBody').innerHTML = html;
                 });
         }
+
+        // Handle Form Submission dynamically
+        document.addEventListener('submit', function(e) {
+            if (e.target && e.target.id === 'responseForm') {
+                e.preventDefault();
+                
+                const form = e.target;
+                const btn = form.querySelector('button[type="submit"]');
+                const originalText = btn.innerHTML;
+                
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+                
+                const formData = new FormData(form);
+                
+                fetch('ajax/admin_respond_review.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Response posted successfully!');
+                        location.reload(); // Reload to update status in table
+                    } else {
+                        alert('Error: ' + data.message);
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while posting the response.');
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            }
+        });
     </script>
 </body>
 </html>

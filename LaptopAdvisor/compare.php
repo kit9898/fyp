@@ -927,7 +927,7 @@ function resolveProductImage($img_url, $placeholder_size = '280x250') {
                         <?php foreach ($products as $product): ?>
                             <td class="<?php if ($product['price'] == $best_specs['price']) echo 'highlight-best'; 
                                              elseif ($product['price'] == $worst_specs['price']) echo 'highlight-worst'; ?>">
-                                <strong>$<?php echo number_format($product['price'], 2); ?></strong>
+                                <strong class="currency-price" data-base-price="<?php echo $product['price']; ?>">$<?php echo number_format($product['price'], 2); ?></strong>
                             </td>
                         <?php endforeach; ?>
                     </tr>
@@ -1304,17 +1304,24 @@ function resolveProductImage($img_url, $placeholder_size = '280x250') {
         </div>
         
         <!-- Price Difference Analysis -->
-        <div style="margin-top: 25px; padding: 20px; background: #fef3c7; border-radius: 10px;">
-            <h4 style="margin: 0 0 10px 0; color: #92400e;">💡 Quick Analysis</h4>
-            <?php 
-            $price_diff = max($prices) - min($prices);
-            $avg_price = array_sum($prices) / count($prices);
-            ?>
-            <p style="margin: 5px 0; color: #78350f; line-height: 1.6;">
-                • Price difference: <strong class="currency-price" data-base-price="<?= $price_diff; ?>">$<?php echo number_format($price_diff, 2); ?></strong><br>
-                • Average price: <strong class="currency-price" data-base-price="<?= $avg_price; ?>">$<?php echo number_format($avg_price, 2); ?></strong><br>
-                • The most expensive option costs <strong><?php echo round(($price_diff / min($prices)) * 100); ?>%</strong> more than the cheapest
-            </p>
+        <!-- AI Comparison Analysis -->
+        <div style="margin-top: 25px; padding: 25px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4 style="margin: 0; color: #92400e; display: flex; align-items: center; gap: 10px; font-size: 1.2rem;">
+                    <i class="fas fa-robot"></i> AI Comparison Verdict
+                </h4>
+                <button id="generateAiBtn" onclick="generateAiInsight()" class="btn btn-sm" style="background: #f59e0b; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
+                    ✨ Generate Analysis
+                </button>
+            </div>
+            
+            <div id="ai-analysis-container" style="color: #78350f; line-height: 1.6; min-height: 50px;">
+                <p>Click "Generate Analysis" to get an AI-powered comparison summary of these products.</p>
+            </div>
+            <div id="ai-loader" style="display: none; text-align: center; color: #b45309; padding: 20px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem;"></i><br>
+                <span style="font-size: 0.9rem; margin-top: 5px; display: block;">Analyzing specs...</span>
+            </div>
         </div>
     </div>
 
@@ -1613,7 +1620,80 @@ window.addEventListener('load', function() {
     if (valueBadges.length > 0) {
         console.log('Best value products highlighted');
     }
+    
+    // Auto-generate AI insight if desired, or let user click
+    // generateAiInsight(); 
 });
+
+// AI Insight Generator
+function generateAiInsight() {
+    const container = document.getElementById('ai-analysis-container');
+    const loader = document.getElementById('ai-loader');
+    const btn = document.getElementById('generateAiBtn');
+    
+    // Show loader
+    container.style.display = 'none';
+    loader.style.display = 'block';
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+    
+    // Gather product data from PHP variables (embedded as JSON)
+    const productsData = <?php 
+        $js_products = array_map(function($p) {
+            return [
+                'name' => $p['product_name'],
+                'brand' => $p['brand'],
+                'price' => $p['price'], // Base price in USD
+                'ram' => $p['ram_gb'],
+                'storage' => $p['storage_gb'],
+                'cpu' => $p['cpu'],
+                'gpu' => $p['gpu'],
+                'display' => $p['display_size']
+            ];
+        }, $products);
+        echo json_encode($js_products);
+    ?>;
+
+    // Convert prices to selected currency if CurrencyManager is available
+    if (typeof CurrencyManager !== 'undefined') {
+        const currency = CurrencyManager.selectedCurrency;
+        const rate = CurrencyManager.rates[currency] || 1;
+        const symbol = CurrencyManager.symbols[currency] || '$';
+
+        productsData.forEach(p => {
+             const basePrice = parseFloat(p.price);
+             const converted = basePrice * rate;
+             p.price = symbol + ' ' + converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        });
+    }
+
+    fetch('ajax/generate_comparison_insight.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ products: productsData })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            container.innerHTML = data.message;
+        } else {
+            container.innerHTML = '<p style="color: #ef4444;">Could not generate insight: ' + (data.message || 'Unknown error') + '</p>';
+        }
+    })
+    .catch(error => {
+        container.innerHTML = '<p style="color: #ef4444;">Network error. Please try again.</p>';
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        loader.style.display = 'none';
+        container.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = '✨ Regenerate Analysis';
+    });
+}
+
 
 // Add print styles dynamically
 const printStyles = document.createElement('style');

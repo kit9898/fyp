@@ -532,6 +532,28 @@ body {
             $trend_stmt->close();
             ?>
 
+            <div style="margin-bottom: 24px;">
+                <!-- AI Spending Analysis -->
+                <div style="padding: 24px; background: linear-gradient(to right, #f0f9ff, #e0f2fe); border: 1px solid #bae6fd; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #0369a1; display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
+                            <span style="font-size: 1.4rem;">🤖</span> AI Financial Insights
+                        </h3>
+                        <button id="generateAiBtn" onclick="generateSpendingInsight()" class="btn-action btn-primary-action" style="background: #0ea5e9; border: none;">
+                            <span>✨</span> Analyze Spending
+                        </button>
+                    </div>
+                    
+                    <div id="ai-analysis-container" style="color: #0c4a6e; line-height: 1.6; min-height: 50px;">
+                        <p>Click "Analyze Spending" to get an AI-powered breakdown of your purchasing habits.</p>
+                    </div>
+                    <div id="ai-loader" style="display: none; text-align: center; color: #0284c7; padding: 20px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem;"></i><br>
+                        <span style="font-size: 0.9rem; margin-top: 5px; display: block;">Crunching the numbers...</span>
+                    </div>
+                </div>
+            </div>
+
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px;">
                 <div class="card">
                     <div class="card-header">
@@ -652,8 +674,9 @@ body {
                                     borderWidth: 2,
                                     tension: 0.4,
                                     fill: true,
-                                    pointRadius: 0,
-                                    pointHoverRadius: 6
+                                    fill: true,
+                                    pointRadius: 4, // Increased size to make single points visible
+                                    pointHoverRadius: 7
                                 }]
                             },
                             options: {
@@ -668,6 +691,56 @@ body {
                         });
                     }
                 });
+
+                // AI Insight Generator
+                function generateSpendingInsight() {
+                    const container = document.getElementById('ai-analysis-container');
+                    const loader = document.getElementById('ai-loader');
+                    const btn = document.getElementById('generateAiBtn');
+                    
+                    // Show loader
+                    container.style.display = 'none';
+                    loader.style.display = 'block';
+                    btn.disabled = true;
+                    btn.textContent = 'Analyzing...';
+                    
+                    // Prepare data from PHP variables
+                    const spendingData = {
+                        brand: <?php echo json_encode($spending_by_brand); ?>,
+                        category: <?php echo json_encode($spending_by_category); ?>,
+                        use_case: <?php echo json_encode($spending_by_use_case); ?>,
+                        trend: {
+                            labels: <?php echo json_encode($months); ?>,
+                            data: <?php echo json_encode($monthly_totals); ?>
+                        }
+                    };
+
+                    fetch('ajax/generate_spending_insight.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ spending_data: spendingData })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            container.innerHTML = data.message;
+                        } else {
+                            container.innerHTML = '<p style="color: #ef4444;">Could not generate insight: ' + (data.message || 'Unknown error') + '</p>';
+                        }
+                    })
+                    .catch(error => {
+                        container.innerHTML = '<p style="color: #ef4444;">Network error. Please try again.</p>';
+                        console.error('Error:', error);
+                    })
+                    .finally(() => {
+                        loader.style.display = 'none';
+                        container.style.display = 'block';
+                        btn.disabled = false;
+                        btn.textContent = '✨ Re-analyze';
+                    });
+                }
             </script>
 
         <?php elseif ($view == 'recommendations'): ?>

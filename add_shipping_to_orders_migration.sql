@@ -22,3 +22,4 @@ AND TABLE_SCHEMA = 'laptop_advisor_db';
 
 
 
+
