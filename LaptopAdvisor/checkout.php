@@ -137,7 +137,7 @@ if (empty($default_address['shipping_name'])) {
 
     <!-- Shipping & Payment Form -->
     <div class="payment-details-box content-box">
-        <form action="cart_process.php" method="post" id="checkoutForm">
+        <form action="bank_simulation.php" method="post" id="checkoutForm">
             <input type="hidden" name="action" value="checkout">
             <input type="hidden" name="payment_method" value="credit_card">
             

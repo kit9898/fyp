@@ -176,6 +176,23 @@ function getGPULabel($score) {
     if ($score >= 4) return '📊 Integrated Graphics';
     return '📝 Basic Graphics';
 }
+
+// Helper function to resolve product image path
+function resolveProductImage($img_url, $placeholder_size = '280x250') {
+    if (empty($img_url)) {
+        return "https://via.placeholder.com/$placeholder_size?text=No+Image";
+    }
+    
+    if (strpos($img_url, 'http') === 0) {
+        return htmlspecialchars($img_url);
+    } elseif (strpos($img_url, 'LaptopAdvisor/') === 0) {
+        return htmlspecialchars('../' . $img_url);
+    } elseif (strpos($img_url, 'images/') === 0) {
+        return htmlspecialchars($img_url);
+    } else {
+        return htmlspecialchars('images/' . basename($img_url));
+    }
+}
 ?>
 
 <style>
@@ -866,7 +883,7 @@ function getGPULabel($score) {
                                     <i class="fas fa-times"></i>
                                 </button>
                                 <img class="product-header-img" 
-                                     src="<?php echo !empty($product['image_url']) ? htmlspecialchars($product['image_url']) : 'https://via.placeholder.com/180'; ?>" 
+                                     src="<?php echo resolveProductImage($product['image_url'], '180'); ?>" 
                                      alt="<?php echo htmlspecialchars($product['product_name']); ?>">
                                 <p class="brand"><?php echo htmlspecialchars($product['brand']); ?></p>
                                 <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
@@ -1104,7 +1121,7 @@ function getGPULabel($score) {
                     <div class="winner-badge">🏆 Best Overall</div>
                 <?php endif; ?>
                 
-                <img src="<?php echo !empty($product['image_url']) ? htmlspecialchars($product['image_url']) : 'https://via.placeholder.com/280'; ?>" 
+                <img src="<?php echo resolveProductImage($product['image_url'], '280'); ?>" 
                      alt="<?php echo htmlspecialchars($product['product_name']); ?>">
                 
                 <div class="compare-card-content">
