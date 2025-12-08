@@ -62,32 +62,17 @@ while ($row = $result_top_products->fetch_assoc()) {
     $top_product_sales[] = (int)$row['total_sold'];
 }
 
-// --- Logic: AI Performance ---
-// Accuracy
-$sql_ai_acc = "SELECT AVG(accuracy_score) as avg_accuracy FROM recommendation_logs WHERE accuracy_score IS NOT NULL";
-$result_ai_acc = $conn->query($sql_ai_acc);
-$ai_accuracy = round(($result_ai_acc->fetch_assoc()['avg_accuracy'] ?? 0) * 100, 1);
-
-// Conversion (Success rate)
-$sql_ai_conv = "SELECT 
-    (SELECT COUNT(*) FROM recommendation_logs WHERE status = 'success') * 100.0 / 
-    (SELECT COUNT(*) FROM recommendation_logs) as conversion_rate";
-$result_ai_conv = $conn->query($sql_ai_conv);
-$ai_conversion = round($result_ai_conv->fetch_assoc()['conversion_rate'] ?? 0, 1);
-
-// Persona Distribution
-$sql_personas = "SELECT p.name as persona_name, COUNT(rl.log_id) as count 
-                 FROM recommendation_logs rl
-                 JOIN personas p ON rl.persona_id = p.persona_id
-                 GROUP BY rl.persona_id
-                 ORDER BY count DESC
-                 LIMIT 3";
-$result_personas = $conn->query($sql_personas);
-$persona_stats = [];
-$total_recs = 0;
-while ($row = $result_personas->fetch_assoc()) {
-    $persona_stats[] = $row;
-    $total_recs += $row['count'];
+// --- Logic: Recent Reviews (Replacement for AI Performance) ---
+$sql_reviews = "SELECT r.*, u.full_name, p.product_name 
+                FROM product_reviews r 
+                JOIN users u ON r.user_id = u.user_id 
+                JOIN products p ON r.product_id = p.product_id 
+                ORDER BY r.created_at DESC 
+                LIMIT 3";
+$result_reviews = $conn->query($sql_reviews);
+$recent_reviews = [];
+while ($row = $result_reviews->fetch_assoc()) {
+    $recent_reviews[] = $row;
 }
 
 // --- Logic: Recent System Activities ---
@@ -143,11 +128,20 @@ $result_recent = $conn->query($sql_recent);
                         <p class="text-subtitle text-muted">Smart Laptop Advisor Platform Overview</p>
                     </div>
                     <div class="d-flex gap-2 align-items-center">
-                        <div class="input-group" style="max-width: 200px;">
-                            <input type="date" class="form-control form-control-sm" id="dateRange">
-                            <button class="btn btn-outline-secondary btn-sm" type="button">
-                                <i class="bi bi-calendar"></i>
-                            </button>
+                        <div class="d-none d-md-flex gap-3 align-items-center me-3 card mb-0 flex-row px-3 py-1 shadow-sm border-0">
+                            <div class="text-end">
+                                <h6 class="mb-0 fw-bold" id="header-time">--:--</h6>
+                                <small class="text-muted" id="header-date" style="font-size: 0.75rem;">Loading...</small>
+                            </div>
+                            <div class="text-end border-start ps-3" id="weather-container">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-cloud-sun fs-5 text-primary" id="weather-icon"></i>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold" id="weather-temp">--°C</h6>
+                                        <small class="text-muted text-truncate d-block" id="weather-loc" style="max-width: 80px; font-size: 0.75rem;">Locating...</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
@@ -285,44 +279,43 @@ $result_recent = $conn->query($sql_recent);
                     <div class="col-12 col-lg-6">
                         <div class="card">
                             <div class="card-header">
-                                <h4>AI Recommendation Performance</h4>
+                                <h4>Recent Customer Reviews</h4>
                             </div>
                             <div class="card-body">
-                                <div class="row mb-3">
-                                    <div class="col-6">
-                                        <div class="text-center">
-                                            <h3 class="text-primary"><?= $ai_accuracy ?>%</h3>
-                                            <p class="text-muted mb-0">Accuracy Rate</p>
+                                <?php if (count($recent_reviews) > 0): ?>
+                                    <?php foreach ($recent_reviews as $rev): 
+                                        $stars = '';
+                                        for ($i=1; $i<=5; $i++) {
+                                            $stars .= ($i <= $rev['rating']) ? '<i class="bi bi-star-fill text-warning"></i>' : '<i class="bi bi-star text-secondary"></i>';
+                                        }
+                                        $short_text = (strlen($rev['review_text']) > 50) ? substr($rev['review_text'], 0, 50) . '...' : $rev['review_text'];
+                                        // Time ago logic
+                                        $time_diff = time() - strtotime($rev['created_at']);
+                                        if ($time_diff < 0) $time_diff = 0;
+                                        if ($time_diff < 60) $time_ago_rev = 'Just now';
+                                        elseif ($time_diff < 3600) $time_ago_rev = floor($time_diff/60) . 'm ago';
+                                        elseif ($time_diff < 86400) $time_ago_rev = floor($time_diff/3600) . 'h ago';
+                                        else $time_ago_rev = floor($time_diff/86400) . 'd ago';
+                                    ?>
+                                    <div class="mb-3 border-bottom pb-2">
+                                        <div class="d-flex justify-content-between">
+                                            <h6 class="mb-1"><?= htmlspecialchars($rev['product_name']) ?></h6>
+                                            <span class="small text-muted"><?= $time_ago_rev ?></span>
                                         </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-center">
-                                            <h3 class="text-success"><?= $ai_conversion ?>%</h3>
-                                            <p class="text-muted mb-0">Conversion Rate</p>
+                                        <div class="mb-1 small">
+                                            <?= $stars ?>
+                                            <span class="ms-1 fw-bold"><?= htmlspecialchars($rev['full_name']) ?></span>
                                         </div>
+                                        <p class="mb-1 small text-muted">"<?= htmlspecialchars($short_text) ?>"</p>
                                     </div>
-                                </div>
-                                <?php 
-                                $colors = ['bg-primary', 'bg-success', 'bg-info'];
-                                $i = 0;
-                                foreach ($persona_stats as $stat): 
-                                    $percentage = $total_recs > 0 ? ($stat['count'] / $total_recs) * 100 : 0;
-                                    $color = $colors[$i % 3];
-                                    $i++;
-                                ?>
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <small><?= htmlspecialchars($stat['persona_name']) ?></small>
-                                        <small><?= $stat['count'] ?> recommendations</small>
-                                    </div>
-                                    <div class="progress mb-2">
-                                        <div class="progress-bar <?= $color ?>" style="width: <?= $percentage ?>%"></div>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                                <?php if (empty($persona_stats)): ?>
-                                    <p class="text-center text-muted">No recommendation data available yet.</p>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <p class="text-center text-muted">No reviews yet.</p>
                                 <?php endif; ?>
+                                
+                                <div class="text-center mt-3">
+                                    <a href="admin_reviews.php" class="btn btn-outline-primary btn-sm">Manage Reviews</a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -630,6 +623,68 @@ $result_recent = $conn->query($sql_recent);
         if (document.querySelector('[data-period="30"]').classList.contains('active')) {
             updateChart(30);
         }
+
+        // --- Time & Weather Widget ---
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const dateString = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+            
+            document.getElementById('header-time').textContent = timeString;
+            document.getElementById('header-date').textContent = dateString;
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        function fetchWeather() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    try {
+                        // 1. Get Weather from Open-Meteo (Free, No Key)
+                        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                        const weatherData = await weatherRes.json();
+                        const temp = Math.round(weatherData.current_weather.temperature);
+                        const code = weatherData.current_weather.weathercode;
+                        
+                        // 2. Get Location Name (BigDataCloud Free API)
+                        const locRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+                        const locData = await locRes.json();
+                        const city = locData.city || locData.locality || "Local";
+
+                        // Update UI
+                        document.getElementById('weather-temp').textContent = `${temp}°C`;
+                        document.getElementById('weather-loc').textContent = city;
+                        
+                        // Icon Logic (WMO Codes)
+                        const iconEl = document.getElementById('weather-icon');
+                        iconEl.className = 'bi fs-5 text-primary'; // Reset
+                        
+                        if (code === 0) iconEl.classList.add('bi-sun');
+                        else if (code >= 1 && code <= 3) iconEl.classList.add('bi-cloud-sun');
+                        else if (code >= 45 && code <= 48) iconEl.classList.add('bi-cloud-fog');
+                        else if (code >= 51 && code <= 67) iconEl.classList.add('bi-cloud-rain');
+                        else if (code >= 71 && code <= 86) iconEl.classList.add('bi-snow');
+                        else if (code >= 95) iconEl.classList.add('bi-cloud-lightning-rain');
+                        else iconEl.classList.add('bi-cloud');
+                        
+                    } catch (error) {
+                        console.error('Weather fetch error:', error);
+                        document.getElementById('weather-loc').textContent = "Unavailable";
+                    }
+                }, function(error) {
+                    console.log('Geolocation denied:', error);
+                    document.getElementById('weather-container').style.display = 'none'; // Hide if denied
+                });
+            } else {
+                document.getElementById('weather-container').style.display = 'none';
+            }
+        }
+        
+        fetchWeather();
     </script>
 </body>
 </html>
