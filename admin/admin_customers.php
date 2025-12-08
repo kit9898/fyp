@@ -255,7 +255,7 @@ while ($row = mysqli_fetch_assoc($customers_result)) {
                                             <i class="bi bi-currency-dollar text-warning font-large-2 float-left"></i>
                                         </div>
                                         <div class="media-body text-right ms-auto">
-                                            <h3 class="warning">$<?php echo number_format($stats['total_spent'], 2); ?></h3>
+                                            <h3 class="warning currency-price" data-base-price="<?= $stats['total_spent']; ?>">$<?php echo number_format($stats['total_spent'], 2); ?></h3>
                                             <span>Total Revenue</span>
                                         </div>
                                     </div>
@@ -409,7 +409,7 @@ while ($row = mysqli_fetch_assoc($customers_result)) {
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <strong>$<?php echo number_format($customer['total_spent'], 2); ?></strong>
+                                                        <strong><span class="currency-price" data-base-price="<?= $customer['total_spent']; ?>">$<?php echo number_format($customer['total_spent'], 2); ?></span></strong>
                                                     </td>
                                                     <td>
                                                         <span class="status-badge status-<?php echo strtolower($customer['status']); ?>">
@@ -541,10 +541,9 @@ while ($row = mysqli_fetch_assoc($customers_result)) {
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('customerDetailsContent').innerHTML = html;
-                })
-                .catch(error => {
-                    document.getElementById('customerDetailsContent').innerHTML = 
-                        '<div class="alert alert-danger">Error loading customer details.</div>';
+                    if (typeof CurrencyManager !== 'undefined') {
+                        CurrencyManager.updatePagePrices();
+                    }
                 });
         }
 

@@ -37,7 +37,7 @@ include 'includes/header.php';
                 echo '<div class="product-card-info">';
                 echo '<p class="brand">' . htmlspecialchars($row["brand"]) . '</p>';
                 echo '<h3>' . htmlspecialchars($row["product_name"]) . '</h3>';
-                echo '<p class="product-price">$' . number_format($row["price"], 2) . '</p>';
+                echo '<p class="product-price currency-price" data-base-price="' . $row["price"] . '">$' . number_format($row["price"], 2) . '</p>';
                 echo '</div>'; // end product-card-info
                 echo '</a>';
                 echo '</div>'; // end product-card

@@ -39,6 +39,63 @@ $theme = isset($_COOKIE['admin_theme']) ? $_COOKIE['admin_theme'] : 'light';
                         </div>
                     </div>
                 </div>
+                <div class="mt-3 px-4 mb-2">
+                    <div class="input-group input-group-sm currency-wrapper">
+                        <span class="input-group-text bg-transparent border-0"><i class="bi bi-cash-coin"></i></span>
+                        <select class="form-select form-select-sm currency-selector" style="cursor: pointer;">
+                            <option value="USD" class="text-dark">🇺🇸 USD ($)</option>
+                            <option value="MYR" class="text-dark">🇲🇾 MYR (RM)</option>
+                            <option value="CNY" class="text-dark">🇨🇳 CNY (¥)</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Custom CSS to handle sidebar specific overrides -->
+                <style>
+                    /* Enhanced Currency Selector Styling */
+                    .currency-wrapper {
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: 8px;
+                        padding: 4px 8px;
+                        transition: all 0.3s ease;
+                    }
+                    
+                    .currency-wrapper:hover {
+                        background: rgba(255, 255, 255, 0.1);
+                        border-color: rgba(255, 255, 255, 0.2);
+                    }
+
+                    .currency-selector {
+                        color: #e2e8f0 !important;
+                        font-weight: 500;
+                        border: none !important;
+                        background: transparent !important;
+                        box-shadow: none !important;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                        padding-left: 0.5rem;
+                    }
+
+                    .currency-selector:focus {
+                        box-shadow: none !important;
+                    }
+
+                    .currency-selector option {
+                        background-color: #1a1c29; /* Dark background matching typical sidebar */
+                        color: #fff;
+                        padding: 12px;
+                    }
+
+                    .input-group-text {
+                        color: #a0a0a0 !important;
+                        padding-right: 0;
+                    }
+                    
+                    /* Override Bootstrap select chevron */
+                    .form-select {
+                        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23a0a0a0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+                    }
+                </style>
                 <div class="sidebar-menu">
                     <ul class="menu">
                         <li class="sidebar-title">Menu</li>
@@ -156,3 +213,5 @@ $theme = isset($_COOKIE['admin_theme']) ? $_COOKIE['admin_theme'] : 'light';
                 <button class="sidebar-toggler btn x"><i data-feather="x"></i></button>
             </div>
         </div>
+    <script src="source/assets/js/currency_manager.js"></script>
+

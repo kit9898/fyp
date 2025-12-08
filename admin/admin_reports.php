@@ -302,18 +302,12 @@ $page_title = "Advanced Reports";
                 
                 const analysisContainer = document.getElementById('analysis-container');
                 if (result.success) {
-                    analysisContainer.innerHTML = result.analysis;
+                    analysisContainer.innerHTML = formatAnalysisHTML(result.analysis);
+                    if (typeof CurrencyManager !== 'undefined') {
+                        CurrencyManager.updatePagePrices();
+                    }
                 } else {
                     console.warn('AI Analysis failed:', result.error);
-                    // Fallback to static analysis if AI fails
-                    // We don't overwrite if it was already set by updateDashboard (which sets static ones)
-                    // But wait, updateDashboard sets innerHTML. 
-                    // Let's make sure updateDashboard DOES NOT set the analysis container content if we want AI to do it.
-                    // Or we let updateDashboard set the "static" analysis first, and then AI overwrites it?
-                    // Better: Let updateDashboard return the static analysis string, and we append or replace?
-                    // Actually, for this implementation, let's have AI overwrite the static one if successful.
-                    // If AI fails, we might want to revert to the static one passed in data.analysis? 
-                    // Let's store the static analysis in a variable first.
                 }
             } catch (error) {
                 console.error('AI Analysis Error:', error);
@@ -321,25 +315,61 @@ $page_title = "Advanced Reports";
             }
         }
 
+        // Helper to wrap currency values in HTML
+        function formatAnalysisHTML(html) {
+            // Regex to find currency amounts ($1,234.56)
+            // We look for $ followed by digits and commas/dots
+            const currencyRegex = /\$([0-9,]+(\.[0-9]{2})?)/g;
+            
+            return html.replace(currencyRegex, (match, value) => {
+                const numericValue = value.replace(/,/g, '');
+                return `<span class="currency-price" data-base-price="${numericValue}">${match}</span>`;
+            });
+        }
+
         function updateDashboard(data) {
             console.log('Updating dashboard with data:', data);
             
             // Update Summary Cards using specific IDs
             if (data.summary) {
-                document.getElementById('card1-title').textContent = data.summary.card1.title;
-                document.getElementById('card1-value').textContent = data.summary.card1.value;
+                const updateCard = (idPrefix, cardData) => {
+                    document.getElementById(`${idPrefix}-title`).textContent = cardData.title;
+                    const valueEl = document.getElementById(`${idPrefix}-value`);
+                    
+                    // Check if title implies currency and value has $
+                    const isCurrency = /Revenue|Spent|Value|Amount|Sales/i.test(cardData.title);
+                    
+                    if (isCurrency && cardData.value.toString().includes('$')) {
+                        // Extract numeric value
+                        const numericValue = cardData.value.toString().replace(/[$,]/g, '');
+                        // Check if it's a valid number
+                        if (!isNaN(parseFloat(numericValue))) {
+                            valueEl.innerHTML = `<span class="currency-price" data-base-price="${numericValue}">${cardData.value}</span>`;
+                        } else {
+                            valueEl.textContent = cardData.value;
+                        }
+                    } else {
+                        valueEl.textContent = cardData.value;
+                    }
+                };
+
+                updateCard('card1', data.summary.card1);
+                updateCard('card2', data.summary.card2);
+                updateCard('card3', data.summary.card3);
                 
-                document.getElementById('card2-title').textContent = data.summary.card2.title;
-                document.getElementById('card2-value').textContent = data.summary.card2.value;
-                
-                document.getElementById('card3-title').textContent = data.summary.card3.title;
-                document.getElementById('card3-value').textContent = data.summary.card3.value;
+                // Trigger currency update for newly added elements
+                if (typeof CurrencyManager !== 'undefined') {
+                    CurrencyManager.updatePagePrices();
+                }
             }
 
             // Update Analysis
             const analysisContainer = document.getElementById('analysis-container');
             if (data.analysis) {
-                analysisContainer.innerHTML = data.analysis;
+                analysisContainer.innerHTML = formatAnalysisHTML(data.analysis);
+                if (typeof CurrencyManager !== 'undefined') {
+                    CurrencyManager.updatePagePrices();
+                }
             } else {
                 analysisContainer.innerHTML = '<p class="text-muted">No analysis available for this report.</p>';
             }

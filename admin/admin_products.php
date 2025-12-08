@@ -880,7 +880,7 @@ $page_title = "Product Management";
                                     </td>
                                     <td><?php echo $product['sku']; ?></td>
                                     <td><?php echo htmlspecialchars($product['primary_use_case']); ?></td>
-                                    <td>$<?php echo number_format($product['price'], 2); ?></td>
+                                    <td><span class="currency-price" data-base-price="<?php echo $product['price']; ?>">$<?php echo number_format($product['price'], 2); ?></span></td>
                                     <td class="<?php echo $product['stock_class']; ?> font-bold"><?php echo $product['stock']; ?></td>
                                     <td><?php echo $product['status_badge']; ?></td>
                                     <td>

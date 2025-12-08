@@ -120,18 +120,18 @@ if (empty($default_address['shipping_name'])) {
         <h3>Order Summary</h3>
         <div class="total-row">
             <span>Subtotal:</span>
-            <span>$<?php echo number_format($sub_total, 2); ?></span>
+            <span class="currency-price" data-base-price="<?= $sub_total; ?>">$<?php echo number_format($sub_total, 2); ?></span>
         </div>
         <?php if (isset($_SESSION['coupon'])): ?>
             <div class="total-row discount">
                 <span>Discount (<?php echo htmlspecialchars($_SESSION['coupon']['code']); ?>):</span>
-                <span>-$<?php echo number_format($discount_amount, 2); ?></span>
+                <span class="currency-price" data-base-price="<?= -$discount_amount; ?>">-$<?php echo number_format($discount_amount, 2); ?></span>
             </div>
         <?php endif; ?>
         <hr>
         <div class="total-row grand-total">
             <span>Total to Pay:</span>
-            <span>$<?php echo number_format($grand_total, 2); ?></span>
+            <span class="currency-price" data-base-price="<?= $grand_total; ?>">$<?php echo number_format($grand_total, 2); ?></span>
         </div>
     </div>
 
@@ -242,7 +242,7 @@ if (empty($default_address['shipping_name'])) {
             </div>
 
             <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1.5rem;">
-                🔒 Pay $<?php echo number_format($grand_total, 2); ?>
+                🔒 Pay <span class="currency-price" data-base-price="<?= $grand_total; ?>">$<?php echo number_format($grand_total, 2); ?></span>
             </button>
         </form>
     </div>

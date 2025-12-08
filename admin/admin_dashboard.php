@@ -175,7 +175,7 @@ $result_recent = $conn->query($sql_recent);
                                             </div>
                                             <div class="col-md-8">
                                                 <h6 class="text-muted font-semibold">Total Revenue</h6>
-                                                <h6 class="font-extrabold mb-0">$<?= number_format($total_revenue, 2) ?></h6>
+                                                <h6 class="font-extrabold mb-0 currency-price" data-base-price="<?= $total_revenue ?>">$<?= number_format($total_revenue, 2) ?></h6>
                                                 <small class="text-success"><i class="bi bi-arrow-up"></i> +12.5%</small>
                                             </div>
                                         </div>
@@ -432,7 +432,7 @@ $result_recent = $conn->query($sql_recent);
                                                     <tr>
                                                         <td>#<?= htmlspecialchars($row['order_id']) ?></td>
                                                         <td><?= htmlspecialchars($row['full_name']) ?></td>
-                                                        <td>$<?= number_format($row['total_amount'], 2) ?></td>
+                                                        <td><span class="currency-price" data-base-price="<?= $row['total_amount'] ?>">$<?= number_format($row['total_amount'], 2) ?></span></td>
                                                         <td>
                                                             <?php 
                                                             $status_class = 'bg-secondary';
@@ -528,10 +528,12 @@ $result_recent = $conn->query($sql_recent);
         var productsOptions = {
             series: <?= json_encode($top_product_sales) ?>,
             chart: {
-                width: 380,
+                width: '100%',
+                height: 350,
                 type: 'donut',
                 background: 'transparent',
-                foreColor: textColor
+                foreColor: textColor,
+                fontFamily: 'Nunito, sans-serif'
             },
             theme: {
                 mode: chartTheme,
@@ -539,32 +541,91 @@ $result_recent = $conn->query($sql_recent);
                     enabled: false
                 }
             },
-            labels: <?= json_encode($top_product_names) ?>,
-            colors: ['#435ebe', '#55c6e8', '#1cc88a', '#f6c23e', '#e74a3b'],
-            responsive: [{
-                breakpoint: 480,
-                options: {
-                    chart: {
-                        width: 200
-                    },
-                    legend: {
-                        position: 'bottom'
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%',
+                        labels: {
+                            show: true,
+                            name: {
+                                show: true,
+                                fontSize: '14px',
+                                fontFamily: 'Nunito, sans-serif',
+                                fontWeight: 600,
+                                color: textColor,
+                                offsetY: -5
+                            },
+                            value: {
+                                show: true,
+                                fontSize: '16px',
+                                fontFamily: 'Nunito, sans-serif',
+                                fontWeight: 700,
+                                color: textColor,
+                                offsetY: 5,
+                                formatter: function (val) {
+                                    return val;
+                                }
+                            },
+                            total: {
+                                show: true,
+                                showAlways: false,
+                                label: 'Total Sold',
+                                fontSize: '14px',
+                                fontFamily: 'Nunito, sans-serif',
+                                fontWeight: 600,
+                                color: textColor,
+                                formatter: function (w) {
+                                    return w.globals.seriesTotals.reduce((a, b) => {
+                                        return a + b
+                                    }, 0)
+                                }
+                            }
+                        }
                     }
                 }
-            }],
+            },
+            labels: <?= json_encode($top_product_names) ?>,
+            // Premium Palette: Blue, Purple, Teal, Orange, Pink to pop against dark
+            colors: ['#4361ee', '#3a0ca3', '#4cc9f0', '#f72585', '#7209b7'],
+            dataLabels: {
+                enabled: false // Cleaner look without text on slices
+            },
             stroke: {
                 show: true,
-                colors: [isDarkMode ? '#1e1e2d' : '#fff'] // Border around slices
+                width: 2,
+                colors: [isDarkMode ? '#1e1e2d' : '#ffffff'] // Matches card bg for spacing effect
             },
             legend: {
+                position: 'bottom',
+                horizontalAlign: 'center', 
+                offsetY: 0,
                 labels: {
-                    colors: textColor
+                    colors: textColor,
+                    useSeriesColors: false
+                },
+                markers: {
+                    width: 10,
+                    height: 10,
+                    radius: 12,
+                },
+                itemMargin: {
+                    horizontal: 10,
+                    vertical: 8
+                }
+            },
+            tooltip: {
+                theme: chartTheme,
+                y: {
+                    formatter: function (val) {
+                        return val + " units"
+                    }
                 }
             },
             noData: {
                 text: 'No sales data available',
                 style: {
-                     color: textColor
+                     color: textColor,
+                     fontSize: '14px'
                 }
             }
         };

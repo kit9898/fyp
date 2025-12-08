@@ -470,7 +470,7 @@ $pending_orders = count(array_filter($orders, function($order) {
                     <h3>Total Spent</h3>
                 </div>
             </div>
-            <p class="stat-value">$<?php echo number_format($total_spent, 2); ?></p>
+            <p class="stat-value currency-price" data-base-price="<?= $total_spent; ?>">$<?php echo number_format($total_spent, 2); ?></p>
         </div>
         
         <div class="stat-card">
@@ -503,7 +503,7 @@ $pending_orders = count(array_filter($orders, function($order) {
                         <tr>
                             <td class="order-id">#<?php echo $order['order_id']; ?></td>
                             <td><?php echo date("F j, Y", strtotime($order['order_date'])); ?></td>
-                            <td><strong>$<?php echo number_format($order['total_amount'], 2); ?></strong></td>
+                            <td><strong><span class="currency-price" data-base-price="<?= $order['total_amount']; ?>">$<?php echo number_format($order['total_amount'], 2); ?></span></strong></td>
                             <td>
                                 <?php 
                                 $status = strtolower($order['order_status']);

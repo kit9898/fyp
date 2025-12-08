@@ -114,7 +114,7 @@ $orders_result = $stmt->get_result();
             </div>
             <div class="col-6">
                 <div class="p-3 border rounded bg-light text-center">
-                    <h3 class="text-success mb-0">$<?php echo number_format($stats['total_spent'], 2); ?></h3>
+                    <h3 class="text-success mb-0 currency-price" data-base-price="<?= $stats['total_spent']; ?>">$<?php echo number_format($stats['total_spent'], 2); ?></h3>
                     <small class="text-muted">Total Spent</small>
                 </div>
             </div>
@@ -153,7 +153,7 @@ $orders_result = $stmt->get_result();
                                 <?php echo ucfirst($order['order_status']); ?>
                             </span>
                         </td>
-                        <td class="text-end">$<?php echo number_format($order['total_amount'], 2); ?></td>
+                        <td class="text-end"><span class="currency-price" data-base-price="<?= $order['total_amount']; ?>">$<?php echo number_format($order['total_amount'], 2); ?></span></td>
                         <td>
                             <a href="admin_orders.php?search=<?php echo $order['order_id']; ?>" class="btn btn-sm btn-outline-primary">
                                 View

@@ -598,7 +598,22 @@ if (isset($_SESSION['temp_voucher'])) {
                 <?php foreach ($cart_products as $product): ?>
                     <div class="cart-item">
                         <div class="item-image-wrapper">
-                            <img src="<?php echo !empty($product['image_url']) ? htmlspecialchars($product['image_url']) : 'https://via.placeholder.com/100'; ?>" 
+                            <?php 
+                            $image_src = 'https://via.placeholder.com/100';
+                            if (!empty($product['image_url'])) {
+                                $img_url = $product['image_url'];
+                                if (strpos($img_url, 'http') === 0) {
+                                    $image_src = $img_url;
+                                } elseif (strpos($img_url, 'LaptopAdvisor/') === 0) {
+                                    $image_src = '../' . $img_url;
+                                } elseif (strpos($img_url, 'images/') === 0) {
+                                    $image_src = $img_url;
+                                } else {
+                                    $image_src = 'images/' . basename($img_url);
+                                }
+                            }
+                            ?>
+                            <img src="<?php echo htmlspecialchars($image_src); ?>" 
                                  alt="<?php echo htmlspecialchars($product['product_name']); ?>" 
                                  class="item-image">
                         </div>
@@ -608,7 +623,7 @@ if (isset($_SESSION['temp_voucher'])) {
                                 <div class="item-name"><?php echo htmlspecialchars($product['product_name']); ?></div>
                                 <div class="item-brand"><?php echo htmlspecialchars($product['brand'] ?? 'LaptopAdvisor'); ?></div>
                             </div>
-                            <div class="item-price">$<?php echo number_format($product['price'], 2); ?></div>
+                            <div class="item-price currency-price" data-base-price="<?= $product['price']; ?>">$<?php echo number_format($product['price'], 2); ?></div>
                         </div>
                         
                         <div class="item-actions">
@@ -688,7 +703,7 @@ if (isset($_SESSION['temp_voucher'])) {
                     
                     <div class="summary-row">
                         <span>Subtotal:</span>
-                        <span>$<?php echo number_format($sub_total, 2); ?></span>
+                        <span class="currency-price" data-base-price="<?= $sub_total; ?>">$<?php echo number_format($sub_total, 2); ?></span>
                     </div>
                     
                     <div class="summary-row">
@@ -704,7 +719,7 @@ if (isset($_SESSION['temp_voucher'])) {
                                     <button type="submit" name="remove_coupon" class="remove-coupon-btn">×</button>
                                 </form>
                             </span>
-                            <span>-$<?php echo number_format($discount_amount, 2); ?></span>
+                            <span class="currency-price" data-base-price="<?= -$discount_amount; ?>">-$<?php echo number_format($discount_amount, 2); ?></span>
                         </div>
                     <?php endif; ?>
                     
@@ -716,7 +731,7 @@ if (isset($_SESSION['temp_voucher'])) {
                                     <button type="submit" name="remove_temp_voucher" class="remove-coupon-btn">×</button>
                                 </form>
                             </span>
-                            <span>-$<?php echo number_format($temp_voucher_discount, 2); ?></span>
+                            <span class="currency-price" data-base-price="<?= -$temp_voucher_discount; ?>">-$<?php echo number_format($temp_voucher_discount, 2); ?></span>
                         </div>
                     <?php endif; ?>
                     
@@ -728,7 +743,7 @@ if (isset($_SESSION['temp_voucher'])) {
                     
                     <div class="summary-total">
                         <span>Total:</span>
-                        <span>$<?php echo number_format($grand_total, 2); ?></span>
+                        <span class="currency-price" data-base-price="<?= $grand_total; ?>">$<?php echo number_format($grand_total, 2); ?></span>
                     </div>
                     
                     <a href="checkout.php" class="checkout-btn">

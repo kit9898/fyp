@@ -35,7 +35,7 @@ $stmt->close();
     <hr style="margin: 2rem 0;">
     <div class="order-summary">
         <p><strong>Order ID:</strong> #<?php echo htmlspecialchars($order['order_id']); ?></p>
-        <p><strong>Order Total:</strong> $<?php echo number_format($order['total_amount'], 2); ?></p>
+        <p><strong>Order Total:</strong> <span class="currency-price" data-base-price="<?= $order['total_amount']; ?>">$<?php echo number_format($order['total_amount'], 2); ?></span></p>
     </div>
     <div style="margin-top: 2rem;">
         <a href="order_details.php?order_id=<?php echo $order['order_id']; ?>" class="btn btn-primary">View Order Details</a>

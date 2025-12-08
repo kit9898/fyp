@@ -315,7 +315,7 @@ $page_title = "Inventory Management";
                                         </span>
                                     </td>
                                     <td><?php echo $item['min_stock_level']; ?></td>
-                                    <td>$<?php echo number_format($item['price'], 2); ?></td>
+                                    <td><span class="currency-price" data-base-price="<?= $item['price']; ?>">$<?php echo number_format($item['price'], 2); ?></span></td>
                                     <td><?php echo $item['status_badge']; ?></td>
                                     <td>
                                         <div class="btn-group">

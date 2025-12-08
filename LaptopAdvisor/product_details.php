@@ -352,7 +352,7 @@ function getUseCaseBadge($use_case) {
                 
                 <div class="price-section">
                     <div class="price-label">Price</div>
-                    <div class="product-price-display">$<?php echo number_format($product['price'], 2); ?></div>
+                    <div class="product-price-display currency-price" data-base-price="<?= $product['price']; ?>">$<?php echo number_format($product['price'], 2); ?></div>
                 </div>
 
                 <p class="description" style="margin: 20px 0; color: #495057; line-height: 1.6;">
@@ -501,7 +501,7 @@ function getUseCaseBadge($use_case) {
                     <?php else: ?>
                     <tr><td>Product Type</td><td><?php echo ucwords(str_replace('_', ' ', $product['product_category'] ?? 'Accessory')); ?></td></tr>
                     <?php endif; ?>
-                    <tr><td>Price</td><td style="font-size: 1.2rem; font-weight: 600; color: #667eea;">$<?php echo number_format($product['price'], 2); ?></td></tr>
+                    <tr><td>Price</td><td class="currency-price" data-base-price="<?= $product['price']; ?>" style="font-size: 1.2rem; font-weight: 600; color: #667eea;">$<?php echo number_format($product['price'], 2); ?></td></tr>
                 </table>
             </div>
 
@@ -704,7 +704,7 @@ function getUseCaseBadge($use_case) {
                                 <div class="product-card-info">
                                     <p class="brand"><?php echo htmlspecialchars($similar['brand']); ?></p>
                                     <h3><?php echo htmlspecialchars($similar['product_name']); ?></h3>
-                                    <p class="product-price">$<?php echo number_format($similar['price'], 2); ?></p>
+                                    <p class="product-price currency-price" data-base-price="<?= $similar['price']; ?>">$<?php echo number_format($similar['price'], 2); ?></p>
                                 </div>
                             </a>
                         </div>
@@ -780,7 +780,7 @@ function getUseCaseBadge($use_case) {
                         <p style="font-size: 0.75rem; color: #ef4444; margin-bottom: 10px;">⚠️ Out of Stock</p>
                     <?php endif; ?>
 
-                    <p style="font-size: 1.3rem; font-weight: 700; color: #667eea; margin: 12px 0;">$<?php echo number_format($accessory['price'], 2); ?></p>
+                    <p class="currency-price" data-base-price="<?= $accessory['price']; ?>" style="font-size: 1.3rem; font-weight: 700; color: #667eea; margin: 12px 0;">$<?php echo number_format($accessory['price'], 2); ?></p>
                     
                     <div style="display: flex; gap: 8px;">
                         <?php if ($accessory['stock_quantity'] > 0): ?>

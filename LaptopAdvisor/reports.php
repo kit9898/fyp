@@ -385,7 +385,7 @@ body {
                         <span class="stat-label">Total Spent</span>
                         <div class="stat-icon-wrapper" style="background: #eef2ff; color: #4f46e5;">💰</div>
                     </div>
-                    <div class="stat-value">$<?php echo number_format($summary['total_spent'] ?? 0, 2); ?></div>
+                    <div class="stat-value currency-price" data-base-price="<?= $summary['total_spent'] ?? 0; ?>">$<?php echo number_format($summary['total_spent'] ?? 0, 2); ?></div>
                     <div class="stat-trend trend-up">
                         <span>↗</span> 12% <span class="trend-neutral">vs last month</span>
                     </div>
@@ -405,7 +405,7 @@ body {
                         <span class="stat-label">Avg. Order Value</span>
                         <div class="stat-icon-wrapper" style="background: #fff7ed; color: #f59e0b;">📈</div>
                     </div>
-                    <div class="stat-value">$<?php echo number_format($avg_order, 2); ?></div>
+                    <div class="stat-value currency-price" data-base-price="<?= $avg_order; ?>">$<?php echo number_format($avg_order, 2); ?></div>
                     <div class="stat-trend trend-up">
                         <span>↗</span> 5% <span class="trend-neutral">vs last month</span>
                     </div>
@@ -453,7 +453,7 @@ body {
                                         <tr>
                                             <td style="font-family: monospace; font-weight: 600;">#<?php echo $order['order_id']; ?></td>
                                             <td><?php echo date("M j, Y", strtotime($order['order_date'])); ?></td>
-                                            <td style="font-weight: 600;">$<?php echo number_format($order['total_amount'], 2); ?></td>
+                                            <td style="font-weight: 600;"><span class="currency-price" data-base-price="<?= $order['total_amount']; ?>">$<?php echo number_format($order['total_amount'], 2); ?></span></td>
                                             <td><span class="status-badge status-success">Completed</span></td>
                                         </tr>
                                     <?php endforeach; ?>

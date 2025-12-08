@@ -430,7 +430,7 @@ $categories_query = $conn->query("SELECT DISTINCT product_category FROM products
                                 <?php endif; ?>
                             </div>
                             
-                            <p class="product-price">$<?php echo number_format($row['price'], 2); ?></p>
+                            <p class="product-price currency-price" data-base-price="<?= $row['price'] ?>">$<?php echo number_format($row['price'], 2); ?></p>
                         </div>
                     </a>
                     
@@ -510,7 +510,7 @@ $categories_query = $conn->query("SELECT DISTINCT product_category FROM products
                                 <?php endif; ?>
                             </div>
                             
-                            <p class="product-price">$<?php echo number_format($row['price'], 2); ?></p>
+                            <p class="product-price currency-price" data-base-price="<?= $row['price'] ?>">$<?php echo number_format($row['price'], 2); ?></p>
                         </div>
                     </a>
                     

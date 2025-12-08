@@ -268,7 +268,7 @@ $items_stmt->close();
             </div>
             <div class="order-meta-item">
                 <label>Total Amount</label>
-                <div class="value">$<?php echo number_format($order['total_amount'], 2); ?></div>
+                <div class="value currency-price" data-base-price="<?= $order['total_amount']; ?>">$<?php echo number_format($order['total_amount'], 2); ?></div>
             </div>
         </div>
     </div>
@@ -281,18 +281,33 @@ $items_stmt->close();
                 <h3>📦 Order Items</h3>
                 <?php foreach ($items as $item): ?>
                     <div class="order-item">
-                        <img src="<?php echo !empty($item['image_url']) ? htmlspecialchars($item['image_url']) : 'https://via.placeholder.com/60'; ?>" 
+                        <?php 
+                        $image_src = 'https://via.placeholder.com/60';
+                        if (!empty($item['image_url'])) {
+                            $img_url = $item['image_url'];
+                            if (strpos($img_url, 'http') === 0) {
+                                $image_src = $img_url;
+                            } elseif (strpos($img_url, 'LaptopAdvisor/') === 0) {
+                                $image_src = '../' . $img_url;
+                            } elseif (strpos($img_url, 'images/') === 0) {
+                                $image_src = $img_url;
+                            } else {
+                                $image_src = 'images/' . basename($img_url);
+                            }
+                        }
+                        ?>
+                        <img src="<?php echo htmlspecialchars($image_src); ?>" 
                              alt="<?php echo htmlspecialchars($item['product_name']); ?>" 
                              class="item-image">
                         <div class="item-details">
                             <div class="item-name"><?php echo htmlspecialchars($item['product_name']); ?></div>
                             <div class="item-meta">
                                 Qty: <?php echo $item['quantity']; ?> × 
-                                $<?php echo number_format($item['price_at_purchase'], 2); ?>
+                                $<span class="currency-price" data-base-price="<?= $item['price_at_purchase']; ?>"><?php echo number_format($item['price_at_purchase'], 2); ?></span>
                             </div>
                         </div>
                         <div class="item-price">
-                            $<?php echo number_format($item['price_at_purchase'] * $item['quantity'], 2); ?>
+                            <span class="currency-price" data-base-price="<?= $item['price_at_purchase'] * $item['quantity']; ?>">$<?php echo number_format($item['price_at_purchase'] * $item['quantity'], 2); ?></span>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -301,7 +316,7 @@ $items_stmt->close();
                 <div class="order-summary">
                     <div class="summary-row">
                         <span>Subtotal</span>
-                        <span>$<?php echo number_format($order['total_amount'], 2); ?></span>
+                        <span class="currency-price" data-base-price="<?= $order['total_amount']; ?>">$<?php echo number_format($order['total_amount'], 2); ?></span>
                     </div>
                     <div class="summary-row">
                         <span>Shipping</span>
@@ -309,7 +324,7 @@ $items_stmt->close();
                     </div>
                     <div class="summary-row">
                         <span>Total</span>
-                        <span>$<?php echo number_format($order['total_amount'], 2); ?></span>
+                        <span class="currency-price" data-base-price="<?= $order['total_amount']; ?>">$<?php echo number_format($order['total_amount'], 2); ?></span>
                     </div>
                 </div>
             </div>

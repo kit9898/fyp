@@ -223,7 +223,7 @@ while ($row = $result->fetch_assoc()) {
                         </div>
                         <div class="col-md-8">
                             <h6 class="text-muted font-semibold">Total Revenue</h6>
-                            <h6 class="font-extrabold mb-0">$<?php echo number_format($total_revenue, 2); ?></h6>
+                            <h6 class="font-extrabold mb-0 currency-price" data-base-price="<?= $total_revenue; ?>">$<?php echo number_format($total_revenue, 2); ?></h6>
                         </div>
                     </div>
                 </div>
@@ -422,7 +422,7 @@ while ($row = $result->fetch_assoc()) {
                                         <a href="#" class="text-primary">ORD-<?php echo str_pad($txn['order_id'], 4, '0', STR_PAD_LEFT); ?></a>
                                     </td>
                                     <td>
-                                        <strong class="text-success">$<?php echo number_format($txn['total_amount'], 2); ?></strong><br>
+                                        <strong class="text-success currency-price" data-base-price="<?= $txn['total_amount']; ?>">$<?php echo number_format($txn['total_amount'], 2); ?></strong><br>
                                     </td>
                                     <td>
                                         <span class="badge bg-primary"><?php echo $txn['payment_method']; ?></span>
@@ -567,7 +567,7 @@ while ($row = $result->fetch_assoc()) {
                         </div>
                         <div class="col-6 text-end">
                             <h6>Payment</h6>
-                            <p>Total: $${data.order.total_amount}<br>
+                            <p>Total: <span class="currency-price" data-base-price="${data.order.total_amount}">$${data.order.total_amount}</span><br>
                             Method: ${data.order.payment_method || 'Credit Card'}</p>
                         </div>
                     </div>
@@ -580,11 +580,14 @@ while ($row = $result->fetch_assoc()) {
                     html += `<tr>
                         <td>${item.model}</td>
                         <td>${item.quantity}</td>
-                        <td>$${item.price_at_purchase}</td>
+                        <td><span class="currency-price" data-base-price="${item.price_at_purchase}">$${item.price_at_purchase}</span></td>
                     </tr>`;
                 });
                 html += `</tbody></table>`;
                 document.getElementById('modalContent').innerHTML = html;
+                if (typeof CurrencyManager !== 'undefined') {
+                    CurrencyManager.updatePagePrices();
+                }
             } else {
                 document.getElementById('modalContent').innerHTML = '<p class="text-danger">Failed to load details</p>';
             }

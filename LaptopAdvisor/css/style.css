@@ -104,6 +104,7 @@ h3 {
     transition: all var(--transition-speed) ease;
     border-radius: var(--border-radius);
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .nav-links li a:hover,

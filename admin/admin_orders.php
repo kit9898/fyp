@@ -313,7 +313,7 @@ $page_title = "Order Management";
                                     </div>
                                 </td>
                                 <td><?php echo date('M d, Y', strtotime($order['order_date'])); ?></td>
-                                <td>$<?php echo number_format($order['total_amount'], 2); ?></td>
+                                <td><span class="currency-price" data-base-price="<?= $order['total_amount']; ?>">$<?php echo number_format($order['total_amount'], 2); ?></span></td>
                                 <td><?php echo $order['payment_method']; ?></td>
                                 <td><?php echo $order['status_badge']; ?></td>
                                 <td>
@@ -521,8 +521,8 @@ $page_title = "Order Management";
                     </div>
                 </td>
                 <td class="text-center">${item.quantity}</td>
-                <td class="text-end">$${parseFloat(item.price_at_purchase).toFixed(2)}</td>
-                <td class="text-end">$${parseFloat(item.subtotal).toFixed(2)}</td>
+                <td class="text-end"><span class="currency-price" data-base-price="${item.price_at_purchase}">$${parseFloat(item.price_at_purchase).toFixed(2)}</span></td>
+                <td class="text-end"><span class="currency-price" data-base-price="${item.subtotal}">$${parseFloat(item.subtotal).toFixed(2)}</span></td>
             </tr>
         `).join('');
 
@@ -569,11 +569,11 @@ $page_title = "Order Management";
                     <tfoot class="table-light">
                         <tr>
                             <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                            <td class="text-end">$${order.subtotal.toFixed(2)}</td>
+                            <td class="text-end"><span class="currency-price" data-base-price="${order.subtotal}">$${order.subtotal.toFixed(2)}</span></td>
                         </tr>
                         <tr>
                             <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                            <td class="text-end"><strong>$${order.total.toFixed(2)}</strong></td>
+                            <td class="text-end"><strong><span class="currency-price" data-base-price="${order.total}">$${order.total.toFixed(2)}</span></strong></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -581,6 +581,9 @@ $page_title = "Order Management";
         `;
         
         document.getElementById('orderDetailsContent').innerHTML = content;
+        if (typeof CurrencyManager !== 'undefined') {
+            CurrencyManager.updatePagePrices();
+        }
     }
 
     function printOrder() {

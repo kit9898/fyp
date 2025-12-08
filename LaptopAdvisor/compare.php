@@ -777,7 +777,7 @@ function getGPULabel($score) {
             <div class="stat-card-icon">💰</div>
             <div class="stat-card-label">Price Range</div>
             <div class="stat-card-value">
-                $<?php echo number_format(min($prices), 0); ?> - $<?php echo number_format(max($prices), 0); ?>
+                <span class="currency-price" data-base-price="<?= min($prices); ?>">$<?php echo number_format(min($prices), 0); ?></span> - <span class="currency-price" data-base-price="<?= max($prices); ?>">$<?php echo number_format(max($prices), 0); ?></span>
             </div>
         </div>
         <?php if (!$is_accessory_mode): ?>
@@ -1114,7 +1114,7 @@ function getGPULabel($score) {
                     </div>
                     
                     <div class="compare-card-price">
-                        $<?php echo number_format($product['price'], 2); ?>
+                        <span class="currency-price" data-base-price="<?= $product['price']; ?>">$<?php echo number_format($product['price'], 2); ?></span>
                     </div>
                     
                     <?php 
@@ -1238,7 +1238,7 @@ function getGPULabel($score) {
                 ?>
                 <p style="margin: 0; font-size: 0.95rem; color: #495057;">
                     <strong><?php echo htmlspecialchars($cheapest['product_name']); ?></strong><br>
-                    at $<?php echo number_format($cheapest['price'], 2); ?>
+                    at <span class="currency-price" data-base-price="<?= $cheapest['price']; ?>">$<?php echo number_format($cheapest['price'], 2); ?></span>
                 </p>
             </div>
             
@@ -1294,8 +1294,8 @@ function getGPULabel($score) {
             $avg_price = array_sum($prices) / count($prices);
             ?>
             <p style="margin: 5px 0; color: #78350f; line-height: 1.6;">
-                • Price difference: <strong>$<?php echo number_format($price_diff, 2); ?></strong><br>
-                • Average price: <strong>$<?php echo number_format($avg_price, 2); ?></strong><br>
+                • Price difference: <strong class="currency-price" data-base-price="<?= $price_diff; ?>">$<?php echo number_format($price_diff, 2); ?></strong><br>
+                • Average price: <strong class="currency-price" data-base-price="<?= $avg_price; ?>">$<?php echo number_format($avg_price, 2); ?></strong><br>
                 • The most expensive option costs <strong><?php echo round(($price_diff / min($prices)) * 100); ?>%</strong> more than the cheapest
             </p>
         </div>
