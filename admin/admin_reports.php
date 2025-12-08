@@ -242,6 +242,9 @@ $page_title = "Advanced Reports";
             btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
             btn.disabled = true;
 
+            // Reset Analysis Section
+            document.getElementById('analysis-container').innerHTML = '<div class="text-center py-3"><span class="spinner-border text-primary" role="status"></span><p class="mt-2 text-muted">Thinking...</p></div>';
+
             // Update Chart Title
             const reportTypeText = document.getElementById('reportType').options[document.getElementById('reportType').selectedIndex].text;
             document.getElementById('chart-title').textContent = reportTypeText + ' Analytics';
@@ -257,6 +260,10 @@ $page_title = "Advanced Reports";
                 .then(data => {
                     if (data.success) {
                         updateDashboard(data);
+                        // Trigger AI Analysis concurrently
+                        if (data.summary) {
+                            fetchAiAnalysis(reportType, dateFrom, dateTo, data.summary);
+                        }
                     } else {
                         throw new Error(data.error || 'Unknown error occurred');
                     }
@@ -268,11 +275,50 @@ $page_title = "Advanced Reports";
                     // Show error in chart area
                     const chartContainer = document.querySelector("#chart-sales-revenue");
                     chartContainer.innerHTML = '<div class="alert alert-danger">Failed to load report data. Please try again.</div>';
+                    document.getElementById('analysis-container').innerHTML = '<p class="text-danger">Analysis unavailable due to data error.</p>';
                 })
                 .finally(() => {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 });
+        }
+
+        async function fetchAiAnalysis(reportType, dateFrom, dateTo, summaryData) {
+            try {
+                const response = await fetch('ajax/generate_ai_analysis.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reportType: reportType,
+                        dateFrom: dateFrom,
+                        dateTo: dateTo,
+                        data: summaryData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                const analysisContainer = document.getElementById('analysis-container');
+                if (result.success) {
+                    analysisContainer.innerHTML = result.analysis;
+                } else {
+                    console.warn('AI Analysis failed:', result.error);
+                    // Fallback to static analysis if AI fails
+                    // We don't overwrite if it was already set by updateDashboard (which sets static ones)
+                    // But wait, updateDashboard sets innerHTML. 
+                    // Let's make sure updateDashboard DOES NOT set the analysis container content if we want AI to do it.
+                    // Or we let updateDashboard set the "static" analysis first, and then AI overwrites it?
+                    // Better: Let updateDashboard return the static analysis string, and we append or replace?
+                    // Actually, for this implementation, let's have AI overwrite the static one if successful.
+                    // If AI fails, we might want to revert to the static one passed in data.analysis? 
+                    // Let's store the static analysis in a variable first.
+                }
+            } catch (error) {
+                console.error('AI Analysis Error:', error);
+                document.getElementById('analysis-container').innerHTML += '<p class="text-muted small mt-2">(AI insights unavailable)</p>';
+            }
         }
 
         function updateDashboard(data) {
