@@ -91,6 +91,7 @@ if (isset($_POST['bulk_upload_csv']) && isset($_FILES['csv_file'])) {
         if ($imported > 0) {
             $success_message = "$imported product(s) imported successfully!";
             logActivity($conn, $_SESSION['admin_id'], 'create', 'products', "Bulk imported $imported products via CSV");
+            triggerRecommendationTraining();
         }
         if (!empty($errors)) {
             $error_message = implode(', ', $errors);
@@ -237,6 +238,7 @@ if (isset($_POST['add_product'])) {
                 $success_message .= " ($additional_images_uploaded additional image(s) uploaded)";
             }
             logActivity($conn, $_SESSION['admin_id'], 'create', 'products', "Added new product: $name", 'product', $new_product_id);
+            triggerRecommendationTraining();
         } else {
             $error_message = "Error adding product: " . $conn->error;
         }
@@ -408,6 +410,7 @@ if (isset($_POST['edit_product'])) {
 
             $success_message = "Product updated successfully!";
             logActivity($conn, $_SESSION['admin_id'], 'update', 'products', "Updated product: $name", 'product', $product_id);
+            triggerRecommendationTraining();
         } else {
             $error_message = "Error updating product: " . $conn->error;
         }
@@ -474,6 +477,7 @@ if (isset($_POST['bulk_delete'])) {
                 }
                 
                 logActivity($conn, $_SESSION['admin_id'], 'delete', 'products', "Bulk deleted " . count($ids_to_delete) . " products");
+                triggerRecommendationTraining();
             } else {
                 $error_message = "Error deleting products.";
             }
@@ -519,6 +523,7 @@ if (isset($_POST['delete_product'])) {
             }
             $success_message = "Product deleted successfully.";
             logActivity($conn, $_SESSION['admin_id'], 'delete', 'products', "Deleted product ID: $product_id", 'product', $product_id);
+            triggerRecommendationTraining();
         } else {
             $error_message = "Error deleting product.";
         }

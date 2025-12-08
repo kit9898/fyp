@@ -110,15 +110,37 @@ if ($view == 'browse') {
     $sort_sql = $sort_options[$sort_filter] ?? 'price ASC';
     $sql .= " ORDER BY " . $sort_sql;
     
+    // PAGINATION: Get Total Count First (Before LIMIT)
+    $count_sql = "SELECT COUNT(*) as cnt FROM products WHERE is_active = 1";
+    if (!empty($where_clauses)) {
+        $count_sql .= " AND " . implode(" AND ", $where_clauses);
+    }
+    $stmt_count = $conn->prepare($count_sql);
+    if (!empty($params)) {
+        $stmt_count->bind_param($types, ...$params);
+    }
+    $stmt_count->execute();
+    $total_results = $stmt_count->get_result()->fetch_assoc()['cnt'];
+    $stmt_count->close();
+
+    // Pagination Calculation
+    $limit = 9;
+    $page = max(1, intval($_GET['page'] ?? 1));
+    $offset = ($page - 1) * $limit;
+    $total_pages = ceil($total_results / $limit);
+
+    // Main Query with Limit
+    $sql .= " LIMIT ? OFFSET ?";
+    $params[] = $limit;
+    $params[] = $offset;
+    $types .= 'ii';
+
     $stmt = $conn->prepare($sql);
     if (!empty($params)) { 
         $stmt->bind_param($types, ...$params); 
     }
     $stmt->execute();
     $result = $stmt->get_result();
-    
-    // Count total results
-    $total_results = $result->num_rows;
 }
 
 if ($view == 'recommendations') {
@@ -375,8 +397,8 @@ $categories_query = $conn->query("SELECT DISTINCT product_category FROM products
     
     <div class="results-header">
         <div class="results-info">
-            Showing <strong><?php echo $total_results; ?></strong> 
-            <?php echo $total_results == 1 ? 'product' : 'products'; ?>
+            Showing <strong><?php echo ($total_results > 0) ? ($offset + 1) : 0; ?>-<?php echo min($offset + $limit, $total_results); ?></strong> 
+            of <strong><?php echo $total_results; ?></strong> products
         </div>
         <!-- List View Buttons Removed as requested -->
     </div>
@@ -454,6 +476,51 @@ $categories_query = $conn->query("SELECT DISTINCT product_category FROM products
                 </div>
             <?php endwhile; ?>
         </div>
+        
+        <?php if (isset($total_pages) && $total_pages > 1): ?>
+        <div class="pagination-container" style="display: flex; justify-content: center; gap: 8px; margin-top: 40px; flex-wrap: wrap;">
+            <?php 
+            $q = $_GET;
+            
+            // Previous
+            if ($page > 1) {
+                $q['page'] = $page - 1;
+                echo '<a href="?' . http_build_query($q) . '" class="btn" style="background: white; border: 1px solid #ddd; color: #666;">&laquo; Prev</a>';
+            }
+            
+            // Page Numbers (Show window around current)
+            $start_p = max(1, $page - 2);
+            $end_p = min($total_pages, $page + 2);
+            
+            if ($start_p > 1) {
+                 $q['page'] = 1;
+                 echo '<a href="?' . http_build_query($q) . '" class="btn" style="background: white; border: 1px solid #ddd; color: #666;">1</a>';
+                 if ($start_p > 2) echo '<span style="padding: 10px;">...</span>';
+            }
+            
+            for ($i = $start_p; $i <= $end_p; $i++) {
+                $q['page'] = $i;
+                $isActive = ($i == $page);
+                $style = $isActive 
+                    ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;' 
+                    : 'background: white; border: 1px solid #ddd; color: #666;';
+                echo '<a href="?' . http_build_query($q) . '" class="btn" style="' . $style . '">' . $i . '</a>';
+            }
+            
+            if ($end_p < $total_pages) {
+                if ($end_p < $total_pages - 1) echo '<span style="padding: 10px;">...</span>';
+                $q['page'] = $total_pages;
+                echo '<a href="?' . http_build_query($q) . '" class="btn" style="background: white; border: 1px solid #ddd; color: #666;">' . $total_pages . '</a>';
+            }
+            
+            // Next
+            if ($page < $total_pages) {
+                $q['page'] = $page + 1;
+                echo '<a href="?' . http_build_query($q) . '" class="btn" style="background: white; border: 1px solid #ddd; color: #666;">Next &raquo;</a>';
+            }
+            ?>
+        </div>
+        <?php endif; ?>
     <?php else: ?>
         <div class="empty-state">
             <div class="empty-state-icon">🔍</div>

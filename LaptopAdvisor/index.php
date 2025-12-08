@@ -33,7 +33,11 @@ include 'includes/header.php';
                 // THE BUG FIX IS HERE: Changed 'id' to 'product_id'
                 echo '<a href="product_details.php?product_id=' . $row["product_id"] . '">';
                 
-                echo '<img src="' . (!empty($row['image_url']) ? htmlspecialchars($row['image_url']) : 'https://via.placeholder.com/280') . '" alt="' . htmlspecialchars($row["product_name"]) . '">';
+                $img_path = $row['image_url'];
+                if (strpos($img_path, 'LaptopAdvisor/') === 0) {
+                    $img_path = str_replace('LaptopAdvisor/', '', $img_path);
+                }
+                echo '<img src="' . (!empty($img_path) ? htmlspecialchars($img_path) : 'https://via.placeholder.com/280') . '" alt="' . htmlspecialchars($row["product_name"]) . '">';
                 echo '<div class="product-card-info">';
                 echo '<p class="brand">' . htmlspecialchars($row["brand"]) . '</p>';
                 echo '<h3>' . htmlspecialchars($row["product_name"]) . '</h3>';

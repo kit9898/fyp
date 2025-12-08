@@ -61,6 +61,7 @@ class RecommendationEngine:
                 SELECT product_id, product_name, brand, price, ram_gb, storage_gb, 
                        display_size, cpu, gpu, battery_life, primary_use_case
                 FROM products
+                WHERE is_active = 1
             """
             self.products_df = pd.read_sql(products_query, self.conn)
             

@@ -34,4 +34,34 @@ function logActivity($conn, $admin_id, $action, $module, $description, $record_t
     
     return false;
 }
+
+/**
+ * Triggers the recommendation engine retraining process asynchronously
+ * 
+ * @return bool True if request sent successfully, False otherwise
+ */
+function triggerRecommendationTraining() {
+    $url = 'http://127.0.0.1:5000/api/train';
+    $data = json_encode(['async' => true]);
+    
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 1); // Fast timeout, fire and forget logic
+    curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
+    
+    $result = curl_exec($ch);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    // We expect a timeout (succesful fire-and-forget) or a quick success response
+    if ($error && strpos($error, 'timed out') === false) {
+        // Real error occurred
+        return false;
+    }
+    
+    return true;
+}
 ?>

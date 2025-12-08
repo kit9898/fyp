@@ -195,7 +195,7 @@ if ($product && isset($product['product_category']) && $product['product_categor
             $accessory_ids = array_column($api_data['recommendations'], 'product_id');
             if (!empty($accessory_ids)) {
                 $placeholders = implode(',', array_fill(0, count($accessory_ids), '?'));
-                $stmt = $conn->prepare("SELECT * FROM products WHERE product_id IN ($placeholders) LIMIT 4");
+                $stmt = $conn->prepare("SELECT * FROM products WHERE product_id IN ($placeholders) AND is_active = 1 LIMIT 4");
                 $stmt->bind_param(str_repeat('i', count($accessory_ids)), ...$accessory_ids);
                 $stmt->execute();
                 $result = $stmt->get_result();
@@ -699,7 +699,13 @@ function getUseCaseBadge($use_case) {
                     <?php foreach ($similar_products as $similar): ?>
                         <div class="product-card">
                             <a href="product_details.php?product_id=<?php echo $similar['product_id']; ?>">
-                                <img src="<?php echo !empty($similar['image_url']) ? htmlspecialchars($similar['image_url']) : 'https://via.placeholder.com/280'; ?>" 
+                                <?php 
+                                $sim_img = $similar['image_url'];
+                                if (strpos($sim_img, 'LaptopAdvisor/') === 0) {
+                                    $sim_img = str_replace('LaptopAdvisor/', '', $sim_img);
+                                }
+                                ?>
+                                <img src="<?php echo !empty($sim_img) ? htmlspecialchars($sim_img) : 'https://via.placeholder.com/280'; ?>" 
                                      alt="<?php echo htmlspecialchars($similar['product_name']); ?>" loading="lazy">
                                 <div class="product-card-info">
                                     <p class="brand"><?php echo htmlspecialchars($similar['brand']); ?></p>
