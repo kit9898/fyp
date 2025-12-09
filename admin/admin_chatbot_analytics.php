@@ -1,7 +1,8 @@
 <?php
+session_start();
 // ============================================
-// Chatbot Analytics - Enhanced ASUS-Style
-// Module D: Smart Laptop Advisor Admin
+// Chatbot Analytics - Enhanced Pro Dashboard
+// Smart Laptop Advisor Admin Panel
 // ============================================
 
 require_once 'includes/db_connect.php';
@@ -9,155 +10,274 @@ require_once 'includes/db_connect.php';
 date_default_timezone_set('Asia/Singapore');
 
 // ============================================
-// LOGIC SECTION
+// LOGIC SECTION - Data Aggregation
 // ============================================
 
-// Helper to get last 7 days
+// Helper: Get date range
 $dates = [];
 for ($i = 6; $i >= 0; $i--) {
     $dates[] = date('Y-m-d', strtotime("-$i days"));
 }
 
-// 1. Today's Analytics
-$today_stats_query = "SELECT 
-    COUNT(DISTINCT c.conversation_id) as total_conversations,
-    COUNT(cm.message_id) as total_messages,
-    AVG(cm.response_time_ms) as avg_response_time_ms,
-    (SELECT COUNT(*) FROM conversation_messages WHERE intent_detected IS NULL AND message_type = 'user' AND DATE(timestamp) = CURDATE()) as unrecognized_count,
-    (SELECT COUNT(*) FROM conversation_messages WHERE intent_detected = 'fallback' AND DATE(timestamp) = CURDATE()) as fallback_count,
-    (SELECT AVG(satisfaction_rating) FROM conversations WHERE satisfaction_rating IS NOT NULL AND DATE(started_at) = CURDATE()) as satisfaction_score
-FROM conversations c
-LEFT JOIN conversation_messages cm ON c.conversation_id = cm.conversation_id AND DATE(cm.timestamp) = CURDATE()
-WHERE DATE(c.started_at) = CURDATE()";
+// ============================================
+// 1. TODAY'S OVERVIEW METRICS
+// ============================================
+$today = date('Y-m-d');
 
-$today_result = $conn->query($today_stats_query);
-$today_analytics = $today_result->fetch_assoc();
+// Total Conversations Today
+$result = $conn->query("SELECT COUNT(*) as total FROM conversations WHERE DATE(started_at) = CURDATE()");
+$today_conversations = ($result && $row = $result->fetch_assoc()) ? ($row['total'] ?? 0) : 0;
 
-$today_analytics['avg_messages_per_session'] = $today_analytics['total_conversations'] > 0 
-    ? $today_analytics['total_messages'] / $today_analytics['total_conversations'] 
-    : 0;
+// Total Messages Today
+$result = $conn->query("SELECT COUNT(*) as total FROM conversation_messages WHERE DATE(timestamp) = CURDATE()");
+$today_messages = ($result && $row = $result->fetch_assoc()) ? ($row['total'] ?? 0) : 0;
 
-// Intent Accuracy
-$accuracy_query = "SELECT 
-    (SUM(CASE WHEN intent_confidence >= 0.7 THEN 1 ELSE 0 END) / COUNT(*)) * 100 as accuracy
-FROM conversation_messages 
-WHERE message_type = 'user' AND DATE(timestamp) = CURDATE() AND intent_detected IS NOT NULL";
-$accuracy_result = $conn->query($accuracy_query);
-$accuracy_data = $accuracy_result->fetch_assoc();
-$today_analytics['intent_accuracy'] = $accuracy_data['accuracy'] ?? 0;
+// Average Messages Per Session
+$avg_messages = $today_conversations > 0 ? round($today_messages / $today_conversations, 1) : 0;
 
-// Sentiment Distribution
-$sentiment_query = "SELECT sentiment, COUNT(*) as count FROM conversations WHERE DATE(started_at) = CURDATE() GROUP BY sentiment";
-$sentiment_result = $conn->query($sentiment_query);
+// Active Users Today (unique user_ids)
+$result = $conn->query("SELECT COUNT(DISTINCT user_id) as total FROM conversations WHERE DATE(started_at) = CURDATE() AND user_id IS NOT NULL");
+$active_users_today = ($result && $row = $result->fetch_assoc()) ? ($row['total'] ?? 0) : 0;
+
+// Average Response Time (ms)
+$result = $conn->query("SELECT AVG(response_time_ms) as avg_time FROM conversation_messages WHERE DATE(timestamp) = CURDATE() AND response_time_ms IS NOT NULL AND message_type = 'bot'");
+$avg_response_time = ($result && $row = $result->fetch_assoc()) ? round($row['avg_time'] ?? 0) : 0;
+
+// Leads Captured Today (conversations with email)
+$result = $conn->query("SELECT COUNT(*) as total FROM conversations WHERE DATE(started_at) = CURDATE() AND customer_email IS NOT NULL");
+$leads_today = ($result && $row = $result->fetch_assoc()) ? ($row['total'] ?? 0) : 0;
+
+// Total All-Time Leads
+$result = $conn->query("SELECT COUNT(*) as total FROM conversations WHERE customer_email IS NOT NULL");
+$total_leads = ($result && $row = $result->fetch_assoc()) ? ($row['total'] ?? 0) : 0;
+
+// ============================================
+// 2. SENTIMENT ANALYSIS
+// ============================================
 $sentiments = ['positive' => 0, 'neutral' => 0, 'negative' => 0];
-$total_sentiments = 0;
-while ($row = $sentiment_result->fetch_assoc()) {
-    $sent = strtolower($row['sentiment'] ?? 'neutral');
-    if (isset($sentiments[$sent])) {
-        $sentiments[$sent] = $row['count'];
-        $total_sentiments += $row['count'];
+$total_sentiment_count = 0;
+$result = $conn->query("SELECT sentiment, COUNT(*) as count FROM conversations WHERE DATE(started_at) = CURDATE() GROUP BY sentiment");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $sent = strtolower($row['sentiment'] ?? 'neutral');
+        if (isset($sentiments[$sent])) {
+            $sentiments[$sent] = $row['count'];
+            $total_sentiment_count += $row['count'];
+        }
     }
 }
 
-$today_analytics['positive_sentiment_pct'] = $total_sentiments > 0 ? ($sentiments['positive'] / $total_sentiments) * 100 : 0;
-$today_analytics['neutral_sentiment_pct'] = $total_sentiments > 0 ? ($sentiments['neutral'] / $total_sentiments) * 100 : 0;
-$today_analytics['negative_sentiment_pct'] = $total_sentiments > 0 ? ($sentiments['negative'] / $total_sentiments) * 100 : 0;
+$positive_pct = $total_sentiment_count > 0 ? round(($sentiments['positive'] / $total_sentiment_count) * 100, 1) : 0;
+$neutral_pct = $total_sentiment_count > 0 ? round(($sentiments['neutral'] / $total_sentiment_count) * 100, 1) : 0;
+$negative_pct = $total_sentiment_count > 0 ? round(($sentiments['negative'] / $total_sentiment_count) * 100, 1) : 0;
 
-// Resolution Rate
-$resolution_query = "SELECT 
-    (SUM(CASE WHEN outcome IN ('recommendation_made', 'order_placed') THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100 as resolution_rate
-FROM conversations WHERE DATE(started_at) = CURDATE()";
-$resolution_result = $conn->query($resolution_query);
-$resolution_data = $resolution_result->fetch_assoc();
-$today_analytics['resolution_rate'] = $resolution_data['resolution_rate'] ?? 0;
+// ============================================
+// 3. CONVERSATION OUTCOMES
+// ============================================
+$outcomes = [];
+$total_outcomes = 0;
+$result = $conn->query("
+    SELECT outcome, COUNT(*) as count 
+    FROM conversations 
+    WHERE outcome IS NOT NULL AND DATE(started_at) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    GROUP BY outcome 
+    ORDER BY count DESC
+");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $outcomes[$row['outcome']] = $row['count'];
+        $total_outcomes += $row['count'];
+    }
+}
 
-// Leads Captured
-$leads_query = "SELECT COUNT(DISTINCT conversation_id) as leads_count 
-FROM conversations WHERE customer_email IS NOT NULL AND DATE(started_at) = CURDATE()";
-$leads_result = $conn->query($leads_query);
-$leads_data = $leads_result->fetch_assoc();
-$today_analytics['leads_count'] = $leads_data['leads_count'] ?? 0;
+// Resolution Rate (recommendation_made + order_placed)
+$resolved = ($outcomes['recommendation_made'] ?? 0) + ($outcomes['order_placed'] ?? 0) + ($outcomes['product_recommendation'] ?? 0);
+$resolution_rate = $total_outcomes > 0 ? round(($resolved / $total_outcomes) * 100, 1) : 0;
 
-// All-time leads
-$all_leads_query = "SELECT COUNT(DISTINCT conversation_id) as total_leads FROM conversations WHERE customer_email IS NOT NULL";
-$all_leads_result = $conn->query($all_leads_query);
-$all_leads_data = $all_leads_result->fetch_assoc();
-$total_leads = $all_leads_data['total_leads'] ?? 0;
+// ============================================
+// 4. TOP INTENTS USED
+// ============================================
+$top_intents = [];
+$max_intent_usage = 1;
+$result = $conn->query("
+    SELECT i.intent_id, i.intent_name, i.display_name, i.usage_count, i.success_count,
+           (SELECT COUNT(*) FROM training_phrases tp WHERE tp.intent_id = i.intent_id) as phrase_count
+    FROM intents i 
+    WHERE i.is_active = 1 
+    ORDER BY i.usage_count DESC 
+    LIMIT 8
+");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $row['success_rate'] = $row['usage_count'] > 0 ? round(($row['success_count'] / $row['usage_count']) * 100, 1) : 0;
+        $top_intents[] = $row;
+        if ($row['usage_count'] > $max_intent_usage) {
+            $max_intent_usage = $row['usage_count'];
+        }
+    }
+}
 
-// 2. 7-day trend data
+// ============================================
+// 5. HOURLY ACTIVITY (Last 24 hours)
+// ============================================
+$hourly_data = array_fill(0, 24, 0);
+$result = $conn->query("
+    SELECT HOUR(timestamp) as hour, COUNT(*) as count 
+    FROM conversation_messages 
+    WHERE timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+    GROUP BY HOUR(timestamp)
+");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $hourly_data[$row['hour']] = $row['count'];
+    }
+}
+
+// ============================================
+// 6. 7-DAY TRENDS
+// ============================================
 $trend_data = [];
 foreach ($dates as $date) {
-    $day_query = "SELECT COUNT(*) as total_conversations, AVG(satisfaction_rating) as satisfaction_score
-    FROM conversations WHERE DATE(started_at) = '$date'";
-    $day_result = $conn->query($day_query);
-    $day_data = $day_result->fetch_assoc();
+    $stmt = $conn->prepare("
+        SELECT 
+            COUNT(DISTINCT c.conversation_id) as conversations,
+            COUNT(cm.message_id) as messages,
+            AVG(c.satisfaction_rating) as satisfaction
+        FROM conversations c
+        LEFT JOIN conversation_messages cm ON c.conversation_id = cm.conversation_id AND DATE(cm.timestamp) = ?
+        WHERE DATE(c.started_at) = ?
+    ");
+    $stmt->bind_param("ss", $date, $date);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
     
-    $acc_query = "SELECT (SUM(CASE WHEN intent_confidence >= 0.7 THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0)) * 100 as accuracy
-    FROM conversation_messages WHERE message_type = 'user' AND DATE(timestamp) = '$date' AND intent_detected IS NOT NULL";
-    $acc_result = $conn->query($acc_query);
-    $acc_data = $acc_result->fetch_assoc();
-    
-    $leads_day_query = "SELECT COUNT(DISTINCT conversation_id) as leads FROM conversations WHERE customer_email IS NOT NULL AND DATE(started_at) = '$date'";
-    $leads_day_result = $conn->query($leads_day_query);
-    $leads_day_data = $leads_day_result->fetch_assoc();
+    // Get leads for this day
+    $stmt2 = $conn->prepare("SELECT COUNT(*) as leads FROM conversations WHERE DATE(started_at) = ? AND customer_email IS NOT NULL");
+    $stmt2->bind_param("s", $date);
+    $stmt2->execute();
+    $leads = $stmt2->get_result()->fetch_assoc()['leads'] ?? 0;
     
     $trend_data[] = [
         'date' => $date,
-        'total_conversations' => $day_data['total_conversations'] ?? 0,
-        'satisfaction_score' => $day_data['satisfaction_score'] ?? 0,
-        'intent_accuracy' => $acc_data['accuracy'] ?? 0,
-        'leads' => $leads_day_data['leads'] ?? 0
+        'conversations' => $result['conversations'] ?? 0,
+        'messages' => $result['messages'] ?? 0,
+        'satisfaction' => round($result['satisfaction'] ?? 0, 1),
+        'leads' => $leads
     ];
 }
 
-// 3. Top Intents
-$top_intents_query = "SELECT 
-    intent_detected as intent_name,
-    COUNT(*) as usage_count,
-    AVG(intent_confidence) * 100 as success_rate
-FROM conversation_messages
-WHERE message_type = 'user' AND intent_detected IS NOT NULL
-GROUP BY intent_detected ORDER BY usage_count DESC LIMIT 8";
-$top_intents_result = $conn->query($top_intents_query);
-$top_intents = [];
-while ($row = $top_intents_result->fetch_assoc()) {
-    $row['display_name'] = ucwords(str_replace('_', ' ', $row['intent_name']));
-    $top_intents[] = $row;
-}
-
-// 4. Unrecognized Queries
-$unrecognized_query = "SELECT message_content, timestamp, COUNT(*) as occurrences
-FROM conversation_messages
-WHERE message_type = 'user' AND intent_detected IS NULL AND timestamp >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-GROUP BY message_content ORDER BY occurrences DESC LIMIT 8";
-$unrecognized_result = $conn->query($unrecognized_query);
-$unrecognized_queries = [];
-while ($row = $unrecognized_result->fetch_assoc()) {
-    $unrecognized_queries[] = $row;
-}
-
-// 5. Popular Products Mentioned (simplified to avoid collation issues)
+// ============================================
+// 7. POPULAR PRODUCTS (Top viewed/sold)
+// ============================================
+// Get popular products based on order_items (most purchased)
 $popular_products = [];
-// Query commented out due to collation mismatch between tables
-// This feature can be re-enabled after fixing database collations
+$pop_stmt = $conn->query("
+    SELECT p.product_id, p.product_name, p.brand, p.price, p.image_url,
+           COALESCE(oi.order_count, 0) as mention_count
+    FROM products p
+    LEFT JOIN (
+        SELECT product_id, COUNT(*) as order_count 
+        FROM order_items 
+        WHERE order_id IN (SELECT order_id FROM orders WHERE order_date >= DATE_SUB(NOW(), INTERVAL 30 DAY))
+        GROUP BY product_id
+    ) oi ON p.product_id = oi.product_id
+    WHERE p.is_active = 1
+    ORDER BY mention_count DESC, p.product_name ASC
+    LIMIT 6
+");
+if ($pop_stmt) {
+    while ($row = $pop_stmt->fetch_assoc()) {
+        $popular_products[] = $row;
+    }
+}
 
-// Chart data
+// ============================================
+// 8. UNRECOGNIZED QUERIES
+// ============================================
+$unrecognized_queries = [];
+$result = $conn->query("
+    SELECT cm.message_content, COUNT(*) as occurrences, MAX(cm.timestamp) as last_seen
+    FROM conversation_messages cm
+    WHERE cm.message_type = 'user' 
+    AND cm.intent_detected IS NULL
+    AND cm.timestamp >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    AND LENGTH(cm.message_content) > 2
+    GROUP BY cm.message_content 
+    ORDER BY occurrences DESC 
+    LIMIT 8
+");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $unrecognized_queries[] = $row;
+    }
+}
+
+// ============================================
+// 9. RECENT CONVERSATIONS SUMMARY
+// ============================================
+$recent_conversations = [];
+$result = $conn->query("
+    SELECT c.conversation_id, c.session_id, c.user_id, c.sentiment, c.outcome,
+           c.message_count, c.started_at, c.duration_seconds,
+           u.full_name as user_name,
+           (SELECT message_content FROM conversation_messages WHERE conversation_id = c.conversation_id ORDER BY timestamp ASC LIMIT 1) as first_message
+    FROM conversations c
+    LEFT JOIN users u ON c.user_id = u.user_id
+    ORDER BY c.started_at DESC
+    LIMIT 5
+");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $recent_conversations[] = $row;
+    }
+}
+
+// ============================================
+// 10. SATISFACTION RATINGS
+// ============================================
+$satisfaction_distribution = [];
+$result = $conn->query("
+    SELECT satisfaction_rating, COUNT(*) as count
+    FROM conversations 
+    WHERE satisfaction_rating IS NOT NULL
+    GROUP BY satisfaction_rating
+    ORDER BY satisfaction_rating DESC
+");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $satisfaction_distribution[$row['satisfaction_rating']] = $row['count'];
+    }
+}
+
+$avg_satisfaction = 0;
+$result = $conn->query("SELECT AVG(satisfaction_rating) as avg_rating FROM conversations WHERE satisfaction_rating IS NOT NULL");
+if ($result && $row = $result->fetch_assoc()) {
+    $avg_satisfaction = round($row['avg_rating'] ?? 0, 1);
+}
+
+// ============================================
+// PREPARE CHART DATA
+// ============================================
 $chart_dates = [];
 $chart_conversations = [];
-$chart_accuracy = [];
-$chart_satisfaction = [];
+$chart_messages = [];
 $chart_leads = [];
 
 foreach ($trend_data as $day) {
     $chart_dates[] = date('M d', strtotime($day['date']));
-    $chart_conversations[] = $day['total_conversations'];
-    $chart_accuracy[] = round($day['intent_accuracy'], 1);
-    $chart_satisfaction[] = round($day['satisfaction_score'], 1);
+    $chart_conversations[] = $day['conversations'];
+    $chart_messages[] = $day['messages'];
     $chart_leads[] = $day['leads'];
 }
 
-// Calculate max intent usage for progress bars
-$max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage_count')) : 1;
+$hourly_labels = [];
+for ($i = 0; $i < 24; $i++) {
+    $hourly_labels[] = sprintf('%02d:00', $i);
+}
+
+// Outcome labels for pie chart
+$outcome_labels = array_keys($outcomes);
+$outcome_values = array_values($outcomes);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -167,7 +287,7 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
     <title>Chatbot Analytics - Smart Laptop Advisor</title>
     
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="source/assets/css/bootstrap.css">
     <link rel="stylesheet" href="source/assets/vendors/iconly/bold.css">
     <link rel="stylesheet" href="source/assets/vendors/perfect-scrollbar/perfect-scrollbar.css">
@@ -177,24 +297,33 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
     
     <style>
     :root {
-        --asus-primary: #0d6efd;
-        --asus-secondary: #6c63ff;
-        --asus-success: #10b981;
-        --asus-warning: #f59e0b;
-        --asus-danger: #ef4444;
-        --asus-info: #06b6d4;
-        --asus-dark: #1e293b;
-        --asus-light: #f8fafc;
-        --asus-gradient: linear-gradient(135deg, #0d6efd 0%, #6c63ff 100%);
+        --accent-primary: #6366f1;
+        --accent-secondary: #8b5cf6;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #06b6d4;
+        --dark: #0f172a;
+        --light: #f8fafc;
+        --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --gradient-info: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    }
+    
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: #f1f5f9;
     }
     
     /* Page Header */
     .analytics-header {
-        background: var(--asus-gradient);
+        background: var(--gradient-primary);
         color: white;
-        padding: 30px;
-        border-radius: 20px;
-        margin-bottom: 30px;
+        padding: 32px;
+        border-radius: 24px;
+        margin-bottom: 28px;
         position: relative;
         overflow: hidden;
     }
@@ -203,9 +332,9 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
         content: '';
         position: absolute;
         top: -50%;
-        right: -10%;
-        width: 300px;
-        height: 300px;
+        right: -15%;
+        width: 400px;
+        height: 400px;
         background: rgba(255, 255, 255, 0.1);
         border-radius: 50%;
     }
@@ -213,16 +342,16 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
     .analytics-header::after {
         content: '';
         position: absolute;
-        bottom: -30%;
-        left: 20%;
-        width: 200px;
-        height: 200px;
+        bottom: -40%;
+        left: 15%;
+        width: 250px;
+        height: 250px;
         background: rgba(255, 255, 255, 0.05);
         border-radius: 50%;
     }
     
     .analytics-header h3 {
-        font-size: 1.75rem;
+        font-size: 1.875rem;
         font-weight: 800;
         margin-bottom: 8px;
         position: relative;
@@ -234,47 +363,49 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
         margin-bottom: 0;
         position: relative;
         z-index: 1;
+        font-weight: 500;
     }
     
     /* Metric Cards */
     .metric-card {
         background: white;
-        border-radius: 16px;
+        border-radius: 20px;
         padding: 24px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         height: 100%;
         position: relative;
         overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.04);
     }
     
     .metric-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15);
     }
     
     .metric-card .metric-icon {
-        width: 60px;
-        height: 60px;
+        width: 56px;
+        height: 56px;
         border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 28px;
+        font-size: 24px;
         color: white;
         margin-bottom: 16px;
     }
     
     .metric-card .metric-value {
-        font-size: 2.5rem;
+        font-size: 2.25rem;
         font-weight: 800;
-        color: var(--asus-dark);
+        color: var(--dark);
         line-height: 1;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
     }
     
     .metric-card .metric-label {
-        font-size: 0.9rem;
+        font-size: 0.875rem;
         color: #64748b;
         font-weight: 600;
     }
@@ -283,21 +414,23 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
         position: absolute;
         top: 20px;
         right: 20px;
-        padding: 4px 10px;
-        border-radius: 20px;
+        padding: 5px 12px;
+        border-radius: 24px;
         font-size: 0.75rem;
-        font-weight: 600;
+        font-weight: 700;
     }
     
-    .metric-trend.up { background: rgba(16, 185, 129, 0.1); color: var(--asus-success); }
-    .metric-trend.down { background: rgba(239, 68, 68, 0.1); color: var(--asus-danger); }
+    .metric-trend.up { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .metric-trend.down { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .metric-trend.neutral { background: rgba(99, 102, 241, 0.1); color: var(--accent-primary); }
     
     /* Chart Cards */
     .chart-card {
         background: white;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        border-radius: 20px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
         overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.04);
     }
     
     .chart-card .card-header {
@@ -309,56 +442,32 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
     .chart-card .card-title {
         font-size: 1rem;
         font-weight: 700;
-        color: var(--asus-dark);
+        color: var(--dark);
         margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .chart-card .card-title i {
+        color: var(--accent-primary);
     }
     
     .chart-card .card-body {
         padding: 24px;
     }
     
-    /* Sentiment Donut */
-    .sentiment-stats {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        margin-top: 20px;
-    }
-    
-    .sentiment-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .sentiment-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-    }
-    
-    .sentiment-label {
-        flex: 1;
-        font-size: 0.9rem;
-        color: #64748b;
-    }
-    
-    .sentiment-value {
-        font-weight: 700;
-        color: var(--asus-dark);
-    }
-    
     /* Intent List */
-    .intent-list {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-    
     .intent-item {
         display: flex;
         align-items: center;
         gap: 16px;
+        padding: 14px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .intent-item:last-child {
+        border-bottom: none;
     }
     
     .intent-icon {
@@ -368,8 +477,9 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: 18px;
         color: white;
+        flex-shrink: 0;
     }
     
     .intent-info {
@@ -379,9 +489,9 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
     
     .intent-name {
         font-weight: 700;
-        color: var(--asus-dark);
+        color: var(--dark);
         font-size: 0.9rem;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
     }
     
     .intent-progress {
@@ -394,14 +504,19 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
     .intent-progress-bar {
         height: 100%;
         border-radius: 3px;
-        transition: width 0.5s ease;
+        transition: width 0.6s ease;
+    }
+    
+    .intent-stats {
+        display: flex;
+        gap: 12px;
+        align-items: center;
     }
     
     .intent-usage {
         font-size: 0.85rem;
         font-weight: 600;
         color: #64748b;
-        white-space: nowrap;
     }
     
     .intent-rate {
@@ -411,26 +526,30 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
         font-weight: 700;
     }
     
-    /* Unrecognized Queries */
+    /* Query Items */
     .query-item {
         display: flex;
         align-items: center;
-        gap: 16px;
-        padding: 16px;
-        background: var(--asus-light);
-        border-radius: 12px;
-        margin-bottom: 12px;
+        gap: 14px;
+        padding: 14px 16px;
+        background: #f8fafc;
+        border-radius: 14px;
+        margin-bottom: 10px;
         transition: all 0.2s ease;
+        border: 1px solid transparent;
     }
     
     .query-item:hover {
-        background: #e2e8f0;
+        background: white;
+        border-color: var(--accent-primary);
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.1);
     }
     
     .query-text {
         flex: 1;
         font-size: 0.9rem;
-        color: var(--asus-dark);
+        color: var(--dark);
+        font-weight: 500;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -439,7 +558,7 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
     .query-count {
         padding: 4px 12px;
         background: rgba(239, 68, 68, 0.1);
-        color: var(--asus-danger);
+        color: var(--danger);
         border-radius: 20px;
         font-size: 0.8rem;
         font-weight: 700;
@@ -451,7 +570,7 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
         border-radius: 10px;
         border: 2px solid #e2e8f0;
         background: white;
-        color: var(--asus-success);
+        color: var(--success);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -460,132 +579,206 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
     }
     
     .query-action:hover {
-        background: var(--asus-success);
-        border-color: var(--asus-success);
+        background: var(--success);
+        border-color: var(--success);
         color: white;
     }
     
-    /* Performance Grid */
-    .performance-grid {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 24px;
-        padding: 24px;
+    /* Product Mention Cards */
+    .product-mention {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 14px;
+        margin-bottom: 10px;
     }
     
-    .perf-item {
-        text-align: center;
+    .product-mention-img {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        object-fit: cover;
+        background: white;
     }
     
-    .perf-value {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--asus-dark);
-        margin-bottom: 4px;
+    .product-mention-info {
+        flex: 1;
     }
     
-    .perf-label {
-        font-size: 0.8rem;
+    .product-mention-name {
+        font-weight: 700;
+        color: var(--dark);
+        font-size: 0.875rem;
+        margin-bottom: 2px;
+    }
+    
+    .product-mention-brand {
+        font-size: 0.75rem;
         color: #64748b;
     }
     
-    /* Live Chat Preview */
-    .live-preview-card {
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        overflow: hidden;
+    .product-mention-count {
+        padding: 4px 12px;
+        background: var(--gradient-primary);
+        color: white;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
     }
     
-    .live-preview-header {
-        background: var(--asus-gradient);
+    /* Conversation Row */
+    .conversation-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px;
+        background: #f8fafc;
+        border-radius: 14px;
+        margin-bottom: 10px;
+    }
+    
+    .conversation-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: white;
-        padding: 16px 20px;
+        font-weight: 700;
+    }
+    
+    .conversation-info {
+        flex: 1;
+    }
+    
+    .conversation-message {
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.875rem;
+        margin-bottom: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 300px;
+    }
+    
+    .conversation-meta {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    
+    .sentiment-badge {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    
+    .sentiment-badge.positive { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .sentiment-badge.neutral { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+    .sentiment-badge.negative { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    
+    /* Sentiment Donut Stats */
+    .sentiment-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 20px;
+    }
+    
+    .sentiment-item {
         display: flex;
         align-items: center;
         gap: 12px;
     }
     
-    .live-preview-header .avatar {
-        width: 40px;
-        height: 40px;
-        background: rgba(255, 255, 255, 0.2);
+    .sentiment-dot {
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
     }
     
-    .live-preview-header .status {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.8rem;
-        opacity: 0.9;
+    .sentiment-label {
+        flex: 1;
+        font-size: 0.9rem;
+        color: #64748b;
+        font-weight: 500;
     }
     
-    .live-preview-header .status-dot {
+    .sentiment-value {
+        font-weight: 700;
+        color: var(--dark);
+    }
+    
+    /* Outcome Badge */
+    .outcome-badge {
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    /* Live Status Indicator */
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(16, 185, 129, 0.1);
+        border-radius: 24px;
+        color: var(--success);
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .live-dot {
         width: 8px;
         height: 8px;
-        background: #10b981;
+        background: var(--success);
         border-radius: 50%;
         animation: pulse 2s infinite;
     }
     
     @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.1); }
     }
     
-    .live-preview-body {
-        height: 300px;
-        background: #f8fafc;
-        padding: 20px;
-        overflow-y: auto;
+    /* Hourly Heatmap */
+    .hourly-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 6px;
     }
     
-    .preview-message {
-        margin-bottom: 16px;
+    .hourly-cell {
+        aspect-ratio: 1;
+        border-radius: 8px;
         display: flex;
-        flex-direction: column;
-    }
-    
-    .preview-message.bot {
-        align-items: flex-start;
-    }
-    
-    .preview-message.user {
-        align-items: flex-end;
-    }
-    
-    .preview-bubble {
-        max-width: 80%;
-        padding: 12px 16px;
-        border-radius: 16px;
-        font-size: 0.9rem;
-    }
-    
-    .preview-message.bot .preview-bubble {
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-bottom-left-radius: 4px;
-    }
-    
-    .preview-message.user .preview-bubble {
-        background: var(--asus-gradient);
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
         color: white;
-        border-bottom-right-radius: 4px;
+        transition: transform 0.2s;
+    }
+    
+    .hourly-cell:hover {
+        transform: scale(1.1);
     }
     
     /* Responsive */
     @media (max-width: 768px) {
-        .performance-grid {
-            grid-template-columns: repeat(3, 1fr);
+        .metric-card .metric-value {
+            font-size: 1.75rem;
         }
         
-        .metric-card .metric-value {
-            font-size: 2rem;
+        .hourly-grid {
+            grid-template-columns: repeat(6, 1fr);
         }
     }
     </style>
@@ -606,69 +799,114 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
             <div class="analytics-header">
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h3><i class="bi bi-graph-up-arrow me-2"></i>Chatbot Analytics</h3>
-                        <p>Real-time performance metrics and insights</p>
+                        <h3><i class="bi bi-robot me-2"></i>AI Chatbot Analytics</h3>
+                        <p>Real-time performance metrics and conversation insights</p>
                     </div>
-                    <div class="col-md-4 text-md-end">
-                        <span class="badge bg-light text-dark me-2">
-                            <i class="bi bi-calendar me-1"></i>Last 7 Days
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <span class="live-indicator">
+                            <span class="live-dot"></span>
+                            Live Dashboard
                         </span>
-                        <button class="btn btn-light btn-sm" onclick="window.location.reload()">
+                        <button class="btn btn-light btn-sm ms-2" onclick="window.location.reload()">
                             <i class="bi bi-arrow-clockwise"></i>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Key Metrics -->
-            <div class="row mb-4">
-                <div class="col-xl-3 col-md-6 mb-4">
+            <!-- Key Metrics Row -->
+            <div class="row g-4 mb-4">
+                <div class="col-xl-3 col-md-6">
                     <div class="metric-card">
-                        <div class="metric-icon" style="background: var(--asus-gradient);">
+                        <div class="metric-icon" style="background: var(--gradient-primary);">
                             <i class="bi bi-chat-dots-fill"></i>
                         </div>
-                        <div class="metric-value"><?php echo number_format($today_analytics['total_conversations'] ?? 0); ?></div>
-                        <div class="metric-label">Today's Conversations</div>
-                        <span class="metric-trend up"><i class="bi bi-arrow-up"></i> Active</span>
+                        <div class="metric-value"><?php echo number_format($today_conversations); ?></div>
+                        <div class="metric-label">Conversations Today</div>
+                        <span class="metric-trend neutral"><i class="bi bi-activity"></i> Active</span>
                     </div>
                 </div>
-                <div class="col-xl-3 col-md-6 mb-4">
+                <div class="col-xl-3 col-md-6">
                     <div class="metric-card">
-                        <div class="metric-icon" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">
-                            <i class="bi bi-bullseye"></i>
+                        <div class="metric-icon" style="background: var(--gradient-info);">
+                            <i class="bi bi-chat-text-fill"></i>
                         </div>
-                        <div class="metric-value"><?php echo number_format($today_analytics['intent_accuracy'] ?? 0, 0); ?>%</div>
-                        <div class="metric-label">Intent Accuracy</div>
+                        <div class="metric-value"><?php echo number_format($today_messages); ?></div>
+                        <div class="metric-label">Messages Today</div>
+                        <span class="metric-trend neutral"><?php echo $avg_messages; ?> avg/session</span>
                     </div>
                 </div>
-                <div class="col-xl-3 col-md-6 mb-4">
+                <div class="col-xl-3 col-md-6">
                     <div class="metric-card">
-                        <div class="metric-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <div class="metric-icon" style="background: var(--gradient-success);">
                             <i class="bi bi-check-circle-fill"></i>
                         </div>
-                        <div class="metric-value"><?php echo number_format($today_analytics['resolution_rate'] ?? 0, 0); ?>%</div>
+                        <div class="metric-value"><?php echo $resolution_rate; ?>%</div>
                         <div class="metric-label">Resolution Rate</div>
+                        <span class="metric-trend <?php echo $resolution_rate >= 70 ? 'up' : 'down'; ?>">
+                            <i class="bi bi-<?php echo $resolution_rate >= 70 ? 'arrow-up' : 'arrow-down'; ?>"></i> 7 Days
+                        </span>
                     </div>
                 </div>
-                <div class="col-xl-3 col-md-6 mb-4">
+                <div class="col-xl-3 col-md-6">
                     <div class="metric-card">
-                        <div class="metric-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <div class="metric-icon" style="background: var(--gradient-warning);">
                             <i class="bi bi-envelope-check-fill"></i>
                         </div>
-                        <div class="metric-value"><?php echo number_format($today_analytics['leads_count'] ?? 0); ?></div>
+                        <div class="metric-value"><?php echo number_format($leads_today); ?></div>
                         <div class="metric-label">Leads Captured Today</div>
                         <span class="metric-trend up"><?php echo $total_leads; ?> Total</span>
                     </div>
                 </div>
             </div>
 
+            <!-- Secondary Metrics -->
+            <div class="row g-4 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div class="metric-value"><?php echo number_format($active_users_today); ?></div>
+                        <div class="metric-label">Active Users Today</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">
+                            <i class="bi bi-lightning-fill"></i>
+                        </div>
+                        <div class="metric-value"><?php echo number_format($avg_response_time); ?><small style="font-size: 0.5em;">ms</small></div>
+                        <div class="metric-label">Avg Response Time</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <div class="metric-value"><?php echo $avg_satisfaction; ?><small style="font-size: 0.5em;">/5</small></div>
+                        <div class="metric-label">Avg Satisfaction</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);">
+                            <i class="bi bi-emoji-smile-fill"></i>
+                        </div>
+                        <div class="metric-value"><?php echo $positive_pct; ?>%</div>
+                        <div class="metric-label">Positive Sentiment</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Charts Row -->
-            <div class="row mb-4">
-                <div class="col-lg-8 mb-4 mb-lg-0">
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
                     <div class="chart-card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="card-title"><i class="bi bi-graph-up me-2"></i>Conversation Trends</h5>
-                            <small class="text-muted">Last 7 Days</small>
+                            <h5 class="card-title"><i class="bi bi-graph-up"></i> 7-Day Conversation Trends</h5>
+                            <small class="text-muted">Messages & Conversations</small>
                         </div>
                         <div class="card-body">
                             <canvas id="trendChart" height="100"></canvas>
@@ -678,25 +916,25 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
                 <div class="col-lg-4">
                     <div class="chart-card h-100">
                         <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-emoji-smile me-2"></i>Sentiment Analysis</h5>
+                            <h5 class="card-title"><i class="bi bi-emoji-smile"></i> Sentiment Distribution</h5>
                         </div>
                         <div class="card-body">
-                            <canvas id="sentimentChart"></canvas>
+                            <canvas id="sentimentChart" height="150"></canvas>
                             <div class="sentiment-stats">
                                 <div class="sentiment-item">
-                                    <div class="sentiment-dot" style="background: #10b981;"></div>
+                                    <div class="sentiment-dot" style="background: var(--success);"></div>
                                     <span class="sentiment-label">Positive</span>
-                                    <span class="sentiment-value"><?php echo number_format($today_analytics['positive_sentiment_pct'], 0); ?>%</span>
+                                    <span class="sentiment-value"><?php echo $positive_pct; ?>%</span>
                                 </div>
                                 <div class="sentiment-item">
                                     <div class="sentiment-dot" style="background: #64748b;"></div>
                                     <span class="sentiment-label">Neutral</span>
-                                    <span class="sentiment-value"><?php echo number_format($today_analytics['neutral_sentiment_pct'], 0); ?>%</span>
+                                    <span class="sentiment-value"><?php echo $neutral_pct; ?>%</span>
                                 </div>
                                 <div class="sentiment-item">
-                                    <div class="sentiment-dot" style="background: #ef4444;"></div>
+                                    <div class="sentiment-dot" style="background: var(--danger);"></div>
                                     <span class="sentiment-label">Negative</span>
-                                    <span class="sentiment-value"><?php echo number_format($today_analytics['negative_sentiment_pct'], 0); ?>%</span>
+                                    <span class="sentiment-value"><?php echo $negative_pct; ?>%</span>
                                 </div>
                             </div>
                         </div>
@@ -704,51 +942,75 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
                 </div>
             </div>
 
-            <!-- Intents & Queries Row -->
-            <div class="row mb-4">
-                <div class="col-lg-6 mb-4 mb-lg-0">
+            <!-- Hourly Activity & Outcomes -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
                     <div class="chart-card h-100">
                         <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-lightning-charge me-2"></i>Top Performing Intents</h5>
+                            <h5 class="card-title"><i class="bi bi-clock-history"></i> Hourly Activity (Last 24h)</h5>
                         </div>
                         <div class="card-body">
-                            <div class="intent-list">
-                                <?php 
-                                $intent_colors = ['#0d6efd', '#6c63ff', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6', '#ec4899'];
-                                $i = 0;
-                                foreach ($top_intents as $intent): 
-                                    $color = $intent_colors[$i % count($intent_colors)];
-                                    $progress = ($intent['usage_count'] / $max_intent_usage) * 100;
-                                    $rate_class = $intent['success_rate'] >= 80 ? 'bg-success text-white' : ($intent['success_rate'] >= 60 ? 'bg-warning' : 'bg-danger text-white');
-                                ?>
-                                <div class="intent-item">
-                                    <div class="intent-icon" style="background: <?php echo $color; ?>;">
-                                        <i class="bi bi-lightning"></i>
-                                    </div>
-                                    <div class="intent-info">
-                                        <div class="intent-name"><?php echo htmlspecialchars($intent['display_name']); ?></div>
-                                        <div class="intent-progress">
-                                            <div class="intent-progress-bar" style="width: <?php echo $progress; ?>%; background: <?php echo $color; ?>;"></div>
-                                        </div>
-                                    </div>
-                                    <div class="intent-usage"><?php echo number_format($intent['usage_count']); ?></div>
-                                    <span class="intent-rate <?php echo $rate_class; ?>"><?php echo number_format($intent['success_rate'], 0); ?>%</span>
+                            <canvas id="hourlyChart" height="80"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="chart-card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title"><i class="bi bi-pie-chart"></i> Conversation Outcomes</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="outcomeChart" height="150"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Intents & Unrecognized Queries -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="chart-card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title"><i class="bi bi-lightning-charge"></i> Top Performing Intents</h5>
+                        </div>
+                        <div class="card-body">
+                            <?php 
+                            $intent_colors = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#14b8a6'];
+                            $i = 0;
+                            foreach ($top_intents as $intent): 
+                                $color = $intent_colors[$i % count($intent_colors)];
+                                $progress = ($intent['usage_count'] / max($max_intent_usage, 1)) * 100;
+                                $rate_class = $intent['success_rate'] >= 80 ? 'bg-success text-white' : ($intent['success_rate'] >= 60 ? 'bg-warning' : 'bg-danger text-white');
+                            ?>
+                            <div class="intent-item">
+                                <div class="intent-icon" style="background: <?php echo $color; ?>;">
+                                    <i class="bi bi-lightning"></i>
                                 </div>
-                                <?php $i++; endforeach; ?>
-                                <?php if (empty($top_intents)): ?>
-                                <div class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox fs-1"></i>
-                                    <p class="mt-2 mb-0">No intent data available</p>
+                                <div class="intent-info">
+                                    <div class="intent-name"><?php echo htmlspecialchars($intent['display_name']); ?></div>
+                                    <div class="intent-progress">
+                                        <div class="intent-progress-bar" style="width: <?php echo $progress; ?>%; background: <?php echo $color; ?>;"></div>
+                                    </div>
                                 </div>
-                                <?php endif; ?>
+                                <div class="intent-stats">
+                                    <span class="intent-usage"><?php echo number_format($intent['usage_count']); ?> uses</span>
+                                    <span class="intent-rate <?php echo $rate_class; ?>"><?php echo $intent['success_rate']; ?>%</span>
+                                </div>
                             </div>
+                            <?php $i++; endforeach; ?>
+                            <?php if (empty($top_intents)): ?>
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1"></i>
+                                <p class="mt-2 mb-0">No intent data available yet</p>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="chart-card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="card-title"><i class="bi bi-question-circle me-2"></i>Unrecognized Queries</h5>
+                            <h5 class="card-title"><i class="bi bi-question-circle"></i> Unrecognized Queries</h5>
                             <button class="btn btn-sm btn-outline-primary" onclick="exportUnrecognized()">
                                 <i class="bi bi-download me-1"></i>Export
                             </button>
@@ -757,9 +1019,11 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
                             <?php if (!empty($unrecognized_queries)): ?>
                                 <?php foreach ($unrecognized_queries as $query): ?>
                                 <div class="query-item">
-                                    <div class="query-text"><?php echo htmlspecialchars($query['message_content']); ?></div>
+                                    <div class="query-text" title="<?php echo htmlspecialchars($query['message_content']); ?>">
+                                        <?php echo htmlspecialchars(substr($query['message_content'], 0, 50)) . (strlen($query['message_content']) > 50 ? '...' : ''); ?>
+                                    </div>
                                     <span class="query-count"><?php echo $query['occurrences']; ?>x</span>
-                                    <button class="query-action" onclick="trainQuery('<?php echo htmlspecialchars($query['message_content'], ENT_QUOTES); ?>')" title="Add Training">
+                                    <button class="query-action" onclick="trainQuery('<?php echo htmlspecialchars(addslashes($query['message_content'])); ?>')" title="Add to Training">
                                         <i class="bi bi-plus-lg"></i>
                                     </button>
                                 </div>
@@ -775,93 +1039,95 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
                 </div>
             </div>
 
-            <!-- Performance Summary & Live Preview -->
-            <div class="row mb-4">
-                <div class="col-lg-8 mb-4 mb-lg-0">
-                    <div class="chart-card">
+            <!-- Popular Products & Recent Conversations -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="chart-card h-100">
                         <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-speedometer2 me-2"></i>Performance Summary</h5>
+                            <h5 class="card-title"><i class="bi bi-laptop"></i> Popular Products Mentioned</h5>
                         </div>
-                        <div class="performance-grid">
-                            <div class="perf-item">
-                                <div class="perf-value"><?php echo number_format($today_analytics['avg_messages_per_session'], 1); ?></div>
-                                <div class="perf-label">Avg Messages</div>
-                            </div>
-                            <div class="perf-item">
-                                <div class="perf-value"><?php echo number_format($today_analytics['avg_response_time_ms'] ?? 0); ?>ms</div>
-                                <div class="perf-label">Avg Response</div>
-                            </div>
-                            <div class="perf-item">
-                                <div class="perf-value"><?php echo number_format($today_analytics['total_messages'] ?? 0); ?></div>
-                                <div class="perf-label">Total Messages</div>
-                            </div>
-                            <div class="perf-item">
-                                <div class="perf-value text-danger"><?php echo number_format($today_analytics['unrecognized_count'] ?? 0); ?></div>
-                                <div class="perf-label">Unrecognized</div>
-                            </div>
-                            <div class="perf-item">
-                                <div class="perf-value text-warning"><?php echo number_format($today_analytics['fallback_count'] ?? 0); ?></div>
-                                <div class="perf-label">Fallbacks</div>
-                            </div>
-                            <div class="perf-item">
-                                <div class="perf-value text-success"><?php echo number_format($today_analytics['satisfaction_score'] ?? 0, 1); ?>/5</div>
-                                <div class="perf-label">Satisfaction</div>
-                            </div>
+                        <div class="card-body">
+                            <?php if (!empty($popular_products)): ?>
+                                <?php foreach ($popular_products as $product): ?>
+                                <?php 
+                                    // Handle different image_url formats
+                                    $img_url = $product['image_url'] ?? '';
+                                    if (empty($img_url)) {
+                                        $img_path = '../LaptopAdvisor/images/laptop1.png';
+                                    } elseif (strpos($img_url, 'LaptopAdvisor/') === 0) {
+                                        // New format: LaptopAdvisor/images/product_xxx.webp
+                                        $img_path = '../' . $img_url;
+                                    } else {
+                                        // Old format: images/laptop1.png
+                                        $img_path = '../LaptopAdvisor/' . $img_url;
+                                    }
+                                ?>
+                                <div class="product-mention">
+                                    <img src="<?php echo htmlspecialchars($img_path); ?>" 
+                                         alt="<?php echo htmlspecialchars($product['product_name']); ?>" 
+                                         class="product-mention-img"
+                                         onerror="this.src='../LaptopAdvisor/images/laptop1.png'">
+                                    <div class="product-mention-info">
+                                        <div class="product-mention-name"><?php echo htmlspecialchars($product['product_name']); ?></div>
+                                        <div class="product-mention-brand"><?php echo htmlspecialchars($product['brand']); ?> • $<?php echo number_format($product['price'], 2); ?></div>
+                                    </div>
+                                    <span class="product-mention-count"><?php echo $product['mention_count']; ?> mentions</span>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-box fs-1"></i>
+                                    <p class="mt-2 mb-0">No product mentions detected yet</p>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4">
-                    <div class="live-preview-card">
-                        <div class="live-preview-header">
-                            <div class="avatar">🤖</div>
-                            <div>
-                                <div class="fw-bold">AI Assistant</div>
-                                <div class="status">
-                                    <div class="status-dot"></div>
-                                    Live Preview
-                                </div>
-                            </div>
+                <div class="col-lg-6">
+                    <div class="chart-card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title"><i class="bi bi-chat-left-text"></i> Recent Conversations</h5>
                         </div>
-                        <div class="live-preview-body">
-                            <div class="preview-message bot">
-                                <div class="preview-bubble">
-                                    Hi! 👋 I'm your Smart Laptop Advisor. How can I help you today?
+                        <div class="card-body">
+                            <?php if (!empty($recent_conversations)): ?>
+                                <?php foreach ($recent_conversations as $conv): ?>
+                                <div class="conversation-row">
+                                    <div class="conversation-avatar">
+                                        <?php echo $conv['user_name'] ? strtoupper(substr($conv['user_name'], 0, 1)) : '<i class="bi bi-person"></i>'; ?>
+                                    </div>
+                                    <div class="conversation-info">
+                                        <div class="conversation-message"><?php echo htmlspecialchars($conv['first_message'] ?? 'New conversation'); ?></div>
+                                        <div class="conversation-meta">
+                                            <?php echo $conv['user_name'] ?? 'Guest'; ?> • 
+                                            <?php echo date('M d, H:i', strtotime($conv['started_at'])); ?> • 
+                                            <?php echo $conv['message_count']; ?> messages
+                                        </div>
+                                    </div>
+                                    <span class="sentiment-badge <?php echo $conv['sentiment'] ?? 'neutral'; ?>">
+                                        <?php echo ucfirst($conv['sentiment'] ?? 'neutral'); ?>
+                                    </span>
                                 </div>
-                            </div>
-                            <div class="preview-message user">
-                                <div class="preview-bubble">
-                                    I need a gaming laptop under RM5000
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-chat fs-1"></i>
+                                    <p class="mt-2 mb-0">No recent conversations</p>
                                 </div>
-                            </div>
-                            <div class="preview-message bot">
-                                <div class="preview-bubble">
-                                    Great choice! Here are some top gaming laptops within your budget...
-                                </div>
-                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Accuracy Trend -->
-            <div class="row">
-                <div class="col-lg-6 mb-4">
-                    <div class="chart-card h-100">
+            <!-- Leads Trend Chart -->
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="chart-card">
                         <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-bullseye me-2"></i>Intent Accuracy Trend</h5>
+                            <h5 class="card-title"><i class="bi bi-envelope-plus"></i> Leads Captured (7 Days)</h5>
                         </div>
                         <div class="card-body">
-                            <canvas id="accuracyChart" height="120"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6 mb-4">
-                    <div class="chart-card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-envelope-plus me-2"></i>Leads Captured Trend</h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="leadsChart" height="120"></canvas>
+                            <canvas id="leadsChart" height="60"></canvas>
                         </div>
                     </div>
                 </div>
@@ -872,12 +1138,11 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
 
     <?php include 'includes/admin_footer.php'; ?>
 
-    <!-- ===== INTENT TRAINING MODAL (Pro-Level UI) ===== -->
+    <!-- Training Modal -->
     <div class="modal fade" id="trainQueryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none;">
-                <!-- Modal Header with Gradient -->
-                <div class="modal-header border-0" style="background: var(--asus-gradient); padding: 24px 30px;">
+                <div class="modal-header border-0" style="background: var(--gradient-primary); padding: 24px 30px;">
                     <div class="d-flex align-items-center gap-3">
                         <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 14px; display: flex; align-items: center; justify-content: center;">
                             <i class="bi bi-mortarboard-fill text-white fs-4"></i>
@@ -890,90 +1155,26 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 
-                <!-- Modal Body -->
                 <div class="modal-body p-4">
-                    <!-- Query Display Card -->
-                    <div class="query-display-card mb-4" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 16px; padding: 20px; border-left: 4px solid var(--asus-primary);">
-                        <div class="d-flex align-items-start gap-3">
-                            <div style="width: 40px; height: 40px; background: var(--asus-gradient); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <i class="bi bi-chat-quote text-white"></i>
-                            </div>
-                            <div>
-                                <label class="text-muted small fw-semibold text-uppercase mb-1">Unrecognized Query</label>
-                                <p id="trainQueryText" class="mb-0 fs-5 fw-semibold" style="color: var(--asus-dark);"></p>
-                            </div>
-                        </div>
+                    <div class="mb-4" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 16px; padding: 20px; border-left: 4px solid var(--accent-primary);">
+                        <label class="text-muted small fw-semibold text-uppercase mb-1">Unrecognized Query</label>
+                        <p id="trainQueryText" class="mb-0 fs-5 fw-semibold" style="color: var(--dark);"></p>
                     </div>
                     
-                    <!-- Training Mode Tabs -->
-                    <ul class="nav nav-pills nav-fill gap-2 mb-4" id="trainingModeTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active d-flex align-items-center justify-content-center gap-2" id="existing-tab" data-bs-toggle="pill" data-bs-target="#existing-intent" type="button" role="tab" style="border-radius: 12px; padding: 14px 20px;">
-                                <i class="bi bi-folder-plus"></i>
-                                <span>Add to Existing Intent</span>
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link d-flex align-items-center justify-content-center gap-2" id="new-tab" data-bs-toggle="pill" data-bs-target="#new-intent" type="button" role="tab" style="border-radius: 12px; padding: 14px 20px;">
-                                <i class="bi bi-plus-circle"></i>
-                                <span>Create New Intent</span>
-                            </button>
-                        </li>
-                    </ul>
-                    
-                    <!-- Tab Content -->
-                    <div class="tab-content" id="trainingModeContent">
-                        <!-- Existing Intent Tab -->
-                        <div class="tab-pane fade show active" id="existing-intent" role="tabpanel">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Select Intent</label>
-                                <select id="intentSelect" class="form-select form-select-lg" style="border-radius: 12px; border: 2px solid #e2e8f0; padding: 12px 16px;">
-                                    <option value="">Loading intents...</option>
-                                </select>
-                            </div>
-                            <div id="intentPreview" class="intent-preview-card" style="display: none; background: #f8fafc; border-radius: 12px; padding: 16px; border: 1px solid #e2e8f0;">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="bi bi-info-circle text-primary"></i>
-                                    <span class="fw-semibold">Intent Info</span>
-                                </div>
-                                <p id="intentDescription" class="text-muted small mb-1"></p>
-                                <div class="d-flex gap-3">
-                                    <span class="badge bg-primary-subtle text-primary" id="intentUsageCount">0 uses</span>
-                                    <span class="badge bg-success-subtle text-success" id="intentPhraseCount">0 phrases</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- New Intent Tab -->
-                        <div class="tab-pane fade" id="new-intent" role="tabpanel">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Intent Name <span class="text-danger">*</span></label>
-                                    <input type="text" id="newIntentName" class="form-control" placeholder="e.g. ask_laptop_specs" style="border-radius: 10px; border: 2px solid #e2e8f0; padding: 10px 14px;">
-                                    <small class="text-muted">Use snake_case (e.g., ask_about_price)</small>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Display Name</label>
-                                    <input type="text" id="newDisplayName" class="form-control" placeholder="e.g. Ask Laptop Specs" style="border-radius: 10px; border: 2px solid #e2e8f0; padding: 10px 14px;">
-                                    <small class="text-muted">Human-readable name (auto-generated if empty)</small>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold">Description</label>
-                                    <textarea id="newIntentDescription" class="form-control" rows="2" placeholder="What this intent handles..." style="border-radius: 10px; border: 2px solid #e2e8f0; padding: 10px 14px;"></textarea>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold">Default Bot Response</label>
-                                    <textarea id="newDefaultResponse" class="form-control" rows="2" placeholder="The chatbot's response when this intent is detected..." style="border-radius: 10px; border: 2px solid #e2e8f0; padding: 10px 14px;"></textarea>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select Intent</label>
+                        <select id="intentSelect" class="form-select form-select-lg" style="border-radius: 12px; border: 2px solid #e2e8f0; padding: 12px 16px;">
+                            <option value="">-- Select an Intent --</option>
+                            <?php foreach ($top_intents as $intent): ?>
+                            <option value="<?php echo $intent['intent_id']; ?>"><?php echo htmlspecialchars($intent['display_name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
                 
-                <!-- Modal Footer -->
                 <div class="modal-footer border-0 px-4 pb-4">
                     <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
-                    <button type="button" class="btn btn-primary px-4 d-flex align-items-center gap-2" id="trainSubmitBtn" onclick="submitTraining()" style="border-radius: 10px; background: var(--asus-gradient); border: none;">
+                    <button type="button" class="btn btn-primary px-4 d-flex align-items-center gap-2" onclick="submitTraining()" style="border-radius: 10px; background: var(--gradient-primary); border: none;">
                         <i class="bi bi-check2-circle"></i>
                         <span>Train AI</span>
                     </button>
@@ -981,14 +1182,14 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
             </div>
         </div>
     </div>
-    
+
     <!-- Success Toast -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="trainSuccessToast" class="toast align-items-center border-0" role="alert" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 14px;">
+        <div id="successToast" class="toast align-items-center border-0" role="alert" style="background: var(--gradient-success); border-radius: 14px;">
             <div class="d-flex">
                 <div class="toast-body text-white d-flex align-items-center gap-2">
                     <i class="bi bi-check-circle-fill fs-5"></i>
-                    <span id="toastMessage">Training phrase added successfully!</span>
+                    <span id="toastMessage">Action completed successfully!</span>
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
@@ -999,10 +1200,10 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
 
     <script>
     // Chart.js Global Defaults
-    Chart.defaults.font.family = 'Nunito, sans-serif';
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     Chart.defaults.font.size = 12;
     
-    // Conversation Trend Chart
+    // 7-Day Trend Chart
     new Chart(document.getElementById('trendChart').getContext('2d'), {
         type: 'line',
         data: {
@@ -1010,30 +1211,42 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
             datasets: [{
                 label: 'Conversations',
                 data: <?php echo json_encode($chart_conversations); ?>,
-                borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                pointBackgroundColor: '#0d6efd'
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#6366f1'
+            }, {
+                label: 'Messages',
+                data: <?php echo json_encode($chart_messages); ?>,
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.05)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#8b5cf6'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
-                legend: { display: false }
+                legend: { 
+                    position: 'top',
+                    labels: { usePointStyle: true, padding: 20 }
+                }
             },
             scales: {
                 y: { 
                     beginAtZero: true,
                     grid: { color: '#e2e8f0' }
                 },
-                x: {
-                    grid: { display: false }
-                }
+                x: { grid: { display: false } }
             }
         }
     });
@@ -1044,11 +1257,7 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
         data: {
             labels: ['Positive', 'Neutral', 'Negative'],
             datasets: [{
-                data: [
-                    <?php echo $today_analytics['positive_sentiment_pct']; ?>,
-                    <?php echo $today_analytics['neutral_sentiment_pct']; ?>,
-                    <?php echo $today_analytics['negative_sentiment_pct']; ?>
-                ],
+                data: [<?php echo $positive_pct; ?>, <?php echo $neutral_pct; ?>, <?php echo $negative_pct; ?>],
                 backgroundColor: ['#10b981', '#64748b', '#ef4444'],
                 borderWidth: 0,
                 cutout: '75%'
@@ -1057,33 +1266,53 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: {
-                legend: { display: false }
-            }
+            plugins: { legend: { display: false } }
         }
     });
     
-    // Accuracy Chart
-    new Chart(document.getElementById('accuracyChart').getContext('2d'), {
-        type: 'line',
+    // Hourly Activity Chart
+    new Chart(document.getElementById('hourlyChart').getContext('2d'), {
+        type: 'bar',
         data: {
-            labels: <?php echo json_encode($chart_dates); ?>,
+            labels: <?php echo json_encode($hourly_labels); ?>,
             datasets: [{
-                label: 'Accuracy %',
-                data: <?php echo json_encode($chart_accuracy); ?>,
-                borderColor: '#06b6d4',
-                backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4
+                label: 'Messages',
+                data: <?php echo json_encode(array_values($hourly_data)); ?>,
+                backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                borderColor: '#6366f1',
+                borderWidth: 1,
+                borderRadius: 6
             }]
         },
         options: {
             responsive: true,
             plugins: { legend: { display: false } },
             scales: {
-                y: { beginAtZero: true, max: 100, grid: { color: '#e2e8f0' } },
+                y: { beginAtZero: true, grid: { color: '#e2e8f0' } },
                 x: { grid: { display: false } }
+            }
+        }
+    });
+    
+    // Outcome Chart
+    new Chart(document.getElementById('outcomeChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: <?php echo json_encode(array_map(function($o) { return ucwords(str_replace('_', ' ', $o)); }, $outcome_labels)); ?>,
+            datasets: [{
+                data: <?php echo json_encode($outcome_values); ?>,
+                backgroundColor: ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'],
+                borderWidth: 0,
+                cutout: '60%'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { usePointStyle: true, padding: 12, font: { size: 11 } }
+                }
             }
         }
     });
@@ -1094,9 +1323,9 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
         data: {
             labels: <?php echo json_encode($chart_dates); ?>,
             datasets: [{
-                label: 'Leads',
+                label: 'Leads Captured',
                 data: <?php echo json_encode($chart_leads); ?>,
-                backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                backgroundColor: 'rgba(245, 158, 11, 0.85)',
                 borderColor: '#f59e0b',
                 borderWidth: 2,
                 borderRadius: 8
@@ -1112,219 +1341,50 @@ $max_intent_usage = !empty($top_intents) ? max(array_column($top_intents, 'usage
         }
     });
     
-    function exportUnrecognized() {
-        window.location.href = 'ajax/export_unrecognized_queries.php';
-    }
-    
-    // ============================================
-    // INTENT TRAINING SYSTEM (Pro-Level)
-    // ============================================
-    
+    // Training Functions
     let currentTrainingQuery = '';
-    let intentsData = [];
     const trainModal = new bootstrap.Modal(document.getElementById('trainQueryModal'));
-    const successToast = new bootstrap.Toast(document.getElementById('trainSuccessToast'));
+    const successToast = new bootstrap.Toast(document.getElementById('successToast'));
     
-    // Open Training Modal
     function trainQuery(query) {
         currentTrainingQuery = query;
         document.getElementById('trainQueryText').textContent = query;
-        
-        // Reset form
         document.getElementById('intentSelect').value = '';
-        document.getElementById('intentPreview').style.display = 'none';
-        document.getElementById('newIntentName').value = '';
-        document.getElementById('newDisplayName').value = '';
-        document.getElementById('newIntentDescription').value = '';
-        document.getElementById('newDefaultResponse').value = '';
-        
-        // Switch to first tab
-        document.getElementById('existing-tab').click();
-        
-        // Load intents
-        loadIntents();
-        
-        // Show modal
         trainModal.show();
     }
     
-    // Load Intents for Dropdown
-    async function loadIntents() {
-        const select = document.getElementById('intentSelect');
-        select.innerHTML = '<option value="">Loading intents...</option>';
-        
-        try {
-            const response = await fetch('ajax/train_query.php?action=get_intents');
-            const data = await response.json();
-            
-            if (data.success && data.intents.length > 0) {
-                intentsData = data.intents;
-                select.innerHTML = '<option value="">-- Select an Intent --</option>';
-                
-                data.intents.forEach(intent => {
-                    const option = document.createElement('option');
-                    option.value = intent.intent_id;
-                    option.textContent = intent.display_name || intent.intent_name;
-                    option.dataset.description = intent.description || 'No description';
-                    option.dataset.usageCount = intent.usage_count || 0;
-                    select.appendChild(option);
-                });
-            } else {
-                select.innerHTML = '<option value="">No intents available - Create a new one</option>';
-            }
-        } catch (error) {
-            console.error('Error loading intents:', error);
-            select.innerHTML = '<option value="">Error loading intents</option>';
-        }
-    }
-    
-    // Intent Selection Change Handler
-    document.getElementById('intentSelect').addEventListener('change', async function() {
-        const intentId = this.value;
-        const preview = document.getElementById('intentPreview');
-        
+    async function submitTraining() {
+        const intentId = document.getElementById('intentSelect').value;
         if (!intentId) {
-            preview.style.display = 'none';
+            alert('Please select an intent');
             return;
         }
-        
-        const selectedOption = this.options[this.selectedIndex];
-        const description = selectedOption.dataset.description;
-        const usageCount = selectedOption.dataset.usageCount;
-        
-        document.getElementById('intentDescription').textContent = description;
-        document.getElementById('intentUsageCount').textContent = usageCount + ' uses';
-        
-        // Get phrase count
-        try {
-            const response = await fetch(`ajax/train_query.php?action=get_phrase_count&intent_id=${intentId}`);
-            const data = await response.json();
-            document.getElementById('intentPhraseCount').textContent = (data.count || 0) + ' phrases';
-        } catch (e) {
-            document.getElementById('intentPhraseCount').textContent = '? phrases';
-        }
-        
-        preview.style.display = 'block';
-    });
-    
-    // Submit Training
-    async function submitTraining() {
-        const btn = document.getElementById('trainSubmitBtn');
-        const originalContent = btn.innerHTML;
-        
-        // Check which tab is active
-        const isNewIntent = document.getElementById('new-intent').classList.contains('active');
-        
-        let formData = new FormData();
-        formData.append('phrase', currentTrainingQuery);
-        
-        if (isNewIntent) {
-            // Create new intent
-            const intentName = document.getElementById('newIntentName').value.trim();
-            
-            if (!intentName) {
-                showError('Please enter an intent name');
-                return;
-            }
-            
-            formData.append('action', 'create_intent');
-            formData.append('intent_name', intentName);
-            formData.append('display_name', document.getElementById('newDisplayName').value.trim());
-            formData.append('description', document.getElementById('newIntentDescription').value.trim());
-            formData.append('default_response', document.getElementById('newDefaultResponse').value.trim());
-        } else {
-            // Add to existing intent
-            const intentId = document.getElementById('intentSelect').value;
-            
-            if (!intentId) {
-                showError('Please select an intent');
-                return;
-            }
-            
-            formData.append('action', 'add_phrase');
-            formData.append('intent_id', intentId);
-        }
-        
-        // Show loading state
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Training...';
         
         try {
             const response = await fetch('ajax/train_query.php', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `action=add_phrase&intent_id=${intentId}&phrase=${encodeURIComponent(currentTrainingQuery)}`
             });
             
             const data = await response.json();
-            
             if (data.success) {
-                // Close modal
                 trainModal.hide();
-                
-                // Show success toast
-                document.getElementById('toastMessage').textContent = data.message;
+                document.getElementById('toastMessage').textContent = 'Training phrase added successfully!';
                 successToast.show();
-                
-                // Remove the trained query from the list (visual feedback)
-                removeTrainedQuery(currentTrainingQuery);
-                
+                setTimeout(() => location.reload(), 1500);
             } else {
-                showError(data.error || 'Training failed');
+                alert(data.error || 'Training failed');
             }
         } catch (error) {
-            console.error('Training error:', error);
-            showError('Network error. Please try again.');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalContent;
+            console.error('Error:', error);
+            alert('Network error. Please try again.');
         }
     }
     
-    // Remove trained query from UI
-    function removeTrainedQuery(query) {
-        const queryItems = document.querySelectorAll('.query-item');
-        queryItems.forEach(item => {
-            const text = item.querySelector('.query-text');
-            if (text && text.textContent.trim() === query.trim()) {
-                item.style.transition = 'all 0.3s ease';
-                item.style.opacity = '0';
-                item.style.transform = 'translateX(20px)';
-                setTimeout(() => {
-                    item.innerHTML = `
-                        <div class="d-flex align-items-center gap-2 text-success">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span>Trained successfully!</span>
-                        </div>
-                    `;
-                    item.style.opacity = '1';
-                    item.style.transform = 'translateX(0)';
-                    item.style.background = 'rgba(16, 185, 129, 0.1)';
-                }, 300);
-            }
-        });
+    function exportUnrecognized() {
+        window.location.href = 'ajax/export_unrecognized_queries.php';
     }
-    
-    // Show Error Alert
-    function showError(message) {
-        // Create error toast
-        const errorHtml = `
-            <div class="alert alert-danger alert-dismissible fade show position-fixed" 
-                 style="bottom: 20px; right: 20px; z-index: 9999; border-radius: 12px; min-width: 300px;">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', errorHtml);
-        
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            const alert = document.querySelector('.alert-danger');
-            if (alert) alert.remove();
-        }, 5000);
-    }
-    
     </script>
 </body>
 </html>
-
